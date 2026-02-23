@@ -1,0 +1,25 @@
+# Environments
+env/
+venv/
+ENV/
+.env
+
+# Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Databases
+*.sqlite3
+db.sqlite3
+
+# Django specific
+local_settings.py
+staticfiles/
+media/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
