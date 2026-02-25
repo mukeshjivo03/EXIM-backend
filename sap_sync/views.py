@@ -68,6 +68,14 @@ class ProductListView(generics.ListAPIView):
     queryset = Products.objects.all()
     serializer_class = ProductSerializer
     
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        return Response({
+            'count' : queryset.count(),
+            'items' : serializer.data
+        })
     
 class PartyGetandDeleteView(generics.RetrieveDestroyAPIView):
     permission_class = [IsAdminUser]
@@ -82,6 +90,15 @@ class PartyListView(generics.ListAPIView):
     
     queryset = Party.objects.all()
     serializer_class =  PartySerializer
+    
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        return Response({
+            'count' : queryset.count(),
+            'items' : serializer.data
+        })    
     
 class SyncLogListView(generics.ListAPIView):
     permission_class = [IsAdminUser]
