@@ -11,3 +11,8 @@ class TankItemViews(generics.RetrieveUpdateDestroyAPIView):
     queryset = TankItem.objects.all()
     serializer_class = TankItemSerializer
     
+    def get_permission(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        
+        return [IsAdminUser()]

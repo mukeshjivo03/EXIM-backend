@@ -94,10 +94,10 @@ class PartyListView(generics.ListAPIView):
     def list(self, request):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        
+
         return Response({
             'count' : queryset.count(),
-            'items' : serializer.data
+            'parties' : serializer.data
         })    
     
 class SyncLogListView(generics.ListAPIView):
