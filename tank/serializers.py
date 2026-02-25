@@ -15,8 +15,13 @@ class TankItemColorSerialier(serializers.ModelSerializer):
 
 
 
-
 class TankDataSerializer(serializers.ModelSerializer):
+    item_code = serializers.SlugRelatedField(
+        slug_field='tank_item_code', 
+        queryset=TankItem.objects.all(),
+        allow_null=True 
+    )
+        
     class Meta:
         model = TankData
         fields = '__all__'
