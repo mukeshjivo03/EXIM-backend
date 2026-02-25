@@ -25,7 +25,7 @@ class syncPartyView(APIView):
             return Response({'success': False, 'error': str(e)}, status=500)
 
         
-class syncProuctsView(APIView):
+class syncProductsView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request):
         try:
@@ -83,3 +83,8 @@ class PartyListView(generics.ListAPIView):
     queryset = Party.objects.all()
     serializer_class =  PartySerializer
     
+class SyncLogListView(generics.ListAPIView):
+    permission_class = [IsAdminUser]
+    
+    queryset = syncLogs.objects.all()
+    serializer_class = SyncLogSerializer

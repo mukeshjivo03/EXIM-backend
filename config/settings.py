@@ -45,8 +45,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'corsheaders',
-    'sap_sync',
     
+    'tank',
+    'sap_sync',
     'accounts'
 ]
 
