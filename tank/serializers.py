@@ -15,6 +15,9 @@ class TankItemColorSerialier(serializers.ModelSerializer):
 
 
 
+
+
+
 class TankDataSerializer(serializers.ModelSerializer):
     item_code = serializers.SlugRelatedField(
         slug_field='tank_item_code', 
@@ -29,21 +32,26 @@ class TankDataSerializer(serializers.ModelSerializer):
         
         
     def validate(self, data):
-        tank_capacity = data.get('tank_capacity')
-        current_capacity = data.get('current_capacity')
-        item_code = data.get('item_code')
+        final_capacity = data.get('current_capacity', getattr(self.instance, 'current_capacity', None))
+        final_item = data.get('item_code', getattr(self.instance, 'item_code', None))
+        max_capacity = data.get('tank_capacity', getattr(self.instance, 'tank_capacity', None))
+
+        if final_capacity == 0 and final_item is None:
+            pass # This is perfectly fine!
         
-        if item_code is not None and current_capacity is None:
-            raise serializers.ValidationError("Please also mention the Item Capacity")
-        
-        if current_capacity is not None and item_code is None:
-            raise serializers.ValidationError("Please also mention the Item Code")
-            
-        
-        if tank_capacity is not None and current_capacity is not None:
-            if current_capacity > tank_capacity or current_capacity < 0 or tank_capacity < 0:
-                raise serializers.ValidationError("Current or Tank capacity should be less than zero or more than tank capacity.")
-            
+        else:
+            if final_item is not None and final_capacity in [None, 0]:
+                raise serializers.ValidationError({"current_capacity": "You cannot assign an item without a capacity greater than 0."})
+
+            if final_capacity is not None and final_capacity > 0 and final_item is None:
+                raise serializers.ValidationError({"item_code": "You cannot add capacity without assigning an Item Code."})
+
+        if final_capacity is not None and max_capacity is not None:
+            if final_capacity > max_capacity:
+                raise serializers.ValidationError({"current_capacity": f"Cannot exceed tank capacity of {max_capacity}."})
+            if final_capacity < 0:
+                raise serializers.ValidationError({"current_capacity": "Capacity cannot be negative."})
+
         return data
 
 class TankDataCapacitySerializer(serializers.ModelSerializer):
@@ -60,19 +68,23 @@ class TankDataCapacitySerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at' , 'updated_at' ,'tank_number' ,'is_active' , 'tank_capacity']
         
     def validate(self, data):
+        final_capacity = data.get('current_capacity', getattr(self.instance, 'current_capacity', None))
+        final_item = data.get('item_code', getattr(self.instance, 'item_code', None))
+        max_capacity = data.get('tank_capacity', getattr(self.instance, 'tank_capacity', None))
+
+        if final_capacity == 0 and final_item is None:
+            pass # This is perfectly fine!
         
-        current_capacity = data.get('current_capacity')
-        item_code = data.get('item_code')
-        
-        if item_code is not None and current_capacity is None:
-            raise serializers.ValidationError("Please also mention the Item Capacity")
-        
-        if current_capacity is not None and item_code is None:
-            raise serializers.ValidationError("Please also mention the Item Code")
-            
-            
-        if self.instance and current_capacity is not None:
-            if current_capacity > self.instance.tank_capacity or current_capacity < 0:
-                raise serializers.ValidationError("Current capacity cannot be more than tanks capacity or less than zero.")
-            
+        else:
+            if final_item is not None and final_capacity in [None, 0]:
+                raise serializers.ValidationError({"current_capacity": "You cannot assign an item without a capacity greater than 0."})
+            if final_capacity is not None and final_capacity > 0 and final_item is None:
+                raise serializers.ValidationError({"item_code": "You cannot add capacity without assigning an Item Code."})
+
+        if final_capacity is not None and max_capacity is not None:
+            if final_capacity > max_capacity:
+                raise serializers.ValidationError({"current_capacity": f"Cannot exceed tank capacity of {max_capacity}."})
+            if final_capacity < 0:
+                raise serializers.ValidationError({"current_capacity": "Capacity cannot be negative."})
+
         return data
