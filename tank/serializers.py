@@ -21,3 +21,14 @@ class TankDataSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['created_at']
         
+class TankDataCapacitySerializer(serializers.ModelSerializer):
+    
+    item_code = serializers.SlugRelatedField(
+        slug_field='tank_item_code', 
+        queryset=TankItem.objects.all(),
+        allow_null=True 
+    )
+    
+    class Meta:
+        model = TankData
+        fields = ['current_capacity' , 'item_code']

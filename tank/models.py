@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 class TankItem(models.Model):
-    tank_item_code = models.CharField(max_length=50)
+    tank_item_code = models.CharField(unique=True ,max_length=50)
     tank_item_name = models.CharField(max_length = 255)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -18,10 +18,10 @@ class TankItem(models.Model):
 
 
 class TankData(models.Model):
-    tank_number = models.IntegerField()
-    item_code = models.ForeignKey(TankItem, on_delete=models.CASCADE)      
+    tank_number = models.IntegerField(unique=True)
+    item_code = models.ForeignKey(TankItem, on_delete=models.CASCADE , null = True)      
     tank_capacity = models.DecimalField(max_digits=10, decimal_places=2)
-    current_capacity = models.DecimalField(max_digits=10, decimal_places=2)
+    current_capacity = models.DecimalField(blank = True , null = True ,max_digits=10, decimal_places=2)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
