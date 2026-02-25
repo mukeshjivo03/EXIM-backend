@@ -31,6 +31,14 @@ class TankDataSerializer(serializers.ModelSerializer):
     def validate(self, data):
         tank_capacity = data.get('tank_capacity')
         current_capacity = data.get('current_capacity')
+        item_code = data.get('item_code')
+        
+        if item_code is not None and current_capacity is None:
+            raise serializers.ValidationError("Please also mention the Item Capacity")
+        
+        if current_capacity is not None and item_code is None:
+            raise serializers.ValidationError("Please also mention the Item Code")
+            
         
         if tank_capacity is not None and current_capacity is not None:
             if current_capacity > tank_capacity or current_capacity < 0 or tank_capacity < 0:
@@ -54,6 +62,15 @@ class TankDataCapacitySerializer(serializers.ModelSerializer):
     def validate(self, data):
         
         current_capacity = data.get('current_capacity')
+        item_code = data.get('item_code')
+        
+        if item_code is not None and current_capacity is None:
+            raise serializers.ValidationError("Please also mention the Item Capacity")
+        
+        if current_capacity is not None and item_code is None:
+            raise serializers.ValidationError("Please also mention the Item Code")
+            
+            
         if self.instance and current_capacity is not None:
             if current_capacity > self.instance.tank_capacity or current_capacity < 0:
                 raise serializers.ValidationError("Current capacity cannot be more than tanks capacity or less than zero.")
