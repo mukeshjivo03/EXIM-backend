@@ -76,7 +76,7 @@ class syncSingleFGProductView(APIView):
         
 # Model Views 
         
-class ProductGetandDeleteView(generics.RetrieveDestroyAPIView):
+class RMProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     permission_classes = [IsAdminUser]
     
     queryset = RMProducts.objects.all()
@@ -85,11 +85,35 @@ class ProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     
     
     
-class ProductListView(generics.ListAPIView):
+class RMProductListView(generics.ListAPIView):
     permission_class = [IsAdminUser]
     
     queryset = RMProducts.objects.all()
     serializer_class = RMProductSerializer
+    
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        return Response({
+            'count' : queryset.count(),
+            'items' : serializer.data
+        })
+        
+class FGProductGetandDeleteView(generics.RetrieveDestroyAPIView):
+    permission_classes = [IsAdminUser]
+    
+    queryset = FGProducts.objects.all()
+    serializer_class = FGProductSerializer 
+    lookup_field = 'item_code'
+    
+    
+    
+class FGProductListView(generics.ListAPIView):
+    permission_class = [IsAdminUser]
+    
+    queryset = FGProducts.objects.all()
+    serializer_class = FGProductSerializer
     
     def list(self, request):
         queryset = self.get_queryset()

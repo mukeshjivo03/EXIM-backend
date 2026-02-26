@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , ProductGetandDeleteView , ProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView
+from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView
 
 
 
@@ -12,8 +12,12 @@ urlpatterns = [
     path('sap_sync/fg/items/' , syncFGProductsView.as_view()),
 
     
-    path('item/<str:item_code>/' , ProductGetandDeleteView.as_view()),
-    path('items/' , ProductListView.as_view()),
+    path('item/rm/<str:item_code>/' , RMProductGetandDeleteView.as_view()),
+    path('items/rm/' , RMProductListView.as_view()),
+    
+    path('item/fg/<str:item_code>/' , FGProductGetandDeleteView.as_view()),
+    path('items/fg/' , FGProductListView.as_view()),
+    
     path('party/<str:card_code>/',PartyGetandDeleteView.as_view()),
     path('parties/',PartyListView.as_view()),
     path('sync_logs/' , SyncLogListView.as_view())

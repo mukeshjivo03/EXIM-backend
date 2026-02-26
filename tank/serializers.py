@@ -14,10 +14,6 @@ class TankItemColorSerialier(serializers.ModelSerializer):
         fields = ['color' , 'tank_item_name']
 
 
-
-
-
-
 class TankDataSerializer(serializers.ModelSerializer):
     item_code = serializers.SlugRelatedField(
         slug_field='tank_item_code', 
