@@ -31,7 +31,7 @@ class syncLogs(models.Model):
     
     
 
-class Products(models.Model):
+class RMProducts(models.Model):
 
     item_code = models.CharField(max_length=50, unique=True) 
     item_name = models.CharField(max_length=255, null=True, blank=True)
@@ -46,7 +46,25 @@ class Products(models.Model):
     u_sub_group = models.CharField(max_length=50, null=True, blank=True)
     
     class Meta:
-        db_table = 'Item'
+        db_table = 'rm_goods'
+        
+
+class FGProducts(models.Model):
+
+    item_code = models.CharField(max_length=50, unique=True) 
+    item_name = models.CharField(max_length=255, null=True, blank=True)
+    category = models.CharField(max_length=50, null=True, blank=True)
+    sal_factor2 = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    u_tax_rate = models.IntegerField(null=True, blank=True)
+    deleted = models.CharField(max_length=1, null=True, blank=True)
+    u_variety = models.CharField(max_length=50, null=True, blank=True)
+    sal_pack_un = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    u_brand = models.CharField(max_length=50, null=True, blank=True)
+    u_unit = models.CharField(max_length=50, null=True, blank=True)
+    u_sub_group = models.CharField(max_length=50, null=True, blank=True)
+    
+    class Meta:
+        db_table = 'fg_goods'
 
 
 

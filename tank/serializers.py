@@ -28,7 +28,7 @@ class TankDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = TankData
         fields = '__all__'
-        read_only_fields = ['created_at']
+        read_only_fields = ['created_at' , 'tank_']
         
         
     def validate(self, data):

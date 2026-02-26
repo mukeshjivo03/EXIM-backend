@@ -4,8 +4,8 @@ from rest_framework import generics
 
 from .services.services import PartyServices, ProductServices
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
-from .serializers import ProductSerializer , PartySerializer , SyncLogSerializer
-from .models import Products , Party , syncLogs
+from .serializers import RMProductSerializer, FGProductSerializer , PartySerializer , SyncLogSerializer
+from .models import RMProducts , FGProducts , Party , syncLogs
 
       
 # Sync Views
@@ -25,12 +25,24 @@ class syncPartyView(APIView):
             return Response({'success': False, 'error': str(e)}, status=500)
 
         
-class syncProductsView(APIView):
+class syncRMProductsView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request):
         try:
-            result = ProductServices().syncProducts()
-            serializer =  ProductSerializer(Products.objects.all() , many=True)
+            result = ProductServices().syncRMProducts()
+            serializer =  RMProductSerializer(RMProducts.objects.all() , many=True)
+            
+            return Response({'success': True , 'Items_processed' : result, 'Items': serializer.data})
+            
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=500)
+        
+class syncFGProductsView(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+        try:
+            result = ProductServices().syncFGProducts()
+            serializer =  FGProductSerializer(FGProducts.objects.all() , many=True)
             
             return Response({'success': True , 'Items_processed' : result, 'Items': serializer.data})
             
@@ -38,12 +50,23 @@ class syncProductsView(APIView):
             return Response({'success': False, 'error': str(e)}, status=500)
         
         
-class syncSingleProductView(APIView):
+class syncSingleRMProductView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request, itemCode):
         try:
-            result = ProductServices().syncProduct(itemCode)
-            serializer = ProductSerializer(result)
+            result = ProductServices().syncRMProduct(itemCode)
+            serializer = RMProductSerializer(result)
+            return Response({'status': 'success', 'item_code': result.item_code,'synced_item' : serializer.data})
+            
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=500)
+        
+class syncSingleFGProductView(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request, itemCode):
+        try:
+            result = ProductServices().syncFGProduct(itemCode)
+            serializer = FGProductSerializer(result)
             return Response({'status': 'success', 'item_code': result.item_code,'synced_item' : serializer.data})
             
         except Exception as e:
@@ -56,8 +79,8 @@ class syncSingleProductView(APIView):
 class ProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     permission_classes = [IsAdminUser]
     
-    queryset = Products.objects.all()
-    serializer_class = ProductSerializer 
+    queryset = RMProducts.objects.all()
+    serializer_class = RMProductSerializer 
     lookup_field = 'item_code'
     
     
@@ -65,8 +88,8 @@ class ProductGetandDeleteView(generics.RetrieveDestroyAPIView):
 class ProductListView(generics.ListAPIView):
     permission_class = [IsAdminUser]
     
-    queryset = Products.objects.all()
-    serializer_class = ProductSerializer
+    queryset = RMProducts.objects.all()
+    serializer_class = RMProductSerializer
     
     def list(self, request):
         queryset = self.get_queryset()

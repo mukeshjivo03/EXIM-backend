@@ -56,22 +56,42 @@ class SAPConnection:
 class Queries:
     
     @staticmethod
-    def get_all_product():
+    def get_all_rm_product():
         return """
             SELECT ItemCode, ItemName, Category, SalFactor2, U_Tax_Rate, Deleted, U_Variety, SalPackUn, U_Brand, U_Unit, U_Sub_Group
             FROM OPENQUERY(HANADB112, 'SELECT "ItemCode", "ItemName", ''OIL'' AS "Category", "SalFactor2", "U_Tax_Rate", "Deleted", "U_Variety", "SalPackUn", "U_Brand", "U_Unit", "U_Sub_Group" 
             FROM "JIVO_OIL_HANADB"."OITM" 
-            WHERE "ItemCode" LIKE ''FG%'' OR "ItemCode" LIKE ''SCH%'' OR "ItemCode" LIKE ''RM%'' OR "ItemCode" LIKE ''PM%'' ')
+            WHERE "ItemCode" LIKE ''RM%'' AND "U_Unit" = ''OIL'' ')
+        """
+        
+    @staticmethod
+    def get_all_fg_product():
+        return """
+            SELECT ItemCode, ItemName, Category, SalFactor2, U_Tax_Rate, Deleted, U_Variety, SalPackUn, U_Brand, U_Unit, U_Sub_Group
+            FROM OPENQUERY(HANADB112, 'SELECT "ItemCode", "ItemName", ''OIL'' AS "Category", "SalFactor2", "U_Tax_Rate", "Deleted", "U_Variety", "SalPackUn", "U_Brand", "U_Unit", "U_Sub_Group" 
+            FROM "JIVO_OIL_HANADB"."OITM" 
+            WHERE "ItemCode" LIKE ''FG%'' AND "U_Unit" = ''OIL'' ')
         """
     
     @staticmethod
-    def get_single_product(itemCode):
+    def get_single_fg_product(itemCode):
         return f"""
             SELECT ItemCode, ItemName, Category, SalFactor2, U_Tax_Rate, Deleted, U_Variety, SalPackUn, U_Brand, U_Unit, U_Sub_Group
             FROM OPENQUERY(HANADB112, 'SELECT "ItemCode", "ItemName", ''OIL'' AS "Category", "SalFactor2", "U_Tax_Rate", "Deleted", "U_Variety", "SalPackUn", "U_Brand", "U_Unit", "U_Sub_Group" 
             FROM "JIVO_OIL_HANADB"."OITM" 
-            WHERE "ItemCode" = ''{itemCode}'' ')
-        """     
+            WHERE "ItemCode" = ''{itemCode}'' AND "ItemCode" LIKE ''FG%'' AND "U_Unit" = ''OIL'' ')
+        """  
+        
+    @staticmethod
+    def get_single_rm_product(itemCode):
+        return f"""
+            SELECT ItemCode, ItemName, Category, SalFactor2, U_Tax_Rate, Deleted, U_Variety, SalPackUn, U_Brand, U_Unit, U_Sub_Group
+            FROM OPENQUERY(HANADB112, 'SELECT "ItemCode", "ItemName", ''OIL'' AS "Category", "SalFactor2", "U_Tax_Rate", "Deleted", "U_Variety", "SalPackUn", "U_Brand", "U_Unit", "U_Sub_Group" 
+            FROM "JIVO_OIL_HANADB"."OITM" 
+            WHERE "ItemCode" = ''{itemCode}'' AND "ItemCode" LIKE ''RM%'' AND "U_Unit" = ''OIL'' ')
+        """  
+        
+
     @staticmethod
     def get_single_party(cardCode):
         return f"""
