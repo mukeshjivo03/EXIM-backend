@@ -13,7 +13,7 @@ from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
 class TankDataView(generics.RetrieveDestroyAPIView):
     queryset = TankData.objects.all()
     serializer_class = TankDataSerializer
-    lookup_field = 'tank_number'
+    lookup_field = 'tank_code'
     
     def get_permissions(self):
         if self.request.method == 'GET':
