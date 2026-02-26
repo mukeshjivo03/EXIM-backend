@@ -35,7 +35,7 @@ class TankDataListCrateView(generics.ListCreateAPIView):
 class TankCapacityUpdateView(generics.UpdateAPIView):
     queryset = TankData.objects.all()
     serializer_class = TankDataCapacitySerializer
-    lookup_field = 'tank_number'
+    lookup_field = 'tank_code'
     
     
 

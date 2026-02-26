@@ -1,4 +1,5 @@
 from django.db import models
+from django.db import models, transaction
 
 # Create your models here.
 class TankItem(models.Model):
@@ -16,10 +17,8 @@ class TankItem(models.Model):
         return self.tank_item_name
     
 
-from django.db import models, transaction
-
 class TankData(models.Model):
-    # Changed to CharField to hold "TNK001"
+    # ... your fields ...
     tank_code = models.CharField(primary_key=True, max_length=20, editable=False)
     item_code = models.ForeignKey('TankItem', on_delete=models.CASCADE, null=True)      
     tank_capacity = models.DecimalField(max_digits=10, decimal_places=2)
@@ -33,6 +32,9 @@ class TankData(models.Model):
         
     def save(self, *args, **kwargs):
         if not self.tank_code:
+            # THIS IS THE MISSING LINE
+            with transaction.atomic(): 
+                # Everything below needs to be indented one level deeper
                 existing_tanks = TankData.objects.select_for_update().values_list('tank_code', flat=True)
                 existing_numbers = set()
 
@@ -41,7 +43,7 @@ class TankData(models.Model):
                         num = int(code.replace('TNK', ''))
                         existing_numbers.add(num)
                     except ValueError:
-                        continue # Skip any malformed codes just in case
+                        continue 
 
                 next_number = 1
                 while next_number in existing_numbers:
