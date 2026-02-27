@@ -20,7 +20,7 @@ class TankItem(models.Model):
 class TankData(models.Model):
 
     tank_code = models.CharField(primary_key=True, max_length=20, editable=False)
-    item_code = models.ForeignKey('TankItem', on_delete=models.PROTECT, null=True)      
+    item_code = models.ForeignKey('TankItem', on_delete=models.CASCADE, null=True)      
     tank_capacity = models.DecimalField(max_digits=10, decimal_places=2)
     current_capacity = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
     is_active = models.BooleanField(default=True)
