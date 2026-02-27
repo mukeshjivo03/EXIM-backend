@@ -29,40 +29,26 @@ class StockUpdateLogListView(generics.ListAPIView):
     serializer_class = StockStatusUpdateLogSerializer
     permission_classes = [IsAdminUser]
 
+
 class StockStatusInsights(APIView):
     
     def get(self, request):
-        # Apply the deleted filter first
+        # Initial filter for non-deleted records
         queryset = StockStatus.objects.filter(deleted=False)
         
+        # Apply filters from request.GET
         filterset = StockStatusFilters(request.GET, queryset=queryset)
         if filterset.is_valid():
             queryset = filterset.qs
 
+        # FIXED: Use Count('id') for the total number of records
         insights = queryset.aggregate(
             total_value=Sum("total"), 
             total_qty=Sum('quantity'), 
-            total_count=Count('id')
+            total_count=Count('id') 
         )
 
-        status_distribution = queryset.values('status').annotate(
-            value=Sum('total'), 
-            count=Count('id')
-        )
-
-        item_distribution = queryset.values('item_code__code').annotate(
-            value=Sum('total'), 
-            count=Count('id')
-        )
-
-        vendor_distribution = queryset.values('vendor_code__code').annotate(
-            value=Sum('total'), 
-            count=Count('id')
-        )
 
         return Response({
             "summary": insights,
-            "status-chart": status_distribution,
-            "item-chart": item_distribution,
-            "vendor_chart": vendor_distribution
         })
