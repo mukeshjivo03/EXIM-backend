@@ -1,6 +1,6 @@
 from django.db import models
 from sap_sync.models import RMProducts , Party 
-
+from decimal import Decimal
 
 class StockStatus(models.Model):
     STATUS_CHOICES = (
@@ -24,7 +24,7 @@ class StockStatus(models.Model):
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
     vendor_code = models.ForeignKey(Party, on_delete=models.CASCADE)
     rate = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=12, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2 , editable = False , default = '0.00')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
@@ -37,6 +37,12 @@ class StockStatus(models.Model):
         return f"{self.item_code} - {self.status}"
     
     def save(self ,*args , **kwargs):
+        
+        if self.rate is not None and self.quantity is not None:
+            self.total = self.rate * self.quantity
+        else:
+            self.total = Deciaml('0.00')
+
         if self.pk:
             old_instance = StockStatus.objects.get(pk=self.pk)
             track_fields = ['status' , 'rate' ,'quantity']
