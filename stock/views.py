@@ -11,12 +11,10 @@ from .filters import StockStatusFilters
 
 
 class StockStatusListCreateView(generics.ListCreateAPIView):
-    queryset = StockStatus.objects.all()
+    queryset = StockStatus.objects.filter(deleted=False)
     serializer_class = StockStatusSerializer
-    # permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser]
     filter_backends = (filters.DjangoFilterBackend,) 
-    
-    # FIX 2: You need the equals sign here
     filterset_class = StockStatusFilters
 
 
@@ -35,7 +33,7 @@ class StockStatusInsights(APIView):
     
     def get(self , request):
 
-        queryset = StockStatus.objects.all()
+        queryset = StockStatus.objects.filter(deleted=False)
         filterset = StockStatusFilters(request.GET, queryset=queryset)
         if filterset.is_valid():
             queryset = filterset.qs
