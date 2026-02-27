@@ -41,7 +41,7 @@ class StockStatus(models.Model):
         if self.rate is not None and self.quantity is not None:
             self.total = self.rate * self.quantity
         else:
-            self.total = Deciaml('0.00')
+            self.total = Decimal('0.00')
 
         if self.pk:
             old_instance = StockStatus.objects.get(pk=self.pk)
