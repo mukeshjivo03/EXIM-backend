@@ -18,9 +18,9 @@ class TankItem(models.Model):
     
 
 class TankData(models.Model):
-    # ... your fields ...
+
     tank_code = models.CharField(primary_key=True, max_length=20, editable=False)
-    item_code = models.ForeignKey('TankItem', on_delete=models.CASCADE, null=True)      
+    item_code = models.ForeignKey('TankItem', on_delete=models.PROTECT, null=True)      
     tank_capacity = models.DecimalField(max_digits=10, decimal_places=2)
     current_capacity = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
     is_active = models.BooleanField(default=True)
@@ -32,9 +32,7 @@ class TankData(models.Model):
         
     def save(self, *args, **kwargs):
         if not self.tank_code:
-            # THIS IS THE MISSING LINE
             with transaction.atomic(): 
-                # Everything below needs to be indented one level deeper
                 existing_tanks = TankData.objects.select_for_update().values_list('tank_code', flat=True)
                 existing_numbers = set()
 
