@@ -18,7 +18,7 @@ class StockStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockStatus
         fields = '__all__'
-        read_only_fields = ['create_at' , 'deleted' , 'total']
+        read_only_fields = ['create_at' , 'total']
 
 class StockStatusUpdateLogSerializer(serializers.ModelSerializer):
     class Meta:
