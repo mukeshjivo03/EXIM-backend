@@ -24,7 +24,7 @@ class StockStatus(models.Model):
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
     vendor_code = models.ForeignKey(Party, on_delete=models.CASCADE)
     rate = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=12, decimal_places=2 , editable = False , default = '0.00')
+    total = models.DecimalField(max_digits=20, decimal_places=2 , editable = False , default = '0.00')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
