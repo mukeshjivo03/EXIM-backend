@@ -44,7 +44,12 @@ class RMProducts(models.Model):
     u_brand = models.CharField(max_length=50, null=True, blank=True)
     u_unit = models.CharField(max_length=50, null=True, blank=True)
     u_sub_group = models.CharField(max_length=50, null=True, blank=True)
-    
+    total_trans_value = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    total_in_qty = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    total_out_qty = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    total_qty = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+    rate = models.DecimalField(max_digits=18, decimal_places=6, null=True, blank=True)
+
     class Meta:
         db_table = 'rm_goods'
         

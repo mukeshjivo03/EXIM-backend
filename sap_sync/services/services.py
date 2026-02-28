@@ -40,7 +40,12 @@ class ProductServices:
                         sal_pack_un = row.get('SalPackUn'),
                         u_brand = row.get('U_Brand'),
                         u_unit = row.get('U_Unit'),
-                        u_sub_group = row.get('U_Sub_Group')
+                        u_sub_group = row.get('U_Sub_Group'),
+                        total_trans_value = row.get('TotalTransValue') or 0,
+                        total_in_qty = row.get('TotalInQty') or 0,
+                        total_out_qty = row.get('TotalOutQty') or 0,
+                        total_qty = row.get('TotalQty') or 0,
+                        rate = row.get('Rate') or 0,
                     )
                 )
 
@@ -49,8 +54,8 @@ class ProductServices:
                         products,
                         batch_size=1000,
                         update_conflicts=True,
-                        unique_fields=['item_code'], 
-                        update_fields=['item_name', 'category', 'sal_factor2', 'u_tax_rate', 'deleted', 'u_variety', 'sal_pack_un', 'u_brand','u_unit', 'u_sub_group']
+                        unique_fields=['item_code'],
+                        update_fields=['item_name', 'category', 'sal_factor2', 'u_tax_rate', 'deleted', 'u_variety', 'sal_pack_un', 'u_brand','u_unit', 'u_sub_group', 'total_trans_value', 'total_in_qty', 'total_out_qty', 'total_qty', 'rate']
                     )
                    
             log.status = 'SCS'

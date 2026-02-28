@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
-from rest_framework.response import Response 
+from rest_framework.response import Response
 from rest_framework import generics
+from django.db.models import Sum, Count, Avg
+from decimal import Decimal
 
 from .services.services import PartyServices, ProductServices
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
@@ -87,17 +89,57 @@ class RMProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     
 class RMProductListView(generics.ListAPIView):
     permission_class = [IsAdminUser]
-    
+
     queryset = RMProducts.objects.all()
     serializer_class = RMProductSerializer
-    
+
     def list(self, request):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().exclude(total_qty=0)
+
+        variety = request.query_params.getlist('variety')
+        if variety:
+            queryset = queryset.filter(u_variety__in=variety)
+
         serializer = self.get_serializer(queryset, many=True)
-        
+
         return Response({
             'count' : queryset.count(),
             'items' : serializer.data
+        })
+
+
+class RMProductSummaryView(APIView):
+
+    def get(self, request):
+        queryset = RMProducts.objects.exclude(total_qty=0)
+
+        variety = request.query_params.getlist('variety')
+        if variety:
+            queryset = queryset.filter(u_variety__in=variety)
+
+        summary = queryset.aggregate(
+            total_count=Count('id'),
+            total_qty=Sum('total_qty'),
+            avg_rate=Avg('rate'),
+            total_trans_value=Sum('total_trans_value'),
+        )
+
+        return Response({
+            'summary': {
+                'total_count': summary['total_count'] or 0,
+                'total_qty': summary['total_qty'] or Decimal('0.00'),
+                'avg_rate': round(summary['avg_rate'], 2) if summary['avg_rate'] else Decimal('0.00'),
+                'total_trans_value': summary['total_trans_value'] or Decimal('0.00'),
+            }
+        })
+
+
+class RMProductVarietyListView(APIView):
+
+    def get(self, request):
+        varieties = RMProducts.objects.values_list('u_variety', flat=True).distinct().order_by('u_variety')
+        return Response({
+            'varieties': [v for v in varieties if v]
         })
         
 class FGProductGetandDeleteView(generics.RetrieveDestroyAPIView):
