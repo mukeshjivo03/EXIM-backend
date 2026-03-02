@@ -26,20 +26,15 @@ def fetch_table_manually():
         try:
             row = reader[start_row + i]
             
-            # Helper function to safely convert string to Decimal
             def clean_dec(val):
                 if not val or not str(val).strip():
                     return Decimal('0.00')
                 try:
-                    # Remove currency symbols or commas
                     clean_val = str(val).replace(',', '').strip()
                     return Decimal(clean_val)
                 except (InvalidOperation, ValueError):
                     return Decimal('0.00')
 
-            # ADJUSTED INDEXING: 
-            # Based on your error log, the data shifted. 
-            # We check if start_col+1 is empty and adjust if needed.
             col_offset = start_col
             if not row[col_offset + 1].strip():
                 col_offset += 1 # Skip the empty spacer column

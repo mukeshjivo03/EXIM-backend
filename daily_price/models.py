@@ -13,3 +13,4 @@ class DailyPrice(models.Model):
 
     class Meta:
         unique_together = ('commodity_name' , 'date')
+        db_table  = 'daily_prices'
