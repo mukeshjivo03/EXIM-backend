@@ -51,7 +51,9 @@ INSTALLED_APPS = [
     'tank',
     'sap_sync',
     'accounts',
-    'stock'
+    'stock',
+    'domestic_contract',
+    'daily_price'
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

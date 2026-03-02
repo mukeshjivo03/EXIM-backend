@@ -22,5 +22,6 @@ urlpatterns = [
     path('account/' , include('accounts.urls')),
     path('' , include('sap_sync.urls')),
     path('tank/' , include('tank.urls')),
-    path('stock-status/' , include('stock.urls'))
+    path('stock-status/' , include('stock.urls')),
+    path('daily-price/' , include('daily_price.urls')),
 ]
