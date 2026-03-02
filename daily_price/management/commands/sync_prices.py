@@ -14,7 +14,6 @@ class Command(BaseCommand):
             return
 
         for row in data:
-            # Matches fields from your Today's Rate table
             obj, created = DailyPrice.objects.update_or_create(
                 commodity_name=row['commodity_name'],
                 date=row['fetched_date'],

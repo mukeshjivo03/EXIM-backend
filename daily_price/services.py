@@ -2,7 +2,7 @@ import csv
 import requests
 from io import StringIO
 from datetime import date
-from decimal import Decimal, InvalidOperation  
+from decimal import Decimal, InvalidOperation
 
 def fetch_table_manually():
     URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2LwtfXKkkDiVzOc_T591-4KWwUvKW-ZaJokeixIzHkOyHNSjGv5Ilh3597ZgaMA/pub?gid=655973128&single=true&output=csv"
@@ -10,7 +10,7 @@ def fetch_table_manually():
     f = StringIO(response.text)
     reader = list(csv.reader(f))
 
-    # Find "Commodities"
+    # 1. Find the Anchor
     start_row, start_col = None, None
     for r_idx, row in enumerate(reader):
         for c_idx, cell in enumerate(row):
@@ -21,34 +21,27 @@ def fetch_table_manually():
 
     if start_row is None: return []
 
+    def clean_dec(val):
+        if not val or not str(val).strip(): return Decimal('0.00')
+        try:
+            return Decimal(str(val).replace(',', '').strip())
+        except (InvalidOperation, ValueError): return Decimal('0.00')
+
+    # 2. Extract with correct spacing
     final_data = []
-    for i in range(1, 13):
+    for i in range(1, 13): # The 12 items in your list
         try:
             row = reader[start_row + i]
             
-            def clean_dec(val):
-                if not val or not str(val).strip():
-                    return Decimal('0.00')
-                try:
-                    clean_val = str(val).replace(',', '').strip()
-                    return Decimal(clean_val)
-                except (InvalidOperation, ValueError):
-                    return Decimal('0.00')
-
-            col_offset = start_col
-            if not row[col_offset + 1].strip():
-                col_offset += 1 # Skip the empty spacer column
-
+            # We skip every other column due to the thin separators in your sheet
             final_data.append({
                 "commodity_name": row[start_col].strip(),
-                "factory_kg": clean_dec(row[col_offset + 1]),
-                "packing_kg": clean_dec(row[col_offset + 2]),
-                "gst_kg": clean_dec(row[col_offset + 3]),
-                "gst_ltr": clean_dec(row[col_offset + 4]),
-                "fetched_date": date.today().isoformat()
+                "factory_kg":     clean_dec(row[start_col + 2]),
+                "packing_kg":     clean_dec(row[start_col + 4]),
+                "gst_kg":         clean_dec(row[start_col + 6]),
+                "gst_ltr":        clean_dec(row[start_col + 8]),
+                "fetched_date":   date.today().isoformat()
             })
         except IndexError:
             continue
-
     return final_data
-
