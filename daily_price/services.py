@@ -27,7 +27,6 @@ def fetch_table_manually():
             return Decimal(str(val).replace(',', '').strip())
         except (InvalidOperation, ValueError): return Decimal('0.00')
 
-    # 2. Extract with correct spacing
     final_data = []
     for i in range(1, 13): # The 12 items in your list
         try:

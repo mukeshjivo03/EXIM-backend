@@ -33,25 +33,26 @@ class PriceFetchView(APIView):
             "preview_data": data
         })
 
-    def post(self,request):
+    def post(self, request):
         data = fetch_table_manually()
-        if isinstance(data,dict) and "error" in data:
-            return Response(data , status= 400)
-
+        if isinstance(data, dict) and "error" in data:
+            return Response(data, status=400)
+    
         print(data)
         for row in data:
             DailyPrice.objects.update_or_create(
-                commodity_name = row['commodity_name'],
-                date = row['fetched_date'],
-                defaults = {
+                commodity_name=row['commodity_name'],
+                date=row['fetched_date'],
+                defaults={
                     'factory_price': row['factory_kg'],
                     'packing_cost_kg': row['packing_kg'],
                     'with_gst_kg': row['gst_kg'],
                     'with_gst_ltr': row['gst_ltr'],
                 }
             )
-
-            return Response({"status": "Successfully posted to database"})
+    
+        # Move this outside the loop!
+        return Response({"status": f"Successfully processed {len(data)} rows"})
 
 
 class DailyPriceTrend(APIView):
