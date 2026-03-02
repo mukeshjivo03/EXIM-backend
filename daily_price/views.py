@@ -1,13 +1,23 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import generics
 from datetime import date, timedelta
 from collections import defaultdict
 from django.http import JsonResponse
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .services import fetch_table_manually
 from .models import DailyPrice
 from.serializers import DailyPriceSerializer
+
+
+class DailyPriceListView(generics.ListAPIView):
+    queryset = DailyPrice.objects.all()
+    serializer_class = DailyPriceSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['date']
+
 
 class PriceFetchView(APIView):
     def get(self, request):
