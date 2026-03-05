@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import RMProducts ,FGProducts , Party , syncLogs
+from .models import RMProducts ,FGProducts , Party , syncLogs , DomesticContracts
 
 
 class RMProductSerializer(serializers.ModelSerializer):
@@ -20,4 +20,9 @@ class PartySerializer(serializers.ModelSerializer):
 class SyncLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = syncLogs
+        fields = '__all__'
+
+class DomesticContractSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DomesticContracts
         fields = '__all__'

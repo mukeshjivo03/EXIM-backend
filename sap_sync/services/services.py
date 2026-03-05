@@ -1,7 +1,7 @@
 from django.utils import timezone
 
 from .connections import SAPConnection , Queries
-from ..models import syncLogs , RMProducts , FGProducts , Party
+from ..models import syncLogs , RMProducts , FGProducts , Party , DomesticContracts 
 
 class ProductServices:
     
@@ -302,4 +302,112 @@ class PartyServices:
             
             raise Exception(f"Service Error: {str(e)}")
     
+    
+
+class POService:
+    def __init__(self):
+        self.connection = SAPConnection()
+    
+    # def syncPOs(self):
+    #     with self.connection as conn:
+    #         query = Queries.get_all_pos()
+    #         result = conn.execute_query(query)
                 
+    #     return result   
+    
+    def syncPOs(self):
+        contracts = []
+        log = syncLogs.objects.create(
+            sync_type = 'DMC',
+            status = 'STR',
+            triggered_by = 'Manual',
+            started_at = timezone.now()
+        )
+        
+        try:
+            with self.connection as conn:
+                query = Queries.get_all_pos()
+                result = conn.execute_query(query) 
+                
+            seen = set()
+            for row in result:
+                po_number = str(row.get('PO Number', '')).strip()
+                grpo_no = str(row.get('GRPO Number') or '').strip()
+
+                if not po_number:
+                    continue
+                
+                key = (po_number, grpo_no)
+                if key in seen:
+                    continue 
+                seen.add(key)
+
+                contracts.append(
+                    DomesticContracts(
+                        po_number=po_number,
+                        grpo_no=grpo_no,
+                        po_date = row.get('PO Date'),
+                        status = row.get('Status'),
+                        product_code = row.get('Product Code'),
+                        product_name = row.get('Product'),
+                        vendor = row.get('Vendor'),
+                        contract_qty = row.get('Contract Qty'),
+                        contract_rate = row.get('Contract Rate'),
+                        contract_value = row.get('Contract Value'),
+                        load_qty = row.get('Load Qty'),
+                        unload_qty = row.get('Unload Qty'),
+                        allowance = row.get('Allowance'),
+                        transporter = row.get('Transporter'),
+                        vehicle_no = row.get('Vehicle No'),
+                        bilty_no = row.get('Bilty Number'),
+                        bilty_date = row.get('Bilty Date'),
+                        grpo_date = row.get('GRPO Date'),
+                        invoice_no = row.get('Invoice Number'),
+                        basic_amount = row.get('Basic Amount'),
+                        landed_cost = row.get('Landed Cost'),
+                        net_amount = row.get('Net Amount'),
+                    )
+                )
+
+            if contracts:
+                DomesticContracts.objects.bulk_create(
+                        contracts,
+                        batch_size=1000,
+                        update_conflicts=True,
+                        unique_fields=['po_number' , 'grpo_no'],
+                        update_fields=['po_date', 'status', 'product_code', 'product_name', 'vendor', 'contract_qty', 'contract_rate', 'contract_value', 'load_qty', 'unload_qty', 'allowance', 'transporter', 'vehicle_no', 'bilty_no', 'bilty_date', 'grpo_date', 'invoice_no', 'basic_amount', 'landed_cost', 'net_amount']
+                    )
+                   
+            log.status = 'SCS'
+            log.completed_at = timezone.now()
+            log.records_procesed = len(contracts)
+            log.save()
+            
+            return len(contracts)
+                
+        except Exception as e:
+            log.status = 'FLD'
+            log.completed_at = timezone.now()
+            log.error_message = str(e)
+            log.save()
+            
+            raise Exception(f"Service Error: {str(e)}")
+        
+        
+    def syncView(self):
+        with self.connection as conn:
+                query = Queries.get_all_pos()
+                result = conn.execute_query(query) 
+                
+        return result   
+    
+class BalanceSheetService:
+    def __init__(self):
+        self.connection = SAPConnection()
+        
+    def syncBalanceSheet(self):
+        with self.connection as conn:
+            query = Queries.get_balance_sheet()
+            result = conn.execute_query(query)
+            
+        return result   

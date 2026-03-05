@@ -134,3 +134,28 @@ class TankItemWiseSummary(APIView):
             })
 
         return Response(results)
+    
+    
+class TankCapacityInsights(APIView):
+    
+    def get(self,request):
+        aggregate = TankData.objects.aggregate(
+            total_capacity = Sum('tank_capacity'),
+            current_capacity = Sum('current_capacity')
+        )
+        
+        total_capacity = aggregate['total_capacity']
+        filled_capacity = aggregate['current_capacity']
+        empty_capacity = total_capacity - filled_capacity
+        filled_percentage = round(((filled_capacity / total_capacity) * 100) , 2)
+        empty_percentage = round(((empty_capacity / total_capacity) * 100),2)
+
+        return Response({
+            "total_capacity" : total_capacity,
+            "filled_capacity" : filled_capacity,
+            "filled_percentage" : filled_percentage,
+            "empty_capacity" : empty_capacity,
+            "empty_percentage" : empty_percentage
+        })            
+        
+        

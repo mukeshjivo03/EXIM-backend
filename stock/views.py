@@ -19,12 +19,7 @@ class StockStatusListCreateView(generics.ListCreateAPIView):
     filterset_class = StockStatusFilters
 
 
-class StockStatusUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = StockStatus.objects.all()
-    serializer_class = StockStatusSerializer
-    permission_classes = [IsAdminUser]
-    lookup_field =  'id'
-
+  
 class StockUpdateLogListView(generics.ListAPIView):
     queryset = StockStatusUpdateLog.objects.all()
     serializer_class = StockStatusUpdateLogSerializer

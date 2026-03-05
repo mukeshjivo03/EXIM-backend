@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'sap_sync',
     'accounts',
     'stock',
-    'domestic_contract',
     'daily_price'
 ]
 

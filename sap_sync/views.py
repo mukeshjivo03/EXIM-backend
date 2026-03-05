@@ -4,10 +4,11 @@ from rest_framework import generics
 from django.db.models import Sum, Count, Avg
 from decimal import Decimal
 
-from .services.services import PartyServices, ProductServices
+from .services.services import PartyServices, ProductServices , POService , BalanceSheetService
+
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
-from .serializers import RMProductSerializer, FGProductSerializer , PartySerializer , SyncLogSerializer
-from .models import RMProducts , FGProducts , Party , syncLogs
+from .serializers import RMProductSerializer, FGProductSerializer , PartySerializer , SyncLogSerializer, DomesticContractSerializer
+from .models import RMProducts , FGProducts , Party , syncLogs, DomesticContracts
 
       
 # Sync Views
@@ -194,3 +195,42 @@ class SyncLogListView(generics.ListAPIView):
     
     queryset = syncLogs.objects.all()
     serializer_class = SyncLogSerializer
+    
+    
+class syncPOView(APIView):
+    
+    def get(self, request):
+        result = POService().syncPOs()
+        return Response({"records_synced": result})
+    
+    
+class noIngestPOsyncView(APIView):
+    def get(self,request):
+        result = POService().syncView()
+        return Response({"records_synced": result})
+        
+    
+class DomesticContactListView(generics.ListAPIView):
+    
+    permission_classes = [IsAdminUser]
+    
+    queryset = DomesticContracts.objects.all()
+    serializer_class = DomesticContractSerializer
+    
+class DomesticContractRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminUser]
+    
+    queryset = DomesticContracts.objects.all()
+    serializer_class = DomesticContractSerializer
+    lookup_field = 'grpo_no'
+    
+    
+class syncBalanceSheet(APIView):
+    
+    def get(self, request):
+        result = BalanceSheetService().syncBalanceSheet()
+        return Response({"balance_sheet": result})
+    
+    
+
+                                    

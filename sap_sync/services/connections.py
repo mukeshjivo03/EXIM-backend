@@ -147,3 +147,124 @@ FROM OPENQUERY(HANADB112, '
              FROM "JIVO_OIL_HANADB"."OCRD" 
              WHERE "CardCode" = ''{cardCode}'' AND "CardType"=''S'' ')
         """
+        
+    @staticmethod
+    def get_all_pos():
+        return """
+            SELECT * FROM OPENQUERY(HANADB112, '
+            SELECT 
+                -- ===== Contract Information (PO details From OPOR and POR1) =====
+                T3."DocNum" AS "PO Number",
+                T3."DocDate" AS "PO Date",
+                T0."DocStatus" AS "Status",
+                T2."ItemCode" AS "Product Code",
+                T2."Dscription" AS "Product",
+                T0."CardName" AS "Vendor",
+                T2."Quantity" AS "Contract Qty",
+                T2."Price" AS "Contract Rate",
+                T2."LineTotal" AS "Contract Value",
+
+                -- ===== Loading Details (UDFs from PDN1) =====
+                T1."Quantity" AS "Load Qty",
+                T1."U_UNE_CUNT" AS "Unload Qty",
+                T1."U_UNE_LTS" AS "Allowance",
+
+                -- ===== Transport & Freight Details (UDFs from OPDN) =====
+                T0."U_TransporterName" AS "Transporter",
+                T0."U_VehicleNoM" AS "Vehicle No",
+                T0."U_BilltyNumber" AS "Bilty No",
+                T0."U_BiltyDate" AS "Bilty Date",
+
+                -- ===== GRPO & Invoice Details =====
+                T0."DocNum" AS "GRPO Number",
+                T0."DocDate" AS "GRPO Date",
+                T4."NumAtCard" AS "Invoice Number",
+
+                -- ===== Summary & Landed Costs =====
+                T1."LineTotal" AS "Basic Amount",
+
+                -- FIX applied here: Changed CostSum to TtlExpndLC
+                IFNULL(T7."TtlExpndLC", 0) AS "Landed Cost", 
+
+                T4."DocTotal" AS "Net Amount"
+
+            FROM "JIVO_OIL_HANADB"."OPDN" T0                                     -- GRPO Header
+            INNER JOIN "JIVO_OIL_HANADB"."PDN1" T1 ON T0."DocEntry" = T1."DocEntry" -- GRPO Lines
+
+            -- Join back to the Purchase Order Lines
+            LEFT JOIN "JIVO_OIL_HANADB"."POR1" T2 ON T1."BaseEntry" = T2."DocEntry" 
+                             AND T1."BaseLine" = T2."LineNum" 
+                             AND T1."BaseType" = 22          -- 22 ensures it only links to POs
+
+            -- Join back to Purchase Order Header
+            LEFT JOIN "JIVO_OIL_HANADB"."OPOR" T3 ON T2."DocEntry" = T3."DocEntry"
+
+            -- Join to AP Invoice Lines & Header
+            LEFT JOIN "JIVO_OIL_HANADB"."PCH1" T5 ON T5."BaseEntry" = T0."DocEntry" 
+                             AND T5."BaseLine" = T1."LineNum"
+                             AND T5."BaseType" = 20          -- 20 ensures it only links to GRPOs
+            LEFT JOIN "JIVO_OIL_HANADB"."OPCH" T4 ON T5."DocEntry" = T4."DocEntry"
+
+            -- Landed Cost Link (IPF1 uses OrigLine for the base line reference)
+            LEFT JOIN "JIVO_OIL_HANADB"."IPF1" T7 ON T7."BaseEntry" = T0."DocEntry" 
+                             AND T7."OrigLine" = T1."LineNum" 
+                             AND T7."BaseType" = 20
+            LEFT JOIN "JIVO_OIL_HANADB"."OIPF" T6 ON T7."DocEntry" = T6."DocEntry"
+
+            -- Add a WHERE clause to filter for a specific document or date range
+            WHERE T3."DocDate" > ''2025-03-31 00:00:00.000''')
+        """
+
+    @staticmethod
+    def get_balance_sheet():
+        return """
+        SELECT * FROM OPENQUERY(HANADB112, '
+                WITH "VendorLatestTransaction" AS (
+                    SELECT
+                        a."CardCode",
+                        a."CardName",
+                        CAST(a."Balance" AS DECIMAL(18,2)) AS "Balance",
+                        b."RefDate" AS "Last Transaction Date",
+                        CAST(b."Debit" AS DECIMAL(18,2)) AS "Last Transanction Amount",
+                        ROW_NUMBER() OVER (PARTITION BY a."CardCode" ORDER BY b."RefDate" DESC) AS "RowNum"
+                    FROM "JIVO_OIL_HANADB"."OCRD" a
+                    INNER JOIN "JIVO_OIL_HANADB"."JDT1" b ON a."CardCode" = b."ShortName"
+                    WHERE b."RefDate" >= ''2024-10-01'' AND b."Debit" > 0 AND
+                    a."CardCode" IN (
+                        ''CUSTA000908'', ''CUSTA000887'', ''CUSTA000907'', ''VENDA000005'', ''VENDA000038'',
+                        ''VENDA000102'', ''VENDA000149'', ''VENDA000316'', ''VENDA000509'', ''VENDA000724'',
+                        ''VENDA001035'', ''VENDA001048'', ''VENDA001203'', ''CUSTA000341'', ''VENDA000103'',
+                        ''VENDA000178'', ''VENDA000205'', ''VENDA000224'', ''VENDA000083'', ''VENDA000245'',
+                        ''VENDA000255'', ''VENDA000265'', ''VENDA000342'', ''VENDA000496'', ''VENDA000693'',
+                        ''VENDA000698'', ''VENDA000714'', ''VENDA001442'', ''VENDA001450'', ''VENDA000784'',
+                        ''VENDA000804'', ''VENDA000916'', ''VENDA000950'', ''VENDA000966'', ''VENDA000967'',
+                        ''VENDA001028'', ''VENDA001030'', ''VENDA001175'', ''VENDA001424'', ''VENDA001240'',
+                        ''VENDA001276'', ''VENDA001287'', ''VENDA001288'', ''VENDA001403'', ''VENDA001390'',
+                        ''VENDA001423'', ''VENDA001559'', ''VENDA000671'', ''VENDA000616'', ''VENDA001304'',
+                        ''VENDA001315'', ''VENDA001339'', ''VENDA001347'', ''VENDA001358'', ''VENDA001375'',
+                        ''VENDA000498'', ''VENDA001494'', ''VENDA001386'', ''VENDA001272'', ''VENDA000596'',
+                        ''VENDA001028'', ''VENDA001303'', ''VENDA000614'', ''VENDA000279'', ''VENDA000599'',
+                        ''VENDA000953'', ''VENDA001132'', ''VENDA001565'', ''VENDA000212'', ''VENDA000043'',
+                        ''VENDA000580'', ''VENDA000493'', ''VENDA001421'', ''VENDA001353'', ''VENDA000220'',
+                        ''VENDA001543'', ''VENDA001331'', ''VENDA000966'', ''VENDA001022'', ''VENDA000994'',
+                        ''VENDA001472'', ''VENDA001329'', ''VENDA001291'', ''VENDA001138'', ''VENDA001295'',
+                        ''VENDA000593'', ''VENDA000731'', ''VENDA000947'', ''VENDA001287'', ''VENDA001278'',
+                        ''VENDA001490'', ''VENDA000256'', ''VENDA000556'', ''VENDA001107'', ''VENDA001239'',
+                        ''VENDA000482'', ''VENDA000967'', ''VENDA001373'', ''VENDA001174'', ''VENDA000104'',
+                        ''VENDA001555'', ''VENDA001293'', ''VENDA000750'', ''VENDA000325'', ''VENDA000931'',
+                        ''VENDA000399'', ''VENDA001521'', ''VENDA000503'', ''VENDA000327'', ''VENDA000775'',
+                        ''VENDA000020'', ''VENDA001334'', ''VENDA001335'', ''VENDA000208'', ''VENDA000676'',
+                        ''VENDA001170'', ''VENDA000150'', ''VENDA001556'', ''VENDA000703'', ''VENDA001030'',
+                        ''VENDA000387'', ''VENDA000629'', ''VENDA000940'', ''VENDA001541'', ''VENDA001052'',
+                        ''VENDA001207'', ''VENDA001242'', ''VENDA000382'', ''VENDA001531'', ''CUSTA001092'',
+                        ''VENDA000930'', ''VENDA000252'', ''VENDA000633'', ''VENDA000052'', ''VENDA001326'',
+                        ''VENDA000597'', ''VENDA000388'', ''VENDA001240'', ''VENDA000558'', ''VENDA000161'',
+                        ''VENDA001199'', ''VENDA000006'', ''VENDA001233'', ''VENDA001296'', ''VENDA000934'',
+                        ''VENDA000202'', ''VENDA001263'', ''VENDA000527'', ''VENDA000134''
+                    )
+                )
+                SELECT "CardCode", "CardName", "Balance", "Last Transaction Date", "Last Transanction Amount"
+                FROM "VendorLatestTransaction"
+                WHERE "RowNum" = 1
+            ')
+        """

@@ -5,7 +5,8 @@ class syncLogs(models.Model):
     
     SYNC_TYPE = (
         ('PRT' , 'Parties'),
-        ('PRD' , 'Product'),
+        ('PRD' , 'Products'),
+        ('DMC', 'Domestic_Contracts')
     )
 
     
@@ -82,3 +83,41 @@ class Party(models.Model):
     
     class Meta:
         db_table = 'Party'
+        
+class DomesticContracts(models.Model):
+    po_number = models.CharField(max_length=50) 
+    po_date = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=5, null=True, blank=True)
+    product_code = models.CharField(max_length=50, null=True, blank=True)
+    product_name = models.CharField(max_length=255, null=True, blank=True)
+    vendor = models.CharField(max_length=255, null=True, blank=True)
+    contract_qty = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    contract_rate = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    contract_value = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    load_qty = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True) 
+    unload_qty = models.CharField(max_length=5, null=True, blank=True)  
+    allowance = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    transporter = models.CharField(max_length=255, null=True, blank=True)
+    vehicle_no = models.CharField(max_length=30, null=True, blank=True)
+    bilty_no = models.CharField(max_length=30, null=True, blank=True)
+    bilty_date = models.DateField(null=True, blank=True)
+    grpo_no = models.CharField(max_length=30, null=True, blank=True)
+    grpo_date = models.DateField(null=True, blank=True)
+    invoice_no = models.CharField(max_length=30, null=True, blank=True)
+    basic_amount = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    landed_cost = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+    net_amount = models.DecimalField(max_digits=15, decimal_places=4, null=True, blank=True)
+
+    
+    
+    
+    class Meta:
+        db_table = 'domestic_contracts'
+        unique_together = ('po_number', 'grpo_no')
+    
+    
+    
+    
+
+    
+    

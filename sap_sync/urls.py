@@ -1,6 +1,11 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView
+from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet
+
+
+
+
+
 
 
 
@@ -22,6 +27,13 @@ urlpatterns = [
     
     path('party/<str:card_code>/',PartyGetandDeleteView.as_view()),
     path('parties/',PartyListView.as_view()),
-    path('sync_logs/' , SyncLogListView.as_view())
+    path('sync_logs/' , SyncLogListView.as_view()),
+
+    path('sap-sync/po/' , syncPOView.as_view()),
+    path('pos/' , DomesticContactListView.as_view()),
+    path('po/<str:grpo_no>/' , DomesticContractRetrieveUpdateDeleteView.as_view()),
+    
+    
+    path('sap-sync/balance-sheet/' , syncBalanceSheet.as_view())
 
 ]
