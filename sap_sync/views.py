@@ -226,7 +226,7 @@ class DomesticContractRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPI
     
     
 class syncBalanceSheet(APIView):
-    permission_classes = [IsAdminUser  , IsManagerUser]
+    permission_classes = [IsAdminUser  |  IsManagerUser]
     
     def get(self, request):
         result = BalanceSheetService().syncBalanceSheet()
