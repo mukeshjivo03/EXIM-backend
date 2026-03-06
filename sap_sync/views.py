@@ -212,7 +212,6 @@ class syncSinglePOView(APIView):
     
     
 class DomesticContactListView(generics.ListAPIView):
-    
     permission_classes = [IsAdminUser]
     
     queryset = DomesticContracts.objects.all()

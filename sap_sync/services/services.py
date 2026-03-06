@@ -394,54 +394,49 @@ class POService:
             raise Exception(f"Service Error: {str(e)}")
         
         
-def syncPO(self, grpo_no):
-    if not grpo_no:
-        raise Exception("Please Provide GRPO Number")
+    def syncPO(self, grpo_no):
+        if not grpo_no:
+            raise Exception("Please Provide GRPO Number")
 
-    with self.connection as conn:
-        query = Queries.get_single_po(grpo_no)
-        result = conn.execute_query(query)
+        with self.connection as conn:
+            query = Queries.get_single_po(grpo_no)
+            result = conn.execute_query(query)
 
-    if not result:
-        raise Exception(f"No data found for GRPO: {grpo_no}")
+        if not result:
+            raise Exception(f"No data found for GRPO: {grpo_no}")
 
-    synced = []
-    for row in result:
-        obj, created = DomesticContracts.objects.update_or_create(
-            # Lookup fields (your unique_together)
-            po_number=row.get('po_number'),
-            grpo_no=row.get('grpo_no'),
-            # Fields to update or set on create
-            defaults={
-                'po_date': row.get('po_date'),
-                'status': row.get('status'),
-                'product_code': row.get('product_code'),
-                'product_name': row.get('product_name'),
-                'vendor': row.get('vendor'),
-                'contract_qty': row.get('contract_qty'),
-                'contract_rate': row.get('contract_rate'),
-                'contract_value': row.get('contract_value'),
-                'load_qty': row.get('load_qty'),
-                'unload_qty': row.get('unload_qty'),
-                'allowance': row.get('allowance'),
-                'transporter': row.get('transporter'),
-                'vehicle_no': row.get('vehicle_no'),
-                'bilty_no': row.get('bilty_no'),
-                'bilty_date': row.get('bilty_date'),
-                'grpo_date': row.get('grpo_date'),
-                'invoice_no': row.get('invoice_no'),
-                'basic_amount': row.get('basic_amount'),
-                'landed_cost': row.get('landed_cost'),
-                'net_amount': row.get('net_amount'),
-            }
-        )
-        synced.append({
-            'po_number': obj.po_number,
-            'grpo_no': obj.grpo_no,
-            'action': 'created' if created else 'updated'
-        })
+        for row in result:
 
-    return synced
+            obj, created = DomesticContracts.objects.update_or_create(
+                # Lookup fields (your unique_together)
+                po_number=row.get('PO Number'),
+                grpo_no=row.get('GRPO Number'),
+                # Fields to update or set on create
+                defaults={
+                    'po_date': row.get('PO Date'),
+                    'status': row.get('Status'),
+                    'product_code': row.get('Product Code'),
+                    'product_name': row.get('Product'),
+                    'vendor' : row.get('Vendor'),
+                    'contract_qty' : row.get('Contract Qty'),
+                    'contract_rate' : row.get('Contract Rate'),
+                    'contract_value' : row.get('Contract Value'),
+                    'load_qty' : row.get('Load Qty'),
+                    'unload_qty' : row.get('Unload Qty'),
+                    'allowance' : row.get('Allowance'),
+                    'transporter' : row.get('Transporter'),
+                    'vehicle_no' : row.get('Vehicle No'),
+                    'bilty_no' : row.get('Bilty Number'),
+                    'bilty_date' : row.get('Bilty Date'),
+                    'grpo_date' : row.get('GRPO Date'),
+                    'invoice_no' : row.get('Invoice Number'),
+                    'basic_amount' : row.get('Basic Amount'),
+                    'landed_cost' : row.get('Landed Cost'),
+                    'net_amount' : row.get('Net Amount'),
+                }
+            )
+
+        return result
         
     
 class BalanceSheetService:
