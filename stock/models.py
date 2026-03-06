@@ -20,9 +20,9 @@ class StockStatus(models.Model):
         ('PROCESSING' , 'PROCESSING')
     )
     
-    item_code = models.ForeignKey(RMProducts, on_delete=models.CASCADE, to_field = 'item_code')
+    item_code = models.ForeignKey(RMProducts, on_delete=models.SET_NULL, null=True ,to_field = 'item_code')
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
-    vendor_code = models.ForeignKey(Party, on_delete=models.CASCADE)
+    vendor_code = models.ForeignKey(Party, on_delete=models.SET_NULL , null = True , to_field = 'card_code')
     rate = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=20, decimal_places=2 , editable = False , default = '0.00')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
@@ -65,7 +65,7 @@ class StockStatus(models.Model):
 
 
 class StockStatusUpdateLog(models.Model):
-    stock_id = models.ForeignKey(StockStatus , on_delete=models.PROTECT)
+    stock_id = models.ForeignKey(StockStatus , on_delete=models.SET_NULL , null = True)
     field_name = models.CharField(max_length=30)   
     old_value = models.CharField(max_length=30)
     new_value = models.CharField(max_length=30)

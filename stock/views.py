@@ -2,7 +2,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 from rest_framework.response import Response
-from django.db.models import Sum, Case, When, DecimalField, Value , Count , F
+from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField
 from decimal import Decimal
 from collections import defaultdict, OrderedDict
 
@@ -116,11 +116,59 @@ STATUS_DISPLAY_ORDER = [
     'DELIVERED',
 ]
 
+
+
+def allocate_fifo(tank_qty, completed_entries):
+    """
+    FIFO allocation: the stock REMAINING in the tank is the NEWEST stock.
+
+    Walk through completed entries from newest → oldest, allocating
+    quantity until the tank total is fully accounted for.
+
+    Args:
+        tank_qty: float — total current_capacity from tank meters
+        completed_entries: list of dicts with 'rate', 'quantity', 'vendor',
+                          already ordered newest-first
+
+    Returns:
+        list of dicts: [{'rate': float, 'qty': float, 'vendor': str}, ...]
+    """
+    remaining = float(tank_qty)
+    allocations = []
+
+    for entry in completed_entries:
+        if remaining <= 0:
+            break
+
+        entry_qty = float(entry['quantity'] or 0)
+        entry_rate = float(entry['rate'] or 0)
+
+        allocated = min(remaining, entry_qty)
+        allocations.append({
+            'rate': entry_rate,
+            'qty': allocated,
+            'vendor': entry.get('vendor', ''),
+        })
+        remaining -= allocated
+
+    # If tank has more than sum of COMPLETED entries (measurement variance),
+    # add the remainder as "unallocated"
+    if remaining > 0:
+        allocations.append({
+            'rate': 0,
+            'qty': remaining,
+            'vendor': 'Unallocated',
+        })
+
+    return allocations
+
+
 class StockDashboard(APIView):
-   def get(self, request):
+
+    def get(self, request):
 
         # ────────────────────────────────────────────────────────────
-        # 1.  IN FACTORY  (from TankData → grouped by item_code)
+        # 1.  IN FACTORY — Tank totals per item
         # ────────────────────────────────────────────────────────────
         tank_qs = (
             TankData.objects
@@ -133,7 +181,58 @@ class StockDashboard(APIView):
         }
 
         # ────────────────────────────────────────────────────────────
-        # 2.  OUTSIDE FACTORY  (StockStatus, no vendor breakdown)
+        # 1b. IN FACTORY — FIFO rate breakdown from COMPLETED entries
+        #
+        #     Use StockStatusUpdateLog to find the ACTUAL timestamp
+        #     when each entry became COMPLETED, then sort newest first.
+        # ────────────────────────────────────────────────────────────
+
+        # Subquery: get the timestamp when this stock entry became COMPLETED
+        completed_at_subquery = (
+            StockStatusUpdateLog.objects
+            .filter(
+                stock_id=OuterRef('pk'),
+                field_name='status',
+                new_value='COMPLETED',
+            )
+            .order_by('-updated_at')    # latest log wins (in case of multiple)
+            .values('updated_at')[:1]
+        )
+
+        completed_qs = (
+            StockStatus.objects
+            .filter(deleted=False, status='COMPLETED')
+            .annotate(
+                completed_at=Subquery(completed_at_subquery, output_field=DateTimeField())
+            )
+            # Primary sort: actual completed timestamp from log (newest first)
+            # Fallback: created_at if no log entry exists
+            .order_by(F('completed_at').desc(nulls_last=True), '-created_at')
+            .values(
+                'item_code_id',
+                'rate',
+                'quantity',
+                'completed_at',
+                vendor=F('vendor_code__card_name'),
+            )
+        )
+
+        # Group completed entries by item_code, preserving order (newest first)
+        completed_by_item = defaultdict(list)
+        for row in completed_qs:
+            completed_by_item[row['item_code_id']].append(row)
+
+        # Run FIFO allocation for each item that has tank stock
+        in_factory_rates = {}
+        for item_code, tank_qty in in_factory_map.items():
+            if tank_qty > 0:
+                entries = completed_by_item.get(item_code, [])
+                in_factory_rates[item_code] = allocate_fifo(tank_qty, entries)
+            else:
+                in_factory_rates[item_code] = []
+
+        # ────────────────────────────────────────────────────────────
+        # 2.  OUTSIDE FACTORY  (no vendor breakdown)
         # ────────────────────────────────────────────────────────────
         outside_qs = (
             StockStatus.objects
@@ -147,18 +246,17 @@ class StockDashboard(APIView):
 
         # ────────────────────────────────────────────────────────────
         # 3.  ALL OTHER STATUSES  (with vendor sub-columns)
+        #     Excludes OUT_SIDE_FACTORY and COMPLETED (already in factory)
         # ────────────────────────────────────────────────────────────
         stock_qs = (
             StockStatus.objects
             .filter(deleted=False)
-            .exclude(status='OUT_SIDE_FACTORY')
+            .exclude(status__in=['OUT_SIDE_FACTORY', 'COMPLETED'])
             .values('item_code_id', 'status', vendor_name=F('vendor_code__card_name'))
             .annotate(qty=Sum('quantity'))
         )
 
-        # status_vendors : {status: {vendor_name, ...}}
         status_vendors = defaultdict(set)
-        # item_data : {item_code: {(status, vendor): qty}}
         item_data = defaultdict(lambda: defaultdict(float))
         all_items = set()
 
@@ -172,13 +270,12 @@ class StockDashboard(APIView):
             item_data[item][(status, vendor)] = qty
             all_items.add(item)
 
-        # Merge item codes from all three sources
+        # Merge item codes from all sources
         all_items.update(in_factory_map.keys())
         all_items.update(outside_factory_map.keys())
 
         # ────────────────────────────────────────────────────────────
         # 4.  BUILD ORDERED STATUS → VENDORS MAP
-        #     (only statuses that have data, in display order)
         # ────────────────────────────────────────────────────────────
         ordered_status_vendors = OrderedDict()
         for status in STATUS_DISPLAY_ORDER:
@@ -198,7 +295,6 @@ class StockDashboard(APIView):
             out_fac = outside_factory_map.get(item_code, 0)
             row_total = in_fac + out_fac
 
-            # Build status__vendor cells
             status_data = {}
             for status, vendors in ordered_status_vendors.items():
                 for vendor in vendors:
@@ -211,6 +307,7 @@ class StockDashboard(APIView):
             items.append({
                 'item_code': item_code,
                 'in_factory': in_fac,
+                'in_factory_rates': in_factory_rates.get(item_code, []),
                 'outside_factory': out_fac,
                 'status_data': status_data,
                 'total': row_total,
@@ -240,7 +337,4 @@ class StockDashboard(APIView):
                 'grand_total': grand_total,
             },
         })
-
-
-
-
+        
