@@ -206,7 +206,7 @@ class syncPOView(APIView):
     
 
 class syncSinglePOView(APIView):
-    permission_classes = [IsAdminUser , IsManagerUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
 
     def get(self, request, grpo_no):
         result = POService().syncPO(grpo_no)
