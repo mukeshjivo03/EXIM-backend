@@ -2,7 +2,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 from rest_framework.response import Response
-from django.db.models import Sum, Case, When, DecimalField, Value
+from django.db.models import Sum, Case, When, DecimalField, Value , Count
 from decimal import Decimal
 
 from .models import StockStatus ,StockStatusUpdateLog
@@ -34,14 +34,10 @@ class StockUpdateLogListView(generics.ListAPIView):
 class StockStatusInsights(APIView):
     
     def get(self, request):
-        # Initial filter for non-deleted records
         queryset = StockStatus.objects.filter(deleted=False)
-        
-        # Apply filters from request.GET
         filterset = StockStatusFilters(request.GET, queryset=queryset)
         if filterset.is_valid():
             queryset = filterset.qs
-
         # FIXED: Use Count('id') for the total number of records
         insights = queryset.aggregate(
             total_value=Sum("total"),
