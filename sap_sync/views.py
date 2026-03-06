@@ -219,7 +219,7 @@ class DomesticContactListView(generics.ListAPIView):
     serializer_class = DomesticContractSerializer
     
 class DomesticContractRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser , IsManagerUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
     queryset = DomesticContracts.objects.all()
     serializer_class = DomesticContractSerializer
     lookup_field = 'id'
