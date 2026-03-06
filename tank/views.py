@@ -3,9 +3,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Sum, Count
+from collections import defaultdict
+from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField
 from decimal import Decimal
 
+
+
+from stock.models import StockStatus, StockStatusUpdateLog
 from .models import TankItem, TankData
 from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
@@ -159,3 +163,183 @@ class TankCapacityInsights(APIView):
         })            
         
         
+
+
+
+def allocate_fifo(total_qty, completed_entries):
+    """
+    FIFO: remaining stock = newest deliveries.
+    Walk newest → oldest, allocating until total_qty is filled.
+
+    Args:
+        total_qty: float — total current_capacity for this item across all tanks
+        completed_entries: list of dicts, ordered newest-first, with
+                          'rate', 'quantity', 'vendor'
+
+    Returns:
+        list of dicts: [{'rate': float, 'qty': float, 'vendor': str}, ...]
+    """
+    remaining = float(total_qty)
+    allocations = []
+
+    for entry in completed_entries:
+        if remaining <= 0:
+            break
+
+        entry_qty = float(entry['quantity'] or 0)
+        entry_rate = float(entry['rate'] or 0)
+
+        allocated = min(remaining, entry_qty)
+        allocations.append({
+            'rate': entry_rate,
+            'qty': allocated,
+            'vendor': entry.get('vendor', ''),
+        })
+        remaining -= allocated
+
+    if remaining > 0:
+        allocations.append({
+            'rate': 0,
+            'qty': remaining,
+            'vendor': 'Unallocated',
+        })
+
+    return allocations
+
+
+def distribute_to_tank(tank_qty, item_total, item_allocations):
+    """
+    Proportionally distribute item-level FIFO allocations to a single tank.
+
+    Args:
+        tank_qty: float — this tank's current_capacity
+        item_total: float — total current_capacity for this item across ALL tanks
+        item_allocations: list from allocate_fifo()
+
+    Returns:
+        list of dicts with proportional quantities, and weighted avg rate
+    """
+    if item_total <= 0 or tank_qty <= 0:
+        return [], 0
+
+    ratio = tank_qty / item_total
+    breakdown = []
+    total_value = 0
+
+    for alloc in item_allocations:
+        proportional_qty = round(alloc['qty'] * ratio, 2)
+        if proportional_qty > 0:
+            breakdown.append({
+                'rate': alloc['rate'],
+                'qty': proportional_qty,
+                'vendor': alloc['vendor'],
+            })
+            total_value += proportional_qty * alloc['rate']
+
+    weighted_avg = round(total_value / tank_qty, 2) if tank_qty > 0 else 0
+
+    return breakdown, weighted_avg
+
+
+class TankRateBreakdownView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        # ────────────────────────────────────────────────────────────
+        # 1. Get all active tanks
+        # ────────────────────────────────────────────────────────────
+        tanks = (
+            TankData.objects
+            .filter(is_active=True, item_code__isnull=False)
+            .select_related('item_code')
+            .order_by('item_code__tank_item_code', 'tank_code')
+        )
+
+        # ────────────────────────────────────────────────────────────
+        # 2. Sum current_capacity per item (across all tanks)
+        # ────────────────────────────────────────────────────────────
+        item_totals_qs = (
+            TankData.objects
+            .filter(is_active=True, item_code__isnull=False)
+            .values(item=F('item_code__tank_item_code'))
+            .annotate(total=Sum('current_capacity'))
+        )
+        item_totals = {
+            row['item']: float(row['total'] or 0) for row in item_totals_qs
+        }
+
+        # ────────────────────────────────────────────────────────────
+        # 3. FIFO: get COMPLETED entries per item, ordered by actual
+        #    completion date from update log (newest first)
+        # ────────────────────────────────────────────────────────────
+        completed_at_subquery = (
+            StockStatusUpdateLog.objects
+            .filter(
+                stock_id=OuterRef('pk'),
+                field_name='status',
+                new_value='COMPLETED',
+            )
+            .order_by('-updated_at')
+            .values('updated_at')[:1]
+        )
+
+        completed_qs = (
+            StockStatus.objects
+            .filter(deleted=False, status='COMPLETED')
+            .annotate(
+                completed_at=Subquery(
+                    completed_at_subquery,
+                    output_field=DateTimeField()
+                )
+            )
+            .order_by(F('completed_at').desc(nulls_last=True), '-created_at')
+            .values(
+                'item_code_id',
+                'rate',
+                'quantity',
+                vendor=F('vendor_code__card_name'),
+            )
+        )
+
+        completed_by_item = defaultdict(list)
+        for row in completed_qs:
+            completed_by_item[row['item_code_id']].append(row)
+
+        # ────────────────────────────────────────────────────────────
+        # 4. Run FIFO per item
+        # ────────────────────────────────────────────────────────────
+        fifo_by_item = {}
+        for item_code, total in item_totals.items():
+            if total > 0:
+                entries = completed_by_item.get(item_code, [])
+                fifo_by_item[item_code] = allocate_fifo(total, entries)
+            else:
+                fifo_by_item[item_code] = []
+
+        # ────────────────────────────────────────────────────────────
+        # 5. Build response — each tank with proportional breakdown
+        # ────────────────────────────────────────────────────────────
+        results = []
+        for tank in tanks:
+            item_code = tank.item_code.tank_item_code
+            tank_qty = float(tank.current_capacity or 0)
+            item_total = item_totals.get(item_code, 0)
+            item_allocs = fifo_by_item.get(item_code, [])
+
+            breakdown, weighted_avg = distribute_to_tank(
+                tank_qty, item_total, item_allocs
+            )
+
+            results.append({
+                'tank_code': tank.tank_code,
+                'item_code': item_code,
+                'item_name': tank.item_code.tank_item_name,
+                'color': tank.item_code.color,
+                'tank_capacity': float(tank.tank_capacity or 0),
+                'current_capacity': tank_qty,
+                'rate_breakdown': breakdown,
+                'weighted_avg_rate': weighted_avg,
+            })
+
+        return Response(results)
