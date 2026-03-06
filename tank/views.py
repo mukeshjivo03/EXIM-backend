@@ -229,9 +229,11 @@ def distribute_to_tank(tank_qty, item_total, item_allocations):
     for alloc in item_allocations:
         proportional_qty = round(alloc['qty'] * ratio, 2)
         if proportional_qty > 0:
+            percentage = round((proportional_qty / tank_qty) * 100, 2)
             breakdown.append({
                 'rate': alloc['rate'],
                 'qty': proportional_qty,
+                'percentage': percentage,
                 'vendor': alloc['vendor'],
             })
             total_value += proportional_qty * alloc['rate']
@@ -343,3 +345,7 @@ class TankRateBreakdownView(APIView):
             })
 
         return Response(results)
+
+
+
+
