@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, Avg
 from decimal import Decimal
 
@@ -205,27 +206,27 @@ class syncPOView(APIView):
     
 
 class syncSinglePOView(APIView):
-    
+    permission_classes = [IsAdminUser , IsManagerUser]
+
     def get(self, request, grpo_no):
         result = POService().syncPO(grpo_no)
         return Response({"po_details": result})
     
     
 class DomesticContactListView(generics.ListAPIView):
-    permission_classes = [IsAdminUser]
-    
+    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser | IsFactoryUser)]
     queryset = DomesticContracts.objects.all()
     serializer_class = DomesticContractSerializer
     
 class DomesticContractRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser]
-    
+    permission_classes = [IsAdminUser , IsManagerUser]
     queryset = DomesticContracts.objects.all()
     serializer_class = DomesticContractSerializer
     lookup_field = 'id'
     
     
 class syncBalanceSheet(APIView):
+    permission_classes = [IsAdminUser  , IsManagerUser]
     
     def get(self, request):
         result = BalanceSheetService().syncBalanceSheet()
