@@ -20,7 +20,7 @@ class StockStatus(models.Model):
         ('PROCESSING' , 'PROCESSING')
     )
     
-    item_code = models.ForeignKey(RMProducts, on_delete=models.CASCADE)
+    item_code = models.ForeignKey(RMProducts, on_delete=models.CASCADE, to_field = 'item_code')
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
     vendor_code = models.ForeignKey(Party, on_delete=models.CASCADE)
     rate = models.DecimalField(max_digits=10, decimal_places=2)

@@ -2,7 +2,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 from rest_framework.response import Response
-from django.db.models import Sum, Count
+from django.db.models import Sum, Case, When, DecimalField, Value
 from decimal import Decimal
 
 from .models import StockStatus ,StockStatusUpdateLog
@@ -94,4 +94,27 @@ class StockStatusSummary(APIView):
 
         return Response({
             "summary": summary,
+        })
+
+class StockDashboard(APIView):
+    def get(self,request):
+        dashboard = StockStatus.objects.filter(deleted=False).values('item_code').annotate(
+            OUT_SIDE_FACTORY=Sum(Case(When(status='OUT_SIDE_FACTORY', then='quantity'), default=Value(0), output_field=DecimalField())),
+            ON_THE_WAY=Sum(Case(When(status='ON_THE_WAY', then='quantity'), default=Value(0), output_field=DecimalField())),
+            UNDER_LOADING=Sum(Case(When(status='UNDER_LOADING', then='quantity'), default=Value(0), output_field=DecimalField())),
+            AT_REFINERY=Sum(Case(When(status='AT_REFINERY', then='quantity'), default=Value(0), output_field=DecimalField())),
+            OTW_TO_REFINERY=Sum(Case(When(status='OTW_TO_REFINERY', then='quantity'), default=Value(0), output_field=DecimalField())),
+            KANDLA_STORAGE=Sum(Case(When(status='KANDLA_STORAGE', then='quantity'), default=Value(0), output_field=DecimalField())),
+            MUNDRA_PORT=Sum(Case(When(status='MUNDRA_PORT', then='quantity'), default=Value(0), output_field=DecimalField())),
+            ON_THE_SEA=Sum(Case(When(status='ON_THE_SEA', then='quantity'), default=Value(0), output_field=DecimalField())),
+            IN_CONTRACT=Sum(Case(When(status='IN_CONTRACT', then='quantity'), default=Value(0), output_field=DecimalField())),
+            COMPLETED=Sum(Case(When(status='COMPLETED', then='quantity'), default=Value(0), output_field=DecimalField())),
+            DELIVERED=Sum(Case(When(status='DELIVERED', then='quantity'), default=Value(0), output_field=DecimalField())),
+            IN_TRANSIT=Sum(Case(When(status='IN_TRANSIT', then='quantity'), default=Value(0), output_field=DecimalField())),
+            PENDING=Sum(Case(When(status='PENDING', then='quantity'), default=Value(0), output_field=DecimalField())),
+            PROCESSING=Sum(Case(When(status='PROCESSING', then='quantity'), default=Value(0), output_field=DecimalField())),
+            total_qty=Sum('quantity'),
+        )
+        return Response({
+            "dashboard" : dashboard
         })
