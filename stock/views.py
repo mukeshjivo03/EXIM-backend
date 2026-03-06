@@ -2,13 +2,16 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 from rest_framework.response import Response
-from django.db.models import Sum, Case, When, DecimalField, Value , Count
+from django.db.models import Sum, Case, When, DecimalField, Value , Count , F
 from decimal import Decimal
+from collections import defaultdict, OrderedDict
+
 
 from .models import StockStatus ,StockStatusUpdateLog
 from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer
 from accounts.permissions import IsAdminUser , IsFactoryUser , IsManagerUser
 from .filters import StockStatusFilters
+from tank.models import TankData
 
 
 class StockStatusListCreateView(generics.ListCreateAPIView):
@@ -92,25 +95,152 @@ class StockStatusSummary(APIView):
             "summary": summary,
         })
 
+
+
+
+
+
+STATUS_DISPLAY_ORDER = [
+    'ON_THE_WAY',
+    'UNDER_LOADING',
+    'AT_REFINERY',
+    'OTW_TO_REFINERY',
+    'KANDLA_STORAGE',
+    'MUNDRA_PORT',
+    'ON_THE_SEA',
+    'IN_CONTRACT',
+    'IN_TRANSIT',
+    'PENDING',
+    'PROCESSING',
+    'COMPLETED',
+    'DELIVERED',
+]
+
 class StockDashboard(APIView):
-    def get(self,request):
-        dashboard = StockStatus.objects.filter(deleted=False).values('item_code').annotate(
-            OUT_SIDE_FACTORY=Sum(Case(When(status='OUT_SIDE_FACTORY', then='quantity'), default=Value(0), output_field=DecimalField())),
-            ON_THE_WAY=Sum(Case(When(status='ON_THE_WAY', then='quantity'), default=Value(0), output_field=DecimalField())),
-            UNDER_LOADING=Sum(Case(When(status='UNDER_LOADING', then='quantity'), default=Value(0), output_field=DecimalField())),
-            AT_REFINERY=Sum(Case(When(status='AT_REFINERY', then='quantity'), default=Value(0), output_field=DecimalField())),
-            OTW_TO_REFINERY=Sum(Case(When(status='OTW_TO_REFINERY', then='quantity'), default=Value(0), output_field=DecimalField())),
-            KANDLA_STORAGE=Sum(Case(When(status='KANDLA_STORAGE', then='quantity'), default=Value(0), output_field=DecimalField())),
-            MUNDRA_PORT=Sum(Case(When(status='MUNDRA_PORT', then='quantity'), default=Value(0), output_field=DecimalField())),
-            ON_THE_SEA=Sum(Case(When(status='ON_THE_SEA', then='quantity'), default=Value(0), output_field=DecimalField())),
-            IN_CONTRACT=Sum(Case(When(status='IN_CONTRACT', then='quantity'), default=Value(0), output_field=DecimalField())),
-            COMPLETED=Sum(Case(When(status='COMPLETED', then='quantity'), default=Value(0), output_field=DecimalField())),
-            DELIVERED=Sum(Case(When(status='DELIVERED', then='quantity'), default=Value(0), output_field=DecimalField())),
-            IN_TRANSIT=Sum(Case(When(status='IN_TRANSIT', then='quantity'), default=Value(0), output_field=DecimalField())),
-            PENDING=Sum(Case(When(status='PENDING', then='quantity'), default=Value(0), output_field=DecimalField())),
-            PROCESSING=Sum(Case(When(status='PROCESSING', then='quantity'), default=Value(0), output_field=DecimalField())),
-            total_qty=Sum('quantity'),
+   def get(self, request):
+
+        # ────────────────────────────────────────────────────────────
+        # 1.  IN FACTORY  (from TankData → grouped by item_code)
+        # ────────────────────────────────────────────────────────────
+        tank_qs = (
+            TankData.objects
+            .filter(is_active=True, item_code__isnull=False)
+            .values(item=F('item_code__tank_item_code'))
+            .annotate(qty=Sum('current_capacity'))
         )
+        in_factory_map = {
+            row['item']: float(row['qty'] or 0) for row in tank_qs
+        }
+
+        # ────────────────────────────────────────────────────────────
+        # 2.  OUTSIDE FACTORY  (StockStatus, no vendor breakdown)
+        # ────────────────────────────────────────────────────────────
+        outside_qs = (
+            StockStatus.objects
+            .filter(deleted=False, status='OUT_SIDE_FACTORY')
+            .values('item_code_id')
+            .annotate(qty=Sum('quantity'))
+        )
+        outside_factory_map = {
+            row['item_code_id']: float(row['qty'] or 0) for row in outside_qs
+        }
+
+        # ────────────────────────────────────────────────────────────
+        # 3.  ALL OTHER STATUSES  (with vendor sub-columns)
+        # ────────────────────────────────────────────────────────────
+        stock_qs = (
+            StockStatus.objects
+            .filter(deleted=False)
+            .exclude(status='OUT_SIDE_FACTORY')
+            .values('item_code_id', 'status', vendor_name=F('vendor_code__card_name'))
+            .annotate(qty=Sum('quantity'))
+        )
+
+        # status_vendors : {status: {vendor_name, ...}}
+        status_vendors = defaultdict(set)
+        # item_data : {item_code: {(status, vendor): qty}}
+        item_data = defaultdict(lambda: defaultdict(float))
+        all_items = set()
+
+        for row in stock_qs:
+            item   = row['item_code_id']
+            status = row['status']
+            vendor = row['vendor_name']
+            qty    = float(row['qty'] or 0)
+
+            status_vendors[status].add(vendor)
+            item_data[item][(status, vendor)] = qty
+            all_items.add(item)
+
+        # Merge item codes from all three sources
+        all_items.update(in_factory_map.keys())
+        all_items.update(outside_factory_map.keys())
+
+        # ────────────────────────────────────────────────────────────
+        # 4.  BUILD ORDERED STATUS → VENDORS MAP
+        #     (only statuses that have data, in display order)
+        # ────────────────────────────────────────────────────────────
+        ordered_status_vendors = OrderedDict()
+        for status in STATUS_DISPLAY_ORDER:
+            if status in status_vendors and status_vendors[status]:
+                ordered_status_vendors[status] = sorted(status_vendors[status])
+
+        # ────────────────────────────────────────────────────────────
+        # 5.  ASSEMBLE ITEM ROWS + COLUMN TOTALS
+        # ────────────────────────────────────────────────────────────
+        items = []
+        total_in_factory = 0
+        total_outside_factory = 0
+        status_vendor_totals = defaultdict(float)
+
+        for item_code in sorted(all_items):
+            in_fac  = in_factory_map.get(item_code, 0)
+            out_fac = outside_factory_map.get(item_code, 0)
+            row_total = in_fac + out_fac
+
+            # Build status__vendor cells
+            status_data = {}
+            for status, vendors in ordered_status_vendors.items():
+                for vendor in vendors:
+                    key = f"{status}__{vendor}"
+                    val = item_data[item_code].get((status, vendor), 0)
+                    status_data[key] = val
+                    row_total += val
+                    status_vendor_totals[key] += val
+
+            items.append({
+                'item_code': item_code,
+                'in_factory': in_fac,
+                'outside_factory': out_fac,
+                'status_data': status_data,
+                'total': row_total,
+            })
+
+            total_in_factory += in_fac
+            total_outside_factory += out_fac
+
+        grand_total = sum(item['total'] for item in items)
+        active_items = sum(1 for item in items if item['total'] > 0)
+
+        # ────────────────────────────────────────────────────────────
+        # 6.  RESPONSE
+        # ────────────────────────────────────────────────────────────
         return Response({
-            "dashboard" : dashboard
+            'summary': {
+                'in_factory_total': total_in_factory,
+                'outside_factory_total': total_outside_factory,
+                'active_items': active_items,
+            },
+            'status_vendors': ordered_status_vendors,
+            'items': items,
+            'totals': {
+                'in_factory': total_in_factory,
+                'outside_factory': total_outside_factory,
+                'status_vendor_totals': dict(status_vendor_totals),
+                'grand_total': grand_total,
+            },
         })
+
+
+
+
