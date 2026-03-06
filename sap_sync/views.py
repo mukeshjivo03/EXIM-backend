@@ -203,12 +203,13 @@ class syncPOView(APIView):
         result = POService().syncPOs()
         return Response({"records_synced": result})
     
+
+class syncSinglePOView(APIView):
     
-class noIngestPOsyncView(APIView):
-    def get(self,request):
-        result = POService().syncView()
-        return Response({"records_synced": result})
-        
+    def get(self, request, grpo_no):
+        result = POService().syncPO(grpo_no)
+        return Response({"po_details": result})
+    
     
 class DomesticContactListView(generics.ListAPIView):
     

@@ -215,6 +215,73 @@ FROM OPENQUERY(HANADB112, '
             WHERE T3."DocDate" > ''2025-03-31 00:00:00.000''')
         """
 
+
+    @staticmethod
+    def get_single_po(grpo_no):
+        return f"""
+            SELECT * FROM OPENQUERY(HANADB112, '
+            SELECT 
+                -- ===== Contract Information (PO details From OPOR and POR1) =====
+                T3."DocNum" AS "PO Number",
+                T3."DocDate" AS "PO Date",
+                T0."DocStatus" AS "Status",
+                T2."ItemCode" AS "Product Code",
+                T2."Dscription" AS "Product",
+                T0."CardName" AS "Vendor",
+                T2."Quantity" AS "Contract Qty",
+                T2."Price" AS "Contract Rate",
+                T2."LineTotal" AS "Contract Value",
+
+                -- ===== Loading Details (UDFs from PDN1) =====
+                T1."Quantity" AS "Load Qty",
+                T1."U_UNE_CUNT" AS "Unload Qty",
+                T1."U_UNE_LTS" AS "Allowance",
+
+                -- ===== Transport & Freight Details (UDFs from OPDN) =====
+                T0."U_TransporterName" AS "Transporter",
+                T0."U_VehicleNoM" AS "Vehicle No",
+                T0."U_BilltyNumber" AS "Bilty No",
+                T0."U_BiltyDate" AS "Bilty Date",
+
+                -- ===== GRPO & Invoice Details =====
+                T0."DocNum" AS "GRPO Number",
+                T0."DocDate" AS "GRPO Date",
+                T4."NumAtCard" AS "Invoice Number",
+
+                -- ===== Summary & Landed Costs =====
+                T1."LineTotal" AS "Basic Amount",
+
+                -- FIX applied here: Changed CostSum to TtlExpndLC
+                IFNULL(T7."TtlExpndLC", 0) AS "Landed Cost", 
+
+                T4."DocTotal" AS "Net Amount"
+
+            FROM "JIVO_OIL_HANADB"."OPDN" T0                                     -- GRPO Header
+            INNER JOIN "JIVO_OIL_HANADB"."PDN1" T1 ON T0."DocEntry" = T1."DocEntry" -- GRPO Lines
+
+            -- Join back to the Purchase Order Lines
+            LEFT JOIN "JIVO_OIL_HANADB"."POR1" T2 ON T1."BaseEntry" = T2."DocEntry" 
+                             AND T1."BaseLine" = T2."LineNum" 
+                             AND T1."BaseType" = 22          -- 22 ensures it only links to POs
+
+            -- Join back to Purchase Order Header
+            LEFT JOIN "JIVO_OIL_HANADB"."OPOR" T3 ON T2."DocEntry" = T3."DocEntry"
+
+            -- Join to AP Invoice Lines & Header
+            LEFT JOIN "JIVO_OIL_HANADB"."PCH1" T5 ON T5."BaseEntry" = T0."DocEntry" 
+                             AND T5."BaseLine" = T1."LineNum"
+                             AND T5."BaseType" = 20          -- 20 ensures it only links to GRPOs
+            LEFT JOIN "JIVO_OIL_HANADB"."OPCH" T4 ON T5."DocEntry" = T4."DocEntry"
+
+            -- Landed Cost Link (IPF1 uses OrigLine for the base line reference)
+            LEFT JOIN "JIVO_OIL_HANADB"."IPF1" T7 ON T7."BaseEntry" = T0."DocEntry" 
+                             AND T7."OrigLine" = T1."LineNum" 
+                             AND T7."BaseType" = 20
+            LEFT JOIN "JIVO_OIL_HANADB"."OIPF" T6 ON T7."DocEntry" = T6."DocEntry"
+
+            -- Add a WHERE clause to filter for a specific document or date range
+            WHERE T0."DocNum" = ''{grpo_no}''')
+        """
     @staticmethod
     def get_balance_sheet():
         return """

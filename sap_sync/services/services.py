@@ -394,12 +394,55 @@ class POService:
             raise Exception(f"Service Error: {str(e)}")
         
         
-    def syncView(self):
-        with self.connection as conn:
-                query = Queries.get_all_pos()
-                result = conn.execute_query(query) 
-                
-        return result   
+def syncPO(self, grpo_no):
+    if not grpo_no:
+        raise Exception("Please Provide GRPO Number")
+
+    with self.connection as conn:
+        query = Queries.get_single_po(grpo_no)
+        result = conn.execute_query(query)
+
+    if not result:
+        raise Exception(f"No data found for GRPO: {grpo_no}")
+
+    synced = []
+    for row in result:
+        obj, created = DomesticContracts.objects.update_or_create(
+            # Lookup fields (your unique_together)
+            po_number=row.get('po_number'),
+            grpo_no=row.get('grpo_no'),
+            # Fields to update or set on create
+            defaults={
+                'po_date': row.get('po_date'),
+                'status': row.get('status'),
+                'product_code': row.get('product_code'),
+                'product_name': row.get('product_name'),
+                'vendor': row.get('vendor'),
+                'contract_qty': row.get('contract_qty'),
+                'contract_rate': row.get('contract_rate'),
+                'contract_value': row.get('contract_value'),
+                'load_qty': row.get('load_qty'),
+                'unload_qty': row.get('unload_qty'),
+                'allowance': row.get('allowance'),
+                'transporter': row.get('transporter'),
+                'vehicle_no': row.get('vehicle_no'),
+                'bilty_no': row.get('bilty_no'),
+                'bilty_date': row.get('bilty_date'),
+                'grpo_date': row.get('grpo_date'),
+                'invoice_no': row.get('invoice_no'),
+                'basic_amount': row.get('basic_amount'),
+                'landed_cost': row.get('landed_cost'),
+                'net_amount': row.get('net_amount'),
+            }
+        )
+        synced.append({
+            'po_number': obj.po_number,
+            'grpo_no': obj.grpo_no,
+            'action': 'created' if created else 'updated'
+        })
+
+    return synced
+        
     
 class BalanceSheetService:
     def __init__(self):
