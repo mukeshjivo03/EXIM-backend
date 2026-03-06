@@ -332,6 +332,7 @@ FROM OPENQUERY(HANADB112, '
                 )
                 SELECT "CardCode", "CardName", "Balance", "Last Transaction Date", "Last Transanction Amount"
                 FROM "VendorLatestTransaction"
-                WHERE "RowNum" = 1
+                WHERE "RowNum" = 1 AND "Balance" <> 0
+                ORDER BY "Balance"
             ')
         """
