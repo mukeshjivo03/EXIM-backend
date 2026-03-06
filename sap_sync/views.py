@@ -223,7 +223,7 @@ class DomesticContractRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPI
     
     queryset = DomesticContracts.objects.all()
     serializer_class = DomesticContractSerializer
-    lookup_field = 'grpo_no'
+    lookup_field = 'id'
     
     
 class syncBalanceSheet(APIView):

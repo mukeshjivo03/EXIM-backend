@@ -32,7 +32,7 @@ urlpatterns = [
     path('sap-sync/po/' , syncPOView.as_view()),
     path('sap-sync/po/<str:grpo_no>/' , syncSinglePOView.as_view()),
     path('pos/' , DomesticContactListView.as_view()),
-    path('po/<str:grpo_no>/' , DomesticContractRetrieveUpdateDeleteView.as_view()),
+    path('po/<int:id>/' , DomesticContractRetrieveUpdateDeleteView.as_view()),
     
     
     path('sap-sync/balance-sheet/' , syncBalanceSheet.as_view())
