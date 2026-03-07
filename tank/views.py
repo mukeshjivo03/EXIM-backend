@@ -4,7 +4,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from collections import defaultdict
-from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField, Count
+from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField 
 from decimal import Decimal
 
 
@@ -248,9 +248,6 @@ class TankRateBreakdownView(APIView):
 
     def get(self, request):
 
-        # ────────────────────────────────────────────────────────────
-        # 1. Get all active tanks
-        # ────────────────────────────────────────────────────────────
         tanks = (
             TankData.objects
             .filter(is_active=True, item_code__isnull=False)
@@ -308,9 +305,6 @@ class TankRateBreakdownView(APIView):
         for row in completed_qs:
             completed_by_item[row['item_code_id']].append(row)
 
-        # ────────────────────────────────────────────────────────────
-        # 4. Run FIFO per item
-        # ────────────────────────────────────────────────────────────
         fifo_by_item = {}
         for item_code, total in item_totals.items():
             if total > 0:
@@ -319,9 +313,6 @@ class TankRateBreakdownView(APIView):
             else:
                 fifo_by_item[item_code] = []
 
-        # ────────────────────────────────────────────────────────────
-        # 5. Build response — each tank with proportional breakdown
-        # ────────────────────────────────────────────────────────────
         results = []
         for tank in tanks:
             item_code = tank.item_code.tank_item_code
