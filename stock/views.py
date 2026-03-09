@@ -1,6 +1,7 @@
 from rest_framework import generics
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Sum, Case, When, DecimalField, Value , Count , F
 from decimal import Decimal
@@ -17,7 +18,7 @@ from tank.models import TankData
 class StockStatusListCreateView(generics.ListCreateAPIView):
     queryset = StockStatus.objects.filter(deleted=False)
     serializer_class = StockStatusSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
     filter_backends = (filters.DjangoFilterBackend,) 
     filterset_class = StockStatusFilters
 
@@ -25,17 +26,19 @@ class StockStatusListCreateView(generics.ListCreateAPIView):
 class StockStatusUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StockStatus.objects.all()
     serializer_class = StockStatusSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
     lookup_field =  'id'
 
 class StockUpdateLogListView(generics.ListAPIView):
     queryset = StockStatusUpdateLog.objects.all()
     serializer_class = StockStatusUpdateLogSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
 
 
 class StockStatusInsights(APIView):
     
+    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser)]
+
     def get(self, request):
         queryset = StockStatus.objects.filter(deleted=False)
         filterset = StockStatusFilters(request.GET, queryset=queryset)
@@ -68,7 +71,7 @@ class StockStatusInsights(APIView):
 
 
 class StockStatusSummary(APIView):
-
+    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser)]
     def get(self, request):
         queryset = StockStatus.objects.filter(deleted=False)
 
@@ -117,7 +120,8 @@ STATUS_DISPLAY_ORDER = [
 ]
 
 class StockDashboard(APIView):
-   def get(self, request):
+    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser)]
+    def get(self, request):
 
         # ────────────────────────────────────────────────────────────
         # 1.  IN FACTORY  (from TankData → grouped by item_code)

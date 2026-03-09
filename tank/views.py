@@ -21,6 +21,7 @@ from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
 class TankDataView(generics.RetrieveDestroyAPIView):
     queryset = TankData.objects.all()
     serializer_class = TankDataSerializer
+    permission_classes = [IsAuthenticated]
     lookup_field = 'tank_code'
     
     def get_permissions(self):
@@ -38,12 +39,13 @@ class TankDataListCrateView(generics.ListCreateAPIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         
-        return [IsAdminUser()]
+        return [IsAuthenticated & (IsAdminUser | IsManagerUser)]
     
 class TankCapacityUpdateView(generics.UpdateAPIView):
     queryset = TankData.objects.all()
     serializer_class = TankDataCapacitySerializer
     lookup_field = 'tank_code'
+    permission_classes = [IsAuthenticated & (IsAdminUser | IsFactoryUser)]
     
     
 
@@ -65,9 +67,9 @@ class TankItemListCreateView(generics.ListCreateAPIView):
     
     def get_permissions(self):
         if self.request.method == 'GET':
-            return [IsAuthenticated()]
+            return [IsAuthenticated() | (IsAdminUser | IsManagerUser)]
         
-        return [IsAdminUser()]
+        return [IsAuthenticated & (IsAdminUser | IsManagerUser)]  
    
 class TankItemColorUpdateView(generics.UpdateAPIView):
     queryset = TankItem.objects.all()
