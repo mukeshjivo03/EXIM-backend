@@ -24,4 +24,5 @@ urlpatterns = [
     path('tank/' , include('tank.urls')),
     path('stock-status/' , include('stock.urls')),
     path('daily-price/' , include('daily_price.urls')),
+    path('license/' , include('license.urls'))
 ]

@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     'sap_sync',
     'accounts',
     'stock',
-    'daily_price'
+    'daily_price',
+    'license'
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
