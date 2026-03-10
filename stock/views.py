@@ -37,7 +37,7 @@ class StockUpdateLogListView(generics.ListAPIView):
 
 class StockStatusInsights(APIView):
     
-    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser)]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
 
     def get(self, request):
         queryset = StockStatus.objects.filter(deleted=False)
@@ -71,7 +71,7 @@ class StockStatusInsights(APIView):
 
 
 class StockStatusSummary(APIView):
-    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser)]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     def get(self, request):
         queryset = StockStatus.objects.filter(deleted=False)
 
@@ -120,7 +120,7 @@ STATUS_DISPLAY_ORDER = [
 ]
 
 class StockDashboard(APIView):
-    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser)]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     def get(self, request):
 
         # ────────────────────────────────────────────────────────────

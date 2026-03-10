@@ -214,7 +214,7 @@ class syncSinglePOView(APIView):
     
     
 class DomesticContactListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser | IsFactoryUser)]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser | IsFactoryUser]
     queryset = DomesticContracts.objects.all()
     serializer_class = DomesticContractSerializer
     

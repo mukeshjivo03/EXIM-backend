@@ -37,20 +37,22 @@ class StockStatus(models.Model):
         return f"{self.item_code} - {self.status}"
     
     def save(self ,*args , **kwargs):
-        
+
         if self.rate is not None and self.quantity is not None:
             self.total = self.rate * self.quantity
         else:
             self.total = Decimal('0.00')
 
-        if self.pk:
+        is_new = self.pk is None
+
+        if not is_new:
             old_instance = StockStatus.objects.get(pk=self.pk)
             track_fields = ['status' , 'rate' ,'quantity']
 
             for field in track_fields:
                 old_val = getattr(old_instance, field)
                 new_val = getattr(self, field)
-                
+
                 if old_val != new_val:
                     StockStatusUpdateLog.objects.create(
                         stock_id = self,
@@ -62,15 +64,24 @@ class StockStatus(models.Model):
 
         super().save(*args, **kwargs)
 
+        if is_new:
+            StockStatusUpdateLog.objects.create(
+                stock_id = self,
+                field_name = 'CREATED',
+                old_value = '',
+                new_value = f"qty={self.quantity}, rate={self.rate}, status={self.status}",
+                updated_by = self.created_by,
+            )
+
 
 
 class StockStatusUpdateLog(models.Model):
     stock_id = models.ForeignKey(StockStatus , on_delete=models.SET_NULL , null = True)
-    field_name = models.CharField(max_length=30)   
-    old_value = models.CharField(max_length=30)
-    new_value = models.CharField(max_length=30)
+    field_name = models.CharField(max_length=50)
+    old_value = models.CharField(max_length=255)
+    new_value = models.CharField(max_length=255)
     updated_at = models.DateTimeField(auto_now=True)
-    updated_by = models.CharField(max_length=30)
+    updated_by = models.CharField(max_length=50)
     
     class Meta:
         db_table = 'stock_update_logs'

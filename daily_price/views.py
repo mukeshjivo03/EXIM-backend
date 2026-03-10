@@ -15,7 +15,7 @@ from accounts.permissions import IsAdminUser, IsManagerUser , IsFactoryUser
 
 
 class DailyPriceListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser)]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = DailyPrice.objects.all()
     serializer_class = DailyPriceSerializer
     filter_backends = [DjangoFilterBackend]
@@ -23,11 +23,11 @@ class DailyPriceListView(generics.ListAPIView):
 
 
 class PriceFetchView(APIView):
-    def get_permission(self):
+    def get_permissions(self):
         if self.request.method == "POST":
-            return [IsAdminUser() | IsManagerUser()]
-        
-        return [IsAuthenticated() & (IsAdminUser() | IsManagerUser())]
+            return [IsAuthenticated(), (IsAdminUser | IsManagerUser)()]
+
+        return [IsAuthenticated(), (IsAdminUser | IsManagerUser)()]
         
         
     def get(self, request):
@@ -66,7 +66,7 @@ class PriceFetchView(APIView):
 
 
 class DailyPriceTrend(APIView):
-    permission_classes = [IsAuthenticated & (IsAdminUser | IsManagerUser)]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     def get(self,request):
         end_date = date.today()
         start_date = end_date - timedelta(days=7)
