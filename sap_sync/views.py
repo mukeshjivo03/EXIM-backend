@@ -90,7 +90,7 @@ class RMProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     
     
 class RMProductListView(generics.ListAPIView):
-    permission_class = [IsAdminUser]
+    permission_classes = [IsAdminUser]
 
     queryset = RMProducts.objects.all()
     serializer_class = RMProductSerializer
@@ -111,6 +111,7 @@ class RMProductListView(generics.ListAPIView):
 
 
 class RMProductSummaryView(APIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
 
     def get(self, request):
         queryset = RMProducts.objects.exclude(total_qty=0)
@@ -137,6 +138,7 @@ class RMProductSummaryView(APIView):
 
 
 class RMProductVarietyListView(APIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
 
     def get(self, request):
         varieties = RMProducts.objects.values_list('u_variety', flat=True).distinct().order_by('u_variety')
@@ -154,7 +156,7 @@ class FGProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     
     
 class FGProductListView(generics.ListAPIView):
-    permission_class = [IsAdminUser]
+    permission_classes = [IsAdminUser]
     
     queryset = FGProducts.objects.all()
     serializer_class = FGProductSerializer
@@ -169,7 +171,7 @@ class FGProductListView(generics.ListAPIView):
         })
     
 class PartyGetandDeleteView(generics.RetrieveDestroyAPIView):
-    permission_class = [IsAdminUser]
+    permission_classes = [IsAdminUser]
     
     queryset = Party.objects.all()
     serializer_class = PartySerializer
@@ -177,7 +179,7 @@ class PartyGetandDeleteView(generics.RetrieveDestroyAPIView):
     
 
 class PartyListView(generics.ListAPIView):
-    permission_class = [IsAdminUser]
+    permission_classes = [IsAdminUser]
     
     queryset = Party.objects.all()
     serializer_class =  PartySerializer
@@ -192,14 +194,15 @@ class PartyListView(generics.ListAPIView):
         })    
     
 class SyncLogListView(generics.ListAPIView):
-    permission_class = [IsAdminUser]
+    permission_classes = [IsAdminUser]
     
     queryset = syncLogs.objects.all()
     serializer_class = SyncLogSerializer
     
     
 class syncPOView(APIView):
-    
+    permission_classes = [IsAdminUser | IsManagerUser]
+
     def get(self, request):
         result = POService().syncPOs()
         return Response({"records_synced": result})
@@ -214,7 +217,7 @@ class syncSinglePOView(APIView):
     
     
 class DomesticContactListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser | IsFactoryUser]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = DomesticContracts.objects.all()
     serializer_class = DomesticContractSerializer
     

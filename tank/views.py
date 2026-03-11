@@ -72,12 +72,14 @@ class TankItemListCreateView(generics.ListCreateAPIView):
         return [IsAuthenticated(), (IsAdminUser | IsManagerUser)()]  
    
 class TankItemColorUpdateView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = TankItem.objects.all()
     serializer_class = TankItemColorSerialier
     lookup_field = 'tank_item_code'
 
 
 class TankDataSummary(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
 
     def get(self, request):
         queryset = TankData.objects.filter(is_active=True)
@@ -109,6 +111,7 @@ class TankDataSummary(APIView):
 
 
 class TankItemWiseSummary(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
 
     def get(self, request):
         queryset = TankData.objects.filter(is_active=True, item_code__isnull=False)
@@ -143,7 +146,8 @@ class TankItemWiseSummary(APIView):
     
     
 class TankCapacityInsights(APIView):
-    
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+
     def get(self,request):
         aggregate = TankData.objects.aggregate(
             total_capacity = Sum('tank_capacity'),
