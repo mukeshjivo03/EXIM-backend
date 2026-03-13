@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
+
     
     'tank',
     'sap_sync',
@@ -108,7 +110,18 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'EXIM API',
+    'DESCRIPTION': 'API docs for EXIM inventory & license management',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
