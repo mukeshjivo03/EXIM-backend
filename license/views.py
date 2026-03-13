@@ -8,23 +8,12 @@ from accounts.permissions import IsAdminUser , IsFactoryUser , IsManagerUser
 from accounts.permissions import IsAdminUser, IsManagerUser
 
 
-# Create your views here.
 class AdvanceLicenseHeadersListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = AdvanceLicenseHeaders.objects.all()
     serializer_class = AdvanceLicenseHeaderSerialzer
     permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
 
-
-class AdvanceLicenseLinesListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
-    queryset = AdvanceLicenseLines.objects.all()
-    serializer_class = AdvanceLicenseLineSerialzer
-
-
- 
-    
-    
 class AdvanceLicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = AdvanceLicenseHeaders.objects.all()
@@ -32,6 +21,16 @@ class AdvanceLicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestro
     lookup_field = 'license_no'
     
     
+    
+    
+class AdvanceLicenseLinesListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+    queryset = AdvanceLicenseLines.objects.all()
+    serializer_class = AdvanceLicenseLineSerialzer
+    
+    
+    
+
 class DFIALicenseHeaderCreateView(generics.CreateAPIView):
     queryset = DFIALicenseHeader.objects.all()
     serializer_class = DFIALicenseheaderCreateSerializer
@@ -55,6 +54,13 @@ class DFIALicenseLinesListCreateView(generics.ListCreateAPIView):
     queryset = DFIALicenseLines.objects.all()
     serialzer_class= DFIALicenseLineSerializer
     permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
+    
+class DFIALicenseLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = DFIALicenseLines.objects.all()
+    serializer_class = DFIALicenseLineSerializer
+    lookup_field = 'id'
+    
+    
     
 
     
