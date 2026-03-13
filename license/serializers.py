@@ -20,9 +20,17 @@ class DFIALicenseLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = DFIALicenseLines
         fields = '__all__'
+        
+        
 
-class DFIALicenseheaderSerializer(serializers.ModelSerializer):
+class DFIALicenseListSerializer(serializers.ModelSerializer):
     dfia_license_lines = DFIALicenseLineSerializer(many=True, read_only=True)
+    class Meta:
+        model = DFIALicenseHeader
+        fields = '__all__'
+
+
+class DFIALicenseheaderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = DFIALicenseHeader
         fields = '__all__'

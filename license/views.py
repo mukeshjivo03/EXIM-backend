@@ -3,7 +3,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from .models import AdvanceLicenseHeaders, AdvanceLicenseLines , DFIALicenseHeader , DFIALicenseLines
-from .serializers import AdvanceLicenseHeaderSerialzer, AdvanceLicenseLineSerialzer , DFIALicenseheaderSerializer , DFIALicenseLineSerializer
+from .serializers import AdvanceLicenseHeaderSerialzer, AdvanceLicenseLineSerialzer , DFIALicenseheaderCreateSerializer , DFIALicenseLineSerializer ,DFIALicenseListSerializer
 from accounts.permissions import IsAdminUser , IsFactoryUser , IsManagerUser
 from accounts.permissions import IsAdminUser, IsManagerUser
 
@@ -22,34 +22,41 @@ class AdvanceLicenseLinesListCreateView(generics.ListCreateAPIView):
     serializer_class = AdvanceLicenseLineSerialzer
 
 
-    permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
+ 
     
     
-    
-class AdvanceLicenseRetrieveDeleteView(generics.RetrieveDestroyAPIView):
+class AdvanceLicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = AdvanceLicenseHeaders.objects.all()
     serializer_class = AdvanceLicenseHeaderSerialzer
     lookup_field = 'license_no'
-    permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
     
     
-class DFIALicenseHeaderListCreateView(generics.ListCreateAPIView):
+class DFIALicenseHeaderCreateView(generics.CreateAPIView):
     queryset = DFIALicenseHeader.objects.all()
-    serializer_class = DFIALicenseheaderSerializer
+    serializer_class = DFIALicenseheaderCreateSerializer
     permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
+
+class DFIALicenseHeaderListView(generics.ListAPIView):
+    queryset = DFIALicenseHeader.objects.all()
+    serializer_class = DFIALicenseListSerializer
+    
+class DFIALicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = DFIALicenseHeader.objects.all()
+    serializer_class = DFIALicenseListSerializer
+    lookup_field = 'file_no'
+    
+    
+    
+    
+    
 
 class DFIALicenseLinesListCreateView(generics.ListCreateAPIView):
     queryset = DFIALicenseLines.objects.all()
     serialzer_class= DFIALicenseLineSerializer
     permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
     
-class DFIALicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = DFIALicenseHeader.objects.all()
-    serializer_class = DFIALicenseheaderSerializer
-    lookup_field = 'file_no'
-    permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
-    
+
     
     
 
