@@ -5,23 +5,29 @@ from rest_framework.permissions import IsAuthenticated
 from .models import AdvanceLicenseHeaders, AdvanceLicenseLines , DFIALicenseHeader , DFIALicenseLines
 from .serializers import AdvanceLicenseHeaderSerialzer, AdvanceLicenseLineSerialzer , DFIALicenseheaderSerializer , DFIALicenseLineSerializer
 from accounts.permissions import IsAdminUser , IsFactoryUser , IsManagerUser
+from accounts.permissions import IsAdminUser, IsManagerUser
 
 
 # Create your views here.
 class AdvanceLicenseHeadersListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = AdvanceLicenseHeaders.objects.all()
     serializer_class = AdvanceLicenseHeaderSerialzer
     permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
 
 
 class AdvanceLicenseLinesListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = AdvanceLicenseLines.objects.all()
     serializer_class = AdvanceLicenseLineSerialzer
+
+
     permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
     
     
     
 class AdvanceLicenseRetrieveDeleteView(generics.RetrieveDestroyAPIView):
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = AdvanceLicenseHeaders.objects.all()
     serializer_class = AdvanceLicenseHeaderSerialzer
     lookup_field = 'license_no'
