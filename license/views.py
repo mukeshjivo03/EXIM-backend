@@ -18,7 +18,7 @@ class AdvanceLicenseHeadersListCreateView(generics.ListCreateAPIView):
 class AdvanceLicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = AdvanceLicenseHeaders.objects.all()
-    serializer_class = AdvanceLicenseHeaderSerialzer
+    serializer_class = AdvanceLicenseHeaderCreateSerialzer
     lookup_field = 'license_no'
         
     
