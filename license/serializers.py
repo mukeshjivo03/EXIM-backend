@@ -8,20 +8,26 @@ class AdvanceLicenseLineSerialzer(serializers.ModelSerializer):
         model = AdvanceLicenseLines
         fields = '__all__'
         
-class AdvanceLicenseHeaderSerialzer(serializers.ModelSerializer):
+class AdvanceLicenseHeaderCreateSerialzer(serializers.ModelSerializer):
     lincense_lines = AdvanceLicenseLineSerialzer(many=True, read_only=True)
     class Meta:
         model = AdvanceLicenseHeaders
         fields = '__all__'
         read_only_fields = ['cif_value_usd' , 'fob_value_usd']
+
+class AdvanceLicenseHeaderSerialzer(serializers.ModelSerializer):
+    class Meta:
+        model = AdvanceLicenseHeaders
+        fields = '__all__'
         
+
+
+
 
 class DFIALicenseLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = DFIALicenseLines
         fields = '__all__'
-        
-        
 
 class DFIALicenseListSerializer(serializers.ModelSerializer):
     dfia_license_lines = DFIALicenseLineSerializer(many=True, read_only=True)
