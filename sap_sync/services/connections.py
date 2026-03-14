@@ -212,7 +212,7 @@ FROM OPENQUERY(HANADB112, '
             LEFT JOIN "JIVO_OIL_HANADB"."OIPF" T6 ON T7."DocEntry" = T6."DocEntry"
 
             -- Add a WHERE clause to filter for a specific document or date range
-            WHERE T3."DocDate" > ''2025-03-31 00:00:00.000''')
+            WHERE T3."DocDate" > ''2025-03-31 00:00:00.000'' AND T2."ItemCode" LIKE ''RM%'' ')
         """
 
 
