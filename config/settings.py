@@ -55,7 +55,8 @@ INSTALLED_APPS = [
     'accounts',
     'stock',
     'daily_price',
-    'license'
+    'license',
+    'planning',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -102,6 +103,9 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST'),
         'PORT': os.getenv('DB_PORT'),
+        'OPTIONS': {
+            'connect_timeout': 10,  # Forces it to wait up to 10 seconds to connect
+        }
     }
 }
 
