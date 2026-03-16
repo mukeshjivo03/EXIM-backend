@@ -9,6 +9,17 @@ class TankService:
     @staticmethod
     @transaction.atomic
     def inward(tank_code, stock_status_id, quantity, created_by):
+        """
+        Oil goes INTO the tank.
+        
+        Full flow in one atomic transaction:
+        1. Validate tank space and item match
+        2. Handle stock split if quantity < stock entry quantity
+        3. Update original stock entry status to IN_TANK
+        4. Create TankLayer
+        5. Create TankLog
+        6. Update tank current_capacity
+        """
         tank = TankData.objects.select_for_update().get(tank_code=tank_code)
         stock_entry = StockStatus.objects.select_for_update().get(pk=stock_status_id)
 
@@ -34,9 +45,9 @@ class TankService:
             )
 
         # Stock entry must be OUTSIDE_FACTORY
-        if stock_entry.status != 'OUTSIDE_FACTORY':
+        if stock_entry.status != 'OUT_SIDE_FACTORY':
             raise ValueError(
-                f"Stock entry #{stock_entry.pk} has status '{stock_entry.status}'. Expected 'OUTSIDE_FACTORY'."
+                f"Stock entry #{stock_entry.pk} has status '{stock_entry.status}'. Expected 'OUT_SIDE_FACTORY'."
             )
 
         # --- Stock Split Logic ---
@@ -47,7 +58,7 @@ class TankService:
             # Partial quantity — create a new entry with the leftover
             StockStatus.objects.create(
                 item_code=stock_entry.item_code,
-                status='OUTSIDE_FACTORY',
+                status='OUT_SIDE_FACTORY',
                 vendor_code=stock_entry.vendor_code,
                 rate=stock_entry.rate,
                 quantity=remainder,
@@ -64,6 +75,9 @@ class TankService:
         layer = TankLayer.objects.create(
             tank_code=tank,
             stock_status=stock_entry,
+            item_code=stock_entry.item_code,
+            vendor=stock_entry.vendor_code,
+            rate=stock_entry.rate,
             quantity_added=quantity,
             quantity_remaining=quantity,
             created_by=created_by,
@@ -81,6 +95,9 @@ class TankService:
         )
 
         # --- Update Tank Capacity ---
+        if tank.item_code is None:
+            tank.item_code = stock_entry.item_code
+            tank.save()
 
         tank.current_capacity = (tank.current_capacity or Decimal('0.00')) + quantity
         tank.save()

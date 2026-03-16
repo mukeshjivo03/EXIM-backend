@@ -374,7 +374,7 @@ class TankInwardView(APIView):
                 tank_code=serializer.validated_data['tank_code'],
                 stock_status_id=serializer.validated_data['stock_status_id'],
                 quantity=serializer.validated_data['quantity'],
-                created_by=request.user.username,
+                created_by=request.user,
             )
  
             return Response({
@@ -412,7 +412,7 @@ class TankOutwardView(APIView):
             result = TankService.outward(
                 tank_code=serializer.validated_data['tank_code'],
                 quantity=serializer.validated_data['quantity'],
-                created_by=request.user.username,
+                created_by=request.user,
                 remarks=serializer.validated_data.get('remarks', ''),
             )
  

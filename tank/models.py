@@ -60,7 +60,7 @@ class TankLayer(models.Model):
     item_code = models.ForeignKey('TankItem' , on_delete = models.CASCADE)
     vendor = models.ForeignKey('sap_sync.Party' , on_delete = models.CASCADE)
     rate = models.DecimalField(max_digits=10, decimal_places=2)
-    qauntity_added = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
+    quantity_added = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
     quantity_remaining = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
     is_exhausted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True , null = True)
@@ -81,6 +81,7 @@ class TankLog(models.Model):
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     stock_status = models.ForeignKey('stock.StockStatus' , on_delete = models.CASCADE , null = True)
     tank_layer = models.ForeignKey('TankLayer' , on_delete = models.CASCADE, null = True)
+    remarks = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
     
