@@ -63,6 +63,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.common.CommonMiddleware',
@@ -109,6 +110,11 @@ DATABASES = {
     }
 }
 
+# SAP Database Connection
+SAP_DB_HOST = os.getenv('SAP_DB_HOST')  # Default to localhost if not set
+SAP_DB_NAME = os.getenv('SAP_DB_NAME')
+SAP_DB_USER = os.getenv('SAP_DB_USER')
+SAP_DB_PASSWORD = os.getenv('SAP_DB_PASSWORD')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -169,3 +175,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'

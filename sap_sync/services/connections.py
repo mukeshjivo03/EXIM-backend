@@ -6,10 +6,10 @@ logger = logging.getLogger(__name__)
 
 class SAPConnection:
     def __init__(self):
-        self.host = getattr(settings, 'SAP_DB_HOST', '103.89.45.75')
-        self.database = getattr(settings, 'SAP_DB_NAME', 'Jivo_All_Branches_Live')
-        self.username = getattr(settings, 'SAP_DB_USER', 'ab')
-        self.password = getattr(settings, 'SAP_DB_PASSWORD', 'Jivo@!@#$')
+        self.host = getattr(settings, 'SAP_DB_HOST')
+        self.database = getattr(settings, 'SAP_DB_NAME')
+        self.username = getattr(settings, 'SAP_DB_USER')
+        self.password = getattr(settings, 'SAP_DB_PASSWORD')
         self.connection = None
         self.cursor = None
     

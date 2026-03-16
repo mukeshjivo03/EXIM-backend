@@ -144,33 +144,41 @@ class TankItemWiseSummary(APIView):
 
         return Response(results)
     
-    
+
+
+
 class TankCapacityInsights(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
 
-    def get(self,request):
+    def get(self, request):
         aggregate = TankData.objects.aggregate(
-            total_capacity = Sum('tank_capacity'),
-            current_capacity = Sum('current_capacity')
+            total_capacity=Sum('tank_capacity'),
+            current_capacity=Sum('current_capacity')
         )
         
-        total_capacity = aggregate['total_capacity']
-        filled_capacity = aggregate['current_capacity']
+        total_capacity = aggregate['total_capacity'] or 0
+        filled_capacity = aggregate['current_capacity'] or 0
+        
+        if total_capacity == 0:
+            return Response({
+                "total_capacity": 0,
+                "filled_capacity": 0,
+                "filled_percentage": 0,
+                "empty_capacity": 0,
+                "empty_percentage": 0
+            })
+        
         empty_capacity = total_capacity - filled_capacity
-        filled_percentage = round(((filled_capacity / total_capacity) * 100) , 2)
-        empty_percentage = round(((empty_capacity / total_capacity) * 100),2)
+        filled_percentage = round((filled_capacity / total_capacity) * 100, 2)
+        empty_percentage = round((empty_capacity / total_capacity) * 100, 2)
 
         return Response({
-            "total_capacity" : total_capacity,
-            "filled_capacity" : filled_capacity,
-            "filled_percentage" : filled_percentage,
-            "empty_capacity" : empty_capacity,
-            "empty_percentage" : empty_percentage
-        })            
-        
-        
-
-
+            "total_capacity": total_capacity,
+            "filled_capacity": filled_capacity,
+            "filled_percentage": filled_percentage,
+            "empty_capacity": empty_capacity,
+            "empty_percentage": empty_percentage
+        })
 
 def allocate_fifo(total_qty, completed_entries):
     """
