@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for app:*)",
+      "Bash(do echo:*)",
+      "Bash(grep -E \"\\\\.py$|^d\" done)"
+    ]
+  }
+}
