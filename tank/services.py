@@ -9,9 +9,9 @@ class TankService:
     @staticmethod
     @transaction.atomic
     def inward(tank_code, stock_status_id, quantity, created_by):
+        
         """
         Oil goes INTO the tank.
-        
         Full flow in one atomic transaction:
         1. Validate tank space and item match
         2. Handle stock split if quantity < stock entry quantity
@@ -20,12 +20,13 @@ class TankService:
         5. Create TankLog
         6. Update tank current_capacity
         """
+        
         tank = TankData.objects.select_for_update().get(tank_code=tank_code)
         stock_entry = StockStatus.objects.select_for_update().get(pk=stock_status_id)
 
         # --- Validations ---
-
         # Tank has enough space
+        
         available_space = tank.tank_capacity - (tank.current_capacity or Decimal('0.00'))
         if quantity > available_space:
             raise ValueError(

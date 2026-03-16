@@ -104,6 +104,32 @@ class OutsideFactoryStock(APIView):
         serializer = StockStatusSerializer(queryset, many=True)
         return Response(serializer.data)
     
+    
+class GetUniqueRM(APIView):
+    def get(self, request):
+        codes = (
+            StockStatus.objects
+            .filter(deleted=False , status = 'OUT_SIDE_FACTORY')
+            .values_list('item_code', flat=True)
+            .distinct()
+        )
+        return Response(list(codes))
+
+class GetStockEntrybyRM(APIView):
+    def get(self, request):
+        item_code = request.query_params.get('item_code')
+
+        if not item_code:
+            return Response({"error": "item_code is required"}, status=400)
+
+        queryset = (
+            StockStatus.objects
+            .filter(deleted=False, item_code=item_code, status='OUT_SIDE_FACTORY')
+            .values('id', 'vendor_code', 'rate', 'quantity', 'total', 'vehicle_number', 'transporter', 'location', 'eta', 'created_at')
+            .order_by('-created_at')
+        )
+
+        return Response(list(queryset))
 
 
 STATUS_DISPLAY_ORDER = [
@@ -247,7 +273,5 @@ class StockDashboard(APIView):
                 'grand_total': grand_total,
             },
         })
-
-
 
 
