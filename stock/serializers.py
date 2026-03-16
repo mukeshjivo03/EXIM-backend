@@ -1,13 +1,15 @@
 from rest_framework import serializers
 from .models import StockStatus , StockStatusUpdateLog
 from sap_sync.models import RMProducts , Party
+from tank.models import TankData , TankItem
+
 
 
 class StockStatusSerializer(serializers.ModelSerializer):
-
+    
     item_code = serializers.SlugRelatedField(
-        slug_field='item_code', 
-        queryset=RMProducts.objects.all()
+        slug_field='tank_item_code', 
+        queryset=TankItem.objects.all()
     )
 
     vendor_code = serializers.SlugRelatedField(
