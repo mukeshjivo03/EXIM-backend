@@ -14,7 +14,7 @@ class SAPConnection:
         self.cursor = None
     
     def connect(self):
-        try:
+        try: 
             self.connection = pymssql.connect(
                 server=self.host,
                 user=self.username,

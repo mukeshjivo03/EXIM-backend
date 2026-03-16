@@ -1,5 +1,6 @@
 from django.db import models
 from sap_sync.models import RMProducts , Party 
+from tank.models import TankData , TankItem
 from decimal import Decimal
 
 class StockStatus(models.Model):
@@ -17,15 +18,20 @@ class StockStatus(models.Model):
         ('DELIVERED' , 'DELIVERED'),
         ('IN_TRANSIT' , 'IN_TRANSIT'),
         ('PENDING' ,  'PENDING'),
-        ('PROCESSING' , 'PROCESSING')
+        ('PROCESSING' , 'PROCESSING'),
+        ('IN_TANK' , 'IN_TANK')
     )
     
-    item_code = models.ForeignKey(RMProducts, on_delete=models.SET_NULL, null=True ,to_field = 'item_code')
+    item_code = models.ForeignKey(TankItem, on_delete=models.SET_NULL, null=True ,to_field = 'tank_item_code')
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
     vendor_code = models.ForeignKey(Party, on_delete=models.SET_NULL , null = True , to_field = 'card_code')
     rate = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=20, decimal_places=2 , editable = False , default = '0.00')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    vehicle_number = models.CharField(max_length=50 , null = True)
+    transporter = models.CharField(max_length=255 , null = True)    
+    location = models.CharField(max_length=255  , null = True)
+    eta = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
     deleted = models.BooleanField(default=False)
@@ -85,3 +91,5 @@ class StockStatusUpdateLog(models.Model):
     
     class Meta:
         db_table = 'stock_update_logs'
+        
+    

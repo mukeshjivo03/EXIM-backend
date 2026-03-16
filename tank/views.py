@@ -5,13 +5,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from collections import defaultdict
 from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField, Count
+
+
 from decimal import Decimal
-
-
-
+from rest_framework import status, serializers
+from .models import TankLayer, TankLog, TankLogConsumption
+from .services import TankService
 from stock.models import StockStatus, StockStatusUpdateLog
 from .models import TankItem, TankData
-from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer
+from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankLayerResponseSerializer , TankLogResponseSerializer
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
 
 
@@ -354,3 +356,140 @@ class TankRateBreakdownView(APIView):
 
 
 
+
+ 
+class TankInwardView(APIView):
+    """
+    POST /tank/inward/
+    Body: { "tank_code": "TNK001", "stock_status_id": 45, "quantity": 30.00 }
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser]
+ 
+    def post(self, request):
+        serializer = TankInwardSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+ 
+        try:
+            result = TankService.inward(
+                tank_code=serializer.validated_data['tank_code'],
+                stock_status_id=serializer.validated_data['stock_status_id'],
+                quantity=serializer.validated_data['quantity'],
+                created_by=request.user.username,
+            )
+ 
+            return Response({
+                'message': 'Inward entry successful',
+                'layer': TankLayerResponseSerializer(result['layer']).data,
+                'log': TankLogResponseSerializer(result['log']).data,
+                'stock_split': result['stock_split'],
+                'remainder_quantity': result['remainder_quantity'],
+            }, status=status.HTTP_201_CREATED)
+ 
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Unexpected error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+ 
+ 
+class TankOutwardView(APIView):
+    """
+    POST /tank/outward/
+    Body: { "tank_code": "TNK001", "quantity": 50.00, "remarks": "Production batch #123" }
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser]
+ 
+    def post(self, request):
+        serializer = TankOutwardSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+ 
+        try:
+            result = TankService.outward(
+                tank_code=serializer.validated_data['tank_code'],
+                quantity=serializer.validated_data['quantity'],
+                created_by=request.user.username,
+                remarks=serializer.validated_data.get('remarks', ''),
+            )
+ 
+            return Response({
+                'message': 'Outward entry successful',
+                'log': TankLogResponseSerializer(result['log']).data,
+                'cost_breakdown': result['cost_breakdown'],
+            }, status=status.HTTP_201_CREATED)
+ 
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Unexpected error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+ 
+ 
+class TankStatusView(APIView):
+    """
+    GET /tank/<tank_code>/layers/
+    Returns active layers with cost breakdown for a specific tank.
+    """
+    permission_classes = [IsAuthenticated]
+ 
+    def get(self, request, tank_code):
+        try:
+            tank = TankData.objects.get(tank_code=tank_code)
+        except TankData.DoesNotExist:
+            return Response(
+                {'error': f'Tank {tank_code} not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+ 
+        tank_status = TankService.get_tank_status(tank_code)
+ 
+        return Response({
+            'tank_code': tank.tank_code,
+            'tank_capacity': tank.tank_capacity,
+            'current_capacity': tank.current_capacity,
+            **tank_status,
+        })
+ 
+ 
+class TankLogsView(APIView):
+    """
+    GET /tank/<tank_code>/logs/
+    Returns all inward/outward events for a tank (passbook view).
+    """
+    permission_classes = [IsAuthenticated]
+ 
+    def get(self, request, tank_code):
+        try:
+            tank = TankData.objects.get(tank_code=tank_code)
+        except TankData.DoesNotExist:
+            return Response(
+                {'error': f'Tank {tank_code} not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+ 
+        logs = (
+            TankLog.objects
+            .filter(tank_code=tank)
+            .prefetch_related(
+                'consumptions__tank_layer__stock_status__vendor_code',
+            )
+            .select_related('stock_status', 'tank_layer')
+            .order_by('-created_at')
+        )
+ 
+        serializer = TankLogResponseSerializer(logs, many=True)
+ 
+        return Response({
+            'tank_code': tank.tank_code,
+            'logs': serializer.data,
+        })
+ 

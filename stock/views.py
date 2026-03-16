@@ -98,9 +98,12 @@ class StockStatusSummary(APIView):
             "summary": summary,
         })
 
-
-
-
+class OutsideFactoryStock(APIView):
+    def get(self,request):
+        queryset = StockStatus.objects.filter(deleted=False, status='OUT_SIDE_FACTORY')
+        serializer = StockStatusSerializer(queryset, many=True)
+        return Response(serializer.data)
+    
 
 
 STATUS_DISPLAY_ORDER = [

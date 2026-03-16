@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-cu9=z4l6eo8o)+!-&3zhfp#0pn#omj&6bic_6^=543insspg+9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = []
 # Add your local IP and 'localhost'
@@ -111,7 +111,7 @@ DATABASES = {
 }
 
 # SAP Database Connection
-SAP_DB_HOST = os.getenv('SAP_DB_HOST')  # Default to localhost if not set
+SAP_DB_HOST = os.getenv('SAP_DB_HOST')  
 SAP_DB_NAME = os.getenv('SAP_DB_NAME')
 SAP_DB_USER = os.getenv('SAP_DB_USER')
 SAP_DB_PASSWORD = os.getenv('SAP_DB_PASSWORD')

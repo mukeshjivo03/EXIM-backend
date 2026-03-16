@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import TankItem, TankData
+from .models import TankItem, TankData , TankLayer , TankLog , TankLogConsumption
+
 
 class TankItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -84,3 +85,75 @@ class TankDataCapacitySerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"current_capacity": "Capacity cannot be negative."})
 
         return data
+    
+    
+class TankInwardSerializer(serializers.Serializer):
+    tank_code = serializers.CharField(max_length=20)
+    stock_status_id = serializers.IntegerField()
+    quantity = serializers.DecimalField(max_digits=10, decimal_places=2)
+ 
+ 
+class TankOutwardSerializer(serializers.Serializer):
+    tank_code = serializers.CharField(max_length=20)
+    quantity = serializers.DecimalField(max_digits=10, decimal_places=2)
+    remarks = serializers.CharField(required=False, default='', allow_blank=True)
+ 
+ 
+class TankLayerResponseSerializer(serializers.ModelSerializer):
+    rate = serializers.DecimalField(
+        max_digits=10, decimal_places=2, source='stock_status.rate', read_only=True
+    )
+    vendor_name = serializers.CharField(
+        source='stock_status.vendor_code.card_name', read_only=True, default='N/A'
+    )
+    item_name = serializers.CharField(
+        source='stock_status.item_code.item_name', read_only=True, default='N/A'
+    )
+    stock_status_id = serializers.IntegerField(source='stock_status.id', read_only=True)
+ 
+    class Meta:
+        model = TankLayer
+        fields = [
+            'id', 'tank_code', 'stock_status_id',
+            'rate', 'vendor_name', 'item_name',
+            'quantity_added', 'quantity_remaining',
+            'is_exhausted', 'created_at', 'created_by',
+        ]
+ 
+ 
+class TankLogConsumptionResponseSerializer(serializers.ModelSerializer):
+    layer_id = serializers.IntegerField(source='tank_layer.id', read_only=True)
+    vendor_name = serializers.CharField(
+        source='tank_layer.stock_status.vendor_code.card_name', read_only=True, default='N/A'
+    )
+    stock_status_id = serializers.IntegerField(
+        source='tank_layer.stock_status.id', read_only=True
+    )
+ 
+    class Meta:
+        model = TankLogConsumption
+        fields = [
+            'id', 'layer_id', 'stock_status_id',
+            'vendor_name', 'quantity_consumed', 'rate', 'created_at',
+        ]
+ 
+ 
+class TankLogResponseSerializer(serializers.ModelSerializer):
+    consumptions = TankLogConsumptionResponseSerializer(many=True, read_only=True)
+    stock_status_id = serializers.IntegerField(
+        source='stock_status.id', read_only=True
+    )
+    tank_layer_id = serializers.IntegerField(
+        source='tank_layer.id', read_only=True
+    )
+ 
+    class Meta:
+        model = TankLog
+        fields = [
+            'id', 'tank_code', 'log_type', 'quantity',
+            'stock_status_id', 'tank_layer_id',
+            'remarks', 'created_at', 'created_by',
+            'consumptions',
+        ]
+ 
+ 
