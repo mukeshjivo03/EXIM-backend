@@ -156,4 +156,14 @@ class TankLogResponseSerializer(serializers.ModelSerializer):
             'consumptions',
         ]
  
- 
+class TankConsumptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TankLogConsumption
+        fields = '__all__'
+        read_only_fields = ['created_at']
+        
+class TankLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TankLog
+        fields = '__all__'
+        read_only_fields = ['created_at']

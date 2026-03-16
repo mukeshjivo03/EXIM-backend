@@ -13,7 +13,7 @@ from .models import TankLayer, TankLog, TankLogConsumption
 from .services import TankService
 from stock.models import StockStatus, StockStatusUpdateLog
 from .models import TankItem, TankData
-from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankLayerResponseSerializer , TankLogResponseSerializer
+from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
 
 
@@ -493,3 +493,16 @@ class TankLogsView(APIView):
             'logs': serializer.data,
         })
  
+class TankConsumptionView(generics.ListAPIView):
+    
+    permission_classes = [IsAuthenticated]
+    queryset = TankLogConsumption.objects.all()
+    serializer_class = TankConsumptionSerializer
+    
+class TankLogView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = TankLog.objects.all()
+    serializer_class = TankLogResponseSerializer
+    
+    
+        
