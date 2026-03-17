@@ -129,22 +129,28 @@ class TankItemWiseSummary(APIView):
         )
 
         results = []
+        grand_total_quantity = Decimal('0.00')
         for item in item_data:
             tank_codes = list(
                 queryset.filter(item_code=item['item_code__tank_item_code'])
                 .values_list('tank_code', flat=True)
             )
+            qty = item['quantity_in_liters'] or Decimal('0.00')
+            grand_total_quantity += qty
             results.append({
                 "color": item['item_code__color'],
                 "tank_item_code": item['item_code__tank_item_code'],
                 "tank_item_name": item['item_code__tank_item_name'],
-                "quantity_in_liters": item['quantity_in_liters'] or Decimal('0.00'),
+                "quantity_in_liters": qty,
                 "total_capacity": item['total_capacity'] or Decimal('0.00'),
                 "tank_count": item['tank_count'],
                 "tank_numbers": tank_codes,
             })
 
-        return Response(results)
+        return Response({
+            "total_quantity": grand_total_quantity,
+            "items": results,
+        })
     
 
 

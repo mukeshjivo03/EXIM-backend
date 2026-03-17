@@ -137,6 +137,8 @@ class TankService:
             .select_for_update()
         )
 
+        exhausted_stock_ids = set()
+
         for layer in layers:
             if remaining_to_consume <= Decimal('0.00'):
                 break
@@ -149,6 +151,8 @@ class TankService:
                 consumed = layer.quantity_remaining
                 layer.quantity_remaining = Decimal('0.00')
                 layer.is_exhausted = True
+                if layer.stock_status_id:
+                    exhausted_stock_ids.add(layer.stock_status_id)
             else:
                 # Partially consumed — this layer still has oil left
                 consumed = remaining_to_consume
@@ -165,6 +169,16 @@ class TankService:
             )
 
             remaining_to_consume -= consumed
+
+        # Mark stock entries as COMPLETED if all their layers are exhausted
+        for stock_id in exhausted_stock_ids:
+            has_active_layers = TankLayer.objects.filter(
+                stock_status_id=stock_id, is_exhausted=False
+            ).exists()
+            if not has_active_layers:
+                StockStatus.objects.filter(pk=stock_id).update(
+                    status='COMPLETED', deleted=True
+                )
 
         # Update tank current capacity
         tank.current_capacity = current - quantity
