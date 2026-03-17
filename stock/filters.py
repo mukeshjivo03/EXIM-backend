@@ -8,9 +8,9 @@ class StockStatusFilters(filters.FilterSet):
     # Matches card_code in your Party model
     vendor = filters.CharFilter(field_name='vendor_code__card_code')
     
-    # Matches item_code in your RMProducts model
-    item = filters.CharFilter(field_name='item_code__item_code')
+    # Matches tank_item_code in TankItem model (FK to_field)
+    item = filters.CharFilter(field_name='item_code__tank_item_code')
 
     class Meta:
         model = StockStatus
-        fields = ['status', 'vendor_code', 'item_code']
+        fields = ['status']
