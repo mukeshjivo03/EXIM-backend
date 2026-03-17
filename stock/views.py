@@ -146,6 +146,7 @@ STATUS_DISPLAY_ORDER = [
     'PROCESSING',
     'COMPLETED',
     'DELIVERED',
+    
 ]
 
 class StockDashboard(APIView):
@@ -156,13 +157,13 @@ class StockDashboard(APIView):
         # 1.  IN FACTORY  (from TankData → grouped by item_code)
         # ────────────────────────────────────────────────────────────
         tank_qs = (
-            TankData.objects
-            .filter(is_active=True, item_code__isnull=False)
-            .values(item=F('item_code__tank_item_code'))
-            .annotate(qty=Sum('current_capacity'))
+            StockStatus.objects
+            .filter(deleted=False, status='IN_TANK')
+            .values('item_code_id')
+            .annotate(qty=Sum('quantity'))
         )
         in_factory_map = {
-            row['item']: float(row['qty'] or 0) for row in tank_qs
+            row['item_code_id']: float(row['qty'] or 0)  for row in tank_qs
         }
 
         # ────────────────────────────────────────────────────────────
