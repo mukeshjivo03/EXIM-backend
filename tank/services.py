@@ -43,7 +43,7 @@ class TankService:
         # --- Stock Split Logic ---
 
         remainder = stock_entry.quantity_in_litre - quantity
-        quantity_in_kg = quantity * 0.92
+        quantity_in_kg = quantity * Decimal('0.92')
 
 
         if remainder > Decimal('0.00'):
