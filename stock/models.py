@@ -14,7 +14,6 @@ class StockStatus(models.Model):
         ('MUNDRA_PORT' , 'MUNDRA_PORT'),
         ('ON_THE_SEA' , 'ON_THE_SEA'),
         ('IN_CONTRACT' , 'IN_CONTRACT'),
-        ('COMPLETED'  , 'COMPLETED'),
         ('DELIVERED' , 'DELIVERED'),
         ('IN_TRANSIT' , 'IN_TRANSIT'),
         ('PENDING' ,  'PENDING'),
