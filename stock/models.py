@@ -28,6 +28,7 @@ class StockStatus(models.Model):
     rate = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=20, decimal_places=2 , editable = False , default = '0.00')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity_in_litre = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
     vehicle_number = models.CharField(max_length=50 , null = True)
     transporter = models.CharField(max_length=255 , null = True)    
     location = models.CharField(max_length=255  , null = True)
@@ -48,7 +49,13 @@ class StockStatus(models.Model):
             self.total = self.rate * self.quantity
         else:
             self.total = Decimal('0.00')
-
+            
+        if self.quantity is not None:
+            self.quantity_in_litre = self.quantity / Decimal(0.92)
+        else:
+            self.quantity_in_litre = Decimal('0.00')
+            
+            
         is_new = self.pk is None
 
         if not is_new:

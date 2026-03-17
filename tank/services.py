@@ -10,17 +10,6 @@ class TankService:
     @transaction.atomic
     def inward(tank_code, stock_status_id, quantity, created_by):
         
-        """
-        Oil goes INTO the tank.
-        Full flow in one atomic transaction:
-        1. Validate tank space and item match
-        2. Handle stock split if quantity < stock entry quantity
-        3. Update original stock entry status to IN_TANK
-        4. Create TankLayer
-        5. Create TankLog
-        6. Update tank current_capacity
-        """
-        
         tank = TankData.objects.select_for_update().get(tank_code=tank_code)
         stock_entry = StockStatus.objects.select_for_update().get(pk=stock_status_id)
 
@@ -34,9 +23,9 @@ class TankService:
             )
 
         # Quantity cannot exceed stock entry quantity
-        if quantity > stock_entry.quantity:
+        if quantity > stock_entry.quantity_in_litre:
             raise ValueError(
-                f"Stock entry #{stock_entry.pk} only has {stock_entry.quantity} MT. Cannot add {quantity} MT."
+                f"Stock entry #{stock_entry.pk} only has {stock_entry.quantity_in_litre} MT. Cannot add {quantity} MT."
             )
 
         # Item must match tank's item
@@ -53,7 +42,9 @@ class TankService:
 
         # --- Stock Split Logic ---
 
-        remainder = stock_entry.quantity - quantity
+        remainder = stock_entry.quantity_in_litre - quantity
+        quantity_in_kg = quantity * 0.92
+
 
         if remainder > Decimal('0.00'):
             # Partial quantity — create a new entry with the leftover
@@ -62,12 +53,12 @@ class TankService:
                 status='OUT_SIDE_FACTORY',
                 vendor_code=stock_entry.vendor_code,
                 rate=stock_entry.rate,
-                quantity=remainder,
+                quantity=quantity_in_kg,
                 created_by=created_by,
             )
 
         # Update original stock entry — quantity becomes what went into tank, status becomes IN_TANK
-        stock_entry.quantity = quantity
+        stock_entry.quantity = quantity_in_kg
         stock_entry.status = 'IN_TANK'
         stock_entry.save()
 
