@@ -56,8 +56,8 @@ class StockStatusInsights(APIView):
 
         if total_qty > 0:
             avg_price_per_kg = round(total_value / total_qty, 2)
-            # 1 litre of oil = 0.92 kg, so price_per_ltr = price_per_kg * 0.92
-            avg_price_per_ltr = round(avg_price_per_kg * Decimal('0.92'), 2)
+            # 1 litre of oil = 0.91 kg, so price_per_ltr = price_per_kg * 0.91
+            avg_price_per_ltr = round(avg_price_per_kg * Decimal('0.91'), 2)
         else:
             avg_price_per_kg = Decimal('0.00')
             avg_price_per_ltr = Decimal('0.00')
@@ -86,7 +86,7 @@ class StockStatusSummary(APIView):
 
         if total_qty > 0:
             avg_price_per_kg = round(total_value / total_qty, 2)
-            avg_price_per_ltr = round(avg_price_per_kg * Decimal('0.92'), 2)
+            avg_price_per_ltr = round(avg_price_per_kg * Decimal('0.91'), 2)
         else:
             avg_price_per_kg = Decimal('0.00')
             avg_price_per_ltr = Decimal('0.00')
