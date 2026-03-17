@@ -111,7 +111,7 @@ class RMProductListView(generics.ListAPIView):
 
 
 class RMProductSummaryView(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         queryset = RMProducts.objects.exclude(total_qty=0)
@@ -138,7 +138,7 @@ class RMProductSummaryView(APIView):
 
 
 class RMProductVarietyListView(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         varieties = RMProducts.objects.values_list('u_variety', flat=True).distinct().order_by('u_variety')

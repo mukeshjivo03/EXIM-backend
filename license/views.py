@@ -12,7 +12,6 @@ class AdvanceLicenseHeadersListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     queryset = AdvanceLicenseHeaders.objects.all()
     serializer_class = AdvanceLicenseHeaderCreateSerialzer
-    permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
 
 
 class AdvanceLicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
@@ -41,15 +40,17 @@ class AdvanceLicenseLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroy
 class DFIALicenseHeaderCreateView(generics.CreateAPIView):
     queryset = DFIALicenseHeader.objects.all()
     serializer_class = DFIALicenseheaderCreateSerializer
-    permission_class = [ IsAuthenticated & (IsManagerUser | IsAdminUser)]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
 
 class DFIALicenseHeaderListView(generics.ListAPIView):
     queryset = DFIALicenseHeader.objects.all()
     serializer_class = DFIALicenseListSerializer
-    
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+
 class DFIALicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = DFIALicenseHeader.objects.all()
     serializer_class = DFIALicenseListSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     lookup_field = 'file_no'
     
 
@@ -70,6 +71,7 @@ class DFIALicenseLinesListView(generics.ListAPIView):
 class DFIALicenseLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = DFIALicenseLines.objects.all()
     serializer_class = DFIALicenseLineSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     lookup_field = 'id'
     
     

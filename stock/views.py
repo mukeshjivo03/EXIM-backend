@@ -99,6 +99,7 @@ class StockStatusSummary(APIView):
         })
 
 class OutsideFactoryStock(APIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
     def get(self,request):
         queryset = StockStatus.objects.filter(deleted=False, status='OUT_SIDE_FACTORY')
         serializer = StockStatusSerializer(queryset, many=True)
@@ -106,6 +107,7 @@ class OutsideFactoryStock(APIView):
     
     
 class GetUniqueRM(APIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
     def get(self, request):
         codes = (
             StockStatus.objects
@@ -116,6 +118,7 @@ class GetUniqueRM(APIView):
         return Response(list(codes))
 
 class GetStockEntrybyRM(APIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
     def get(self, request):
         item_code = request.query_params.get('item_code')
 
