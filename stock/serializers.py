@@ -13,9 +13,11 @@ class StockStatusSerializer(serializers.ModelSerializer):
     )
 
     vendor_code = serializers.SlugRelatedField(
-        slug_field='card_code', 
+        slug_field='card_code',
         queryset=Party.objects.all()
     )
+
+    eta = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = StockStatus
