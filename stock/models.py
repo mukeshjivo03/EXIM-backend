@@ -51,7 +51,7 @@ class StockStatus(models.Model):
             self.total = Decimal('0.00')
             
         if self.quantity is not None:
-            self.quantity_in_litre = self.quantity / Decimal(0.92)
+            self.quantity_in_litre = self.quantity / Decimal('0.92')
         else:
             self.quantity_in_litre = Decimal('0.00')
             
