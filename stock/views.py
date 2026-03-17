@@ -128,7 +128,7 @@ class GetStockEntrybyRM(APIView):
         queryset = (
             StockStatus.objects
             .filter(deleted=False, item_code=item_code, status='OUT_SIDE_FACTORY')
-            .values('id', 'vendor_code', 'rate', 'quantity', 'quantity_in_litre','total', 'vehicle_number', 'transporter', 'location', 'eta', 'created_at')
+            .values('id', 'vendor_code', 'vendor_code__card_name', 'rate', 'quantity', 'quantity_in_litre','total', 'vehicle_number', 'transporter', 'location', 'eta', 'created_at')
             .order_by('-created_at')
         )
 
