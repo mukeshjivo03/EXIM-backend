@@ -53,16 +53,15 @@ class TankService:
             # Partial quantity — create a new entry with the leftover
             StockStatus.objects.create(
                 item_code=stock_entry.item_code,
-                status='OUT_SIDE_FACTORY',
+                status='IN_TANK',
                 vendor_code=stock_entry.vendor_code,
                 rate=stock_entry.rate,
-                quantity=quantity_remaining_in_kg,
+                quantity= quantity_in_tank_in_kg,
                 created_by=created_by,
             )
 
         # Update original stock entry — quantity becomes what went into tank, status becomes IN_TANK
-        stock_entry.quantity = quantity_in_tank_in_kg
-        stock_entry.status = 'IN_TANK'
+        stock_entry.quantity = quantity_remaining_in_kg
         stock_entry.save()
 
         # --- Create Tank Layer ---
