@@ -111,6 +111,7 @@ class TankService:
         """
         Oil goes OUT of the tank (production consumption).
         FIFO: eats oldest layers first, records cost trail.
+        Updates StockStatus quantity (KG) as oil is consumed.
         """
         tank = TankData.objects.select_for_update().get(tank_code=tank_code)
 
@@ -141,7 +142,8 @@ class TankService:
             .select_for_update()
         )
 
-        exhausted_stock_ids = set()
+        # Track consumption per stock_status
+        stock_consumed_litres = {}  # {stock_status_id: total_litres_consumed}
 
         for layer in layers:
             if remaining_to_consume <= Decimal('0.00'):
@@ -155,8 +157,6 @@ class TankService:
                 consumed = layer.quantity_remaining
                 layer.quantity_remaining = Decimal('0.00')
                 layer.is_exhausted = True
-                if layer.stock_status_id:
-                    exhausted_stock_ids.add(layer.stock_status_id)
             else:
                 # Partially consumed — this layer still has oil left
                 consumed = remaining_to_consume
@@ -164,7 +164,7 @@ class TankService:
 
             layer.save()
 
-            # Record the consumption trail (rate is snapshot — won't change even if stock entry is edited later)
+            # Record the consumption trail
             TankLogConsumption.objects.create(
                 tank_log=log,
                 tank_layer=layer,
@@ -172,17 +172,32 @@ class TankService:
                 rate=layer_rate,
             )
 
+            # Accumulate per stock_status
+            if layer.stock_status_id:
+                stock_consumed_litres[layer.stock_status_id] = (
+                    stock_consumed_litres.get(layer.stock_status_id, Decimal('0.00')) + consumed
+                )
+
             remaining_to_consume -= consumed
 
-        # Mark stock entries as COMPLETED if all their layers are exhausted
-        for stock_id in exhausted_stock_ids:
+        # --- Update each touched StockStatus (mirror of inward split logic) ---
+        for stock_id, consumed_litres in stock_consumed_litres.items():
+            stock = StockStatus.objects.select_for_update().get(pk=stock_id)
+
+            # Convert litres back to KG (same factor used in inward)
+            consumed_kg = consumed_litres * Decimal('0.91')
+            stock.quantity = max(stock.quantity - consumed_kg, Decimal('0.00'))
+
+            # If all layers for this stock are done → COMPLETED
             has_active_layers = TankLayer.objects.filter(
                 stock_status_id=stock_id, is_exhausted=False
             ).exists()
+
             if not has_active_layers:
-                StockStatus.objects.filter(pk=stock_id).update(
-                    status='COMPLETED', deleted=True
-                )
+                stock.status = 'COMPLETED'
+                stock.deleted = True
+
+            stock.save()  # triggers quantity_in_litre recalc + update log
 
         # Update tank current capacity
         tank.current_capacity = current - quantity
@@ -193,7 +208,7 @@ class TankService:
             'consumptions': list(log.consumptions.all()),
             'cost_breakdown': TankService.get_outward_cost_breakdown(log),
         }
-
+        
     @staticmethod
     def get_outward_cost_breakdown(tank_log):
         """
