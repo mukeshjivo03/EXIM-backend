@@ -44,8 +44,7 @@ class StockStatusInsights(APIView):
         filterset = StockStatusFilters(request.GET, queryset=queryset)
         if filterset.is_valid():
             queryset = filterset.qs
-        # FIXED: Use Count('id') for the total number of records
-        insights = queryset.aggregate(
+            insights = queryset.aggregate(
             total_value=Sum("total"),
             total_qty=Sum('quantity'),
             total_count=Count('id')
