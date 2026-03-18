@@ -57,6 +57,8 @@ class TankService:
                 vendor_code=stock_entry.vendor_code,
                 rate=stock_entry.rate,
                 quantity= quantity_in_tank_in_kg,
+                vehicle_number=stock_entry.vehicle_number,
+                transporter=stock_entry.transporter,
                 created_by=created_by,
             )
 
