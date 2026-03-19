@@ -134,6 +134,7 @@ class GetStockEntrybyRM(APIView):
         return Response(list(queryset))
 
 
+
 STATUS_DISPLAY_ORDER = [
     'ON_THE_WAY',
     'UNDER_LOADING',
@@ -254,7 +255,7 @@ class StockDashboard(APIView):
         ordered_items = [ic for ic in ITEM_CODE_DISPLAY_ORDER if ic in all_items]
         ordered_items += sorted(all_items - set(ITEM_CODE_DISPLAY_ORDER))
         
-        for item_code in sorted(all_items):
+        for item_code in ordered_items:
             in_fac  = in_factory_map.get(item_code, 0)
             out_fac = outside_factory_map.get(item_code, 0)
             row_total = in_fac + out_fac
