@@ -151,6 +151,25 @@ STATUS_DISPLAY_ORDER = [
     
 ]
 
+ITEM_CODE_DISPLAY_ORDER = [
+    'RM0CDRO',
+    'RM00C01',
+    'RM00CPC',
+    'RM00C02',
+    'RM00SBR',
+    'RMMKG01',
+    'RM0GNCP',
+    'RM00GNR',
+    'RM00GNR02',
+    'RM00RBR',
+    'RM00RBD',
+    'RM00CSR',
+    'RM0SESM',
+    'RM00P01',
+    'RM0EL01',
+    'RM0EV01'
+]
+
 class StockDashboard(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     def get(self, request):
@@ -220,6 +239,9 @@ class StockDashboard(APIView):
         for status in STATUS_DISPLAY_ORDER:
             if status in status_vendors and status_vendors[status]:
                 ordered_status_vendors[status] = sorted(status_vendors[status])
+                
+
+
 
         # ────────────────────────────────────────────────────────────
         # 5.  ASSEMBLE ITEM ROWS + COLUMN TOTALS
@@ -228,7 +250,10 @@ class StockDashboard(APIView):
         total_in_factory = 0
         total_outside_factory = 0
         status_vendor_totals = defaultdict(float)
-
+        
+        ordered_items = [ic for ic in ITEM_CODE_DISPLAY_ORDER if ic in all_items]
+        ordered_items += sorted(all_items - set(ITEM_CODE_DISPLAY_ORDER))
+        
         for item_code in sorted(all_items):
             in_fac  = in_factory_map.get(item_code, 0)
             out_fac = outside_factory_map.get(item_code, 0)
@@ -276,5 +301,6 @@ class StockDashboard(APIView):
                 'grand_total': grand_total,
             },
         })
+
 
 
