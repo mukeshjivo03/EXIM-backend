@@ -90,7 +90,7 @@ class RMProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     
     
 class RMProductListView(generics.ListAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
 
     queryset = RMProducts.objects.all()
     serializer_class = RMProductSerializer
@@ -138,7 +138,7 @@ class RMProductSummaryView(APIView):
 
 
 class RMProductVarietyListView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
 
     def get(self, request):
         varieties = RMProducts.objects.values_list('u_variety', flat=True).distinct().order_by('u_variety')
@@ -156,7 +156,7 @@ class FGProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     
     
 class FGProductListView(generics.ListAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
     
     queryset = FGProducts.objects.all()
     serializer_class = FGProductSerializer
@@ -179,7 +179,7 @@ class PartyGetandDeleteView(generics.RetrieveDestroyAPIView):
     
 
 class PartyListView(generics.ListAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser | IsManagerUser]
     
     queryset = Party.objects.all()
     serializer_class =  PartySerializer
