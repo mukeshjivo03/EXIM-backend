@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from .models import DomesticReports
 
-class DomesticReportSerializer(serializers.modelSerializer):
+class DomesticReportSerializer(serializers.ModelSerializer):
+    
     class Meta:
-        mdoel = DomesticReports
+        model = DomesticReports
         fields = '__all__'
 
