@@ -45,21 +45,7 @@ class TankService:
         remainder = stock_entry.quantity_in_litre - quantity
         quantity_remaining_in_kg = remainder * Decimal('0.91')
         quantity_in_tank_in_kg = quantity * Decimal('0.91')
-        
-
-
-        if remainder > Decimal('0.00'):
-            # Partial quantity — create a new entry with the leftover
-            StockStatus.objects.create(
-                item_code=stock_entry.item_code,
-                status='OUT_SIDE_FACTORY',
-                vendor_code=stock_entry.vendor_code,
-                rate=stock_entry.rate,
-                quantity=quantity_remaining_in_kg,
-                vehicle_number = stock_entry.vehicle_number,
-                transporter = stock_entry.transporter,
-                created_by=created_by,
-            )
+ 
 
         # Update original stock entry — quantity becomes what went into tank, status becomes IN_TANK
         stock_entry.quantity = quantity_in_tank_in_kg
