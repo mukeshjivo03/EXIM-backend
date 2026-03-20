@@ -174,10 +174,6 @@ ITEM_CODE_DISPLAY_ORDER = [
 class StockDashboard(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
     def get(self, request):
-
-        # ────────────────────────────────────────────────────────────
-        # 1.  IN FACTORY  (from TankData → grouped by item_code)
-        # ────────────────────────────────────────────────────────────
         tank_qs = (
             StockStatus.objects
             .filter(deleted=False, status='IN_TANK')
@@ -188,8 +184,6 @@ class StockDashboard(APIView):
             row['item_code_id']: float(row['qty'] or 0)  for row in tank_qs
         }
 
-        # ────────────────────────────────────────────────────────────
-        # 2.  OUTSIDE FACTORY  (StockStatus, no vendor breakdown)
         # ────────────────────────────────────────────────────────────
         outside_qs = (
             StockStatus.objects
