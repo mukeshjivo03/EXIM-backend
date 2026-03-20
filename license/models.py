@@ -26,7 +26,6 @@ class AdvanceLicenseHeaders(models.Model):
     def save(self, *args , **kwargs):
         if self.cif_value_inr and self.cif_exchange_rate:
             self.cif_value_usd = self.cif_value_inr / self.cif_exchange_rate
-            
         
         if self.fob_value_inr and self.fob_exhange_rate:
             self.fob_value_usd = self.fob_value_inr / self.fob_exhange_rate
@@ -80,15 +79,9 @@ class DFIALicenseHeader(models.Model):
         if self.fob_value_inr and self.fob_exchange_rate:
             self.fob_value_usd = self.fob_value_inr / self.fob_exchange_rate
             
-        elif self.fob_value_usd and self.fob_exchange_rate:
-            self.fob_value_inr = self.fob_value_usd * self.fob_exchange_rate
-            
             
         if self.cif_value_inr and self.cif_exchange_rate:
             self.cif_value_usd = self.cif_value_inr / self.cif_exchange_rate
-            
-        elif self.cif_value_usd and self.cif_exchange_rate:
-            self.cif_value_inr = self.cif_value_usd * self.cif_exchange_rate
             
        
         super().save(*args , **kwargs)
