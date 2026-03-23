@@ -167,3 +167,8 @@ class TankLogSerializer(serializers.ModelSerializer):
         model = TankLog
         fields = '__all__'
         read_only_fields = ['created_at']
+        
+class TransferTankSerialier(serializers.ModelSerializer):
+    class Meta:
+        model = TankData
+        fields = ['tank_code' , 'item_code','current_capacity' ,'tank_capacity']

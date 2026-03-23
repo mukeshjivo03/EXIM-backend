@@ -1,5 +1,7 @@
 from django.urls import path
-from .views import StockStatusListCreateView , StockStatusUpdateRetrieveDeleteView , StockUpdateLogListView , StockStatusInsights , StockStatusSummary, StockDashboard, OutsideFactoryStock , GetUniqueRM , GetStockEntrybyRM
+from .views import StockStatusListCreateView , StockStatusUpdateRetrieveDeleteView , StockUpdateLogListView , StockStatusInsights , StockStatusSummary, StockDashboard, OutsideFactoryStock , GetUniqueRM , GetStockEntrybyRM , ArriveBatch , Dispatch , MoveView
+
+
 
 
 
@@ -15,4 +17,7 @@ urlpatterns = [
     path('out/' , OutsideFactoryStock.as_view()),
     path('get-unique-rm/' , GetUniqueRM.as_view()),
     path('get-stock-entry-by-rm/', GetStockEntrybyRM.as_view()),
+    path('arrive-batch/', ArriveBatch.as_view()),
+    path('dispatch/', Dispatch.as_view()),
+    path('move/', MoveView.as_view())
 ]

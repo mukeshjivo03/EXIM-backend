@@ -10,6 +10,7 @@ from collections import defaultdict, OrderedDict
 
 from .models import StockStatus ,StockStatusUpdateLog
 from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer
+from .services import arrive_batch , dispatch , move
 from accounts.permissions import IsAdminUser , IsFactoryUser , IsManagerUser
 from .filters import StockStatusFilters
 from tank.models import TankData
@@ -299,3 +300,45 @@ class StockDashboard(APIView):
 
 
 
+class Dispatch(APIView):
+    def post(self,request):
+        dispatch_status = request.data.get('destination_status')
+        source_id = request.data.get('stock_id')
+        dispatch_quantity = request.data.get('quantity')
+        action = request.data.get('action')
+        created_by = request.data.get('created_by')
+        
+        stock = StockStatus.objects.get(id=source_id)
+        new_record = dispatch(stock, dispatch_quantity, dispatch_status , created_by , action)
+        
+        serializer = StockStatusSerializer(new_record)
+        return Response(serializer.data)
+    
+class ArriveBatch(APIView):
+    def post(self,request):
+        otw_id = request.data.get('stock_id')
+        action = request.data.get('action')
+        destination_status = request.data.get('destination_status')
+        weighed_qty = request.data.get('weighed_qty')
+        created_by = request.data.get('created_by')
+        
+        otw_record = StockStatus.objects.get(id=otw_id)
+        
+        accumulator = arrive_batch(otw_record, weighed_qty, created_by ,action, destination_status) 
+        
+        serializer = StockStatusSerializer(accumulator)
+        return Response(serializer.data)
+    
+class MoveView(APIView):
+    def post(self,request):
+        stock_id =  request.data.get('stock_id')
+        new_quantity = request.data.get('new_quantity')
+        action = request.data.get('action')
+        created_by = request.data.get('created_by')
+        new_status = request.data.get('new_status')
+        
+        stock = StockStatus.objects.get(id=stock_id)
+        new_record = move(stock, new_quantity, action, new_status,created_by)
+        
+        serializer = StockStatusSerializer(new_record)
+        return Response(serializer.data)

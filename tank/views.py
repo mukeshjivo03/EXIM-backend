@@ -4,7 +4,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from collections import defaultdict
-from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField, Count
+from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField, Count , Q
 
 
 from decimal import Decimal
@@ -13,7 +13,7 @@ from .models import TankLayer, TankLog, TankLogConsumption
 from .services import TankService
 from stock.models import StockStatus, StockStatusUpdateLog
 from .models import TankItem, TankData
-from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer
+from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer , TransferTankSerialier
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
 
 
@@ -511,4 +511,13 @@ class TankLogView(generics.ListAPIView):
     serializer_class = TankLogResponseSerializer
     
     
-        
+class EmptyorSameTanks(APIView):
+    def get(self, request):
+        item_code = request.query_params.get('item_code')
+        empty_or_same_tanks = TankData.objects.filter(Q(item_code=item_code) |  Q(current_capacity=0))
+        serializer = TransferTankSerialier(empty_or_same_tanks, many=True)
+        return Response(serializer.data)
+    
+
+
+   

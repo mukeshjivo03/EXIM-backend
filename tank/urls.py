@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import TankItemViews , TankItemListCreateView , TankItemColorUpdateView , TankDataView, TankDataListCrateView , TankCapacityUpdateView , TankDataSummary , TankItemWiseSummary , TankCapacityInsights ,TankRateBreakdownView , TankInwardView , TankOutwardView , TankStatusView , TankLogsView , TankConsumptionView , TankLogView
+from .views import TankItemViews , TankItemListCreateView , TankItemColorUpdateView , TankDataView, TankDataListCrateView , TankCapacityUpdateView , TankDataSummary , TankItemWiseSummary , TankCapacityInsights ,TankRateBreakdownView , TankInwardView , TankOutwardView , TankStatusView , TankLogsView , TankConsumptionView , TankLogView , EmptyorSameTanks
+
 
 
 
@@ -24,6 +25,7 @@ urlpatterns = [
     path('logs/<str:tank_code>/', TankLogsView.as_view()),
     path('consumption/', TankConsumptionView.as_view()),
     path('log/', TankLogView.as_view()),
+    path('get-same-tanks/', EmptyorSameTanks.as_view()),
     
     # Keep this last — catch-all for tank_code
     path('<str:tank_code>/', TankDataView.as_view()),

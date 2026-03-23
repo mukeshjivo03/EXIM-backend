@@ -22,6 +22,20 @@ class StockStatus(models.Model):
         ('IN_TANK' , 'IN_TANK')
     )
     
+    REMAINDER_ACTION_CHOICES = (
+        ('RETAIN',    'Retain — reduce parent, keep alive'),
+        ('TOLERATE',  'Tolerate — absorb difference, close source'),
+        ('DEBIT',     'Debit — log as loss, close source'),
+    )
+
+    STORAGE_STATUSES = frozenset([
+        'AT_REFINERY',
+        'KANDLA_STORAGE',
+        'MUNDRA_PORT',
+        'IN_TANK',
+        'OUT_SIDE_FACTORY',
+    ])
+    
     item_code = models.ForeignKey(TankItem, on_delete=models.SET_NULL, null=True ,to_field = 'tank_item_code')
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
     vendor_code = models.ForeignKey(Party, on_delete=models.SET_NULL , null = True , to_field = 'card_code')
@@ -37,11 +51,20 @@ class StockStatus(models.Model):
     created_by = models.CharField(max_length=50)
     deleted = models.BooleanField(default=False)
     
+    parent = models.ForeignKey('self',null=True, blank=True,on_delete=models.SET_NULL,related_name='children',)
+    is_accumulator = models.BooleanField(default=False)
+    remainder_action = models.CharField(max_length=20,choices=REMAINDER_ACTION_CHOICES,null=True, blank=True)
+
     class Meta:
         db_table = 'stock_status'
         
     def __str__(self):
         return f"{self.item_code} - {self.status}"
+    
+    @property
+    def can_be_parent(self) -> bool:
+        return self.status in self.STORAGE_STATUSES
+    
     
     def save(self ,*args , **kwargs):
 
@@ -100,3 +123,24 @@ class StockStatusUpdateLog(models.Model):
         db_table = 'stock_update_logs'
         
     
+
+
+class DebitEntry(models.Model):
+    stock = models.ForeignKey(StockStatus, on_delete=models.SET_NULL, null=True, related_name='debits')
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    rate = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=20, decimal_places=2, editable=False)
+    responsible_party = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, to_field='card_code')
+    reason = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'stock_debit_entries'
+
+    def save(self, *args, **kwargs):
+        self.total = self.quantity * self.rate
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Debit {self.quantity} MTS @ {self.rate} — {self.stock}"
