@@ -35,16 +35,16 @@ class TankService:
             )
 
         # Stock entry must be OUTSIDE_FACTORY
-        if stock_entry.status != 'OUT_SIDE_FACTORY':
+        if stock_entry.status != 'COMPLETED':
             raise ValueError(
-                f"Stock entry #{stock_entry.pk} has status '{stock_entry.status}'. Expected 'OUT_SIDE_FACTORY'."
+                f"Stock entry #{stock_entry.pk} has status '{stock_entry.status}'. Expected 'COMPLETED'."
             )
 
         # --- Stock Split Logic ---
 
         remainder = stock_entry.quantity_in_litre - quantity
-        quantity_remaining_in_kg = remainder * Decimal('0.91')
-        quantity_in_tank_in_kg = quantity * Decimal('0.91')
+        quantity_remaining_in_kg = remainder / Decimal('1.0989')
+        quantity_in_tank_in_kg = quantity / Decimal('1.0989')
         
 
 
@@ -185,7 +185,7 @@ class TankService:
             stock = StockStatus.objects.select_for_update().get(pk=stock_id)
 
             # Convert litres back to KG (same factor used in inward)
-            consumed_kg = consumed_litres * Decimal('0.91')
+            consumed_kg = consumed_litres / Decimal('1.0989')
             stock.quantity = max(stock.quantity - consumed_kg, Decimal('0.00'))
 
             # If all layers for this stock are done → COMPLETED

@@ -56,8 +56,8 @@ class StockStatusInsights(APIView):
 
         if total_qty > 0:
             avg_price_per_kg = round(total_value / total_qty, 2)
-            # 1 litre of oil = 0.91 kg, so price_per_ltr = price_per_kg * 0.91
-            avg_price_per_ltr = round(avg_price_per_kg * Decimal('0.91'), 2)
+            # 1 litre = 1 kg * 1.0989, so price_per_ltr = price_per_kg / 1.0989
+            avg_price_per_ltr = round(avg_price_per_kg / Decimal('1.0989'), 2)
         else:
             avg_price_per_kg = Decimal('0.00')
             avg_price_per_ltr = Decimal('0.00')
@@ -86,7 +86,7 @@ class StockStatusSummary(APIView):
 
         if total_qty > 0:
             avg_price_per_kg = round(total_value / total_qty, 2)
-            avg_price_per_ltr = round(avg_price_per_kg * Decimal('0.91'), 2)
+            avg_price_per_ltr = round(avg_price_per_kg / Decimal('1.0989'), 2)
         else:
             avg_price_per_kg = Decimal('0.00')
             avg_price_per_ltr = Decimal('0.00')
@@ -111,7 +111,7 @@ class GetUniqueRM(APIView):
     def get(self, request):
         codes = (
             StockStatus.objects
-            .filter(deleted=False , status = 'OUT_SIDE_FACTORY')
+            .filter(deleted=False , status = 'COMPLETED')
             .values_list('item_code', flat=True)
             .distinct()
         )
@@ -127,7 +127,7 @@ class GetStockEntrybyRM(APIView):
 
         queryset = (
             StockStatus.objects
-            .filter(deleted=False, item_code=item_code, status='OUT_SIDE_FACTORY')
+            .filter(deleted=False, item_code=item_code, status='COMPLETED')
             .values('id', 'vendor_code', 'vendor_code__card_name', 'rate', 'quantity', 'quantity_in_litre','total', 'vehicle_number', 'transporter', 'location', 'eta', 'created_at')
             .order_by('-created_at')
         )
