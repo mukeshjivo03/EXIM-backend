@@ -99,6 +99,13 @@ class TankOutwardSerializer(serializers.Serializer):
     remarks = serializers.CharField(required=False, default='', allow_blank=True)
  
  
+class TankTransferSerializer(serializers.Serializer):
+    source_tank_code = serializers.CharField(max_length=20)
+    destination_tank_code = serializers.CharField(max_length=20)
+    quantity = serializers.DecimalField(max_digits=10, decimal_places=2)
+    remarks = serializers.CharField(required=False, default='', allow_blank=True)
+
+
 class TankLayerResponseSerializer(serializers.ModelSerializer):
     rate = serializers.DecimalField(
         max_digits=10, decimal_places=2, source='stock_status.rate', read_only=True
@@ -150,7 +157,7 @@ class TankLogResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = TankLog
         fields = [
-            'id', 'tank_code', 'log_type', 'quantity',
+            'id', 'tank_code', 'destination_tank', 'log_type', 'quantity',
             'stock_status_id', 'tank_layer_id',
             'remarks', 'created_at', 'created_by',
             'consumptions',

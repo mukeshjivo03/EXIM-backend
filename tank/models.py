@@ -73,11 +73,13 @@ class TankLog(models.Model):
     
     LOG_TYPE = (
         ("INWARD"  , "INWARD"),
-        ("OUTWARD" , "OUTWARD")
+        ("OUTWARD" , "OUTWARD"),
+        ("TRANSFER", "TRANSFER"),
     )
     
     log_type = models.CharField(max_length=10 , choices=LOG_TYPE)
-    tank_code = models.ForeignKey('TankData' , on_delete = models.CASCADE)
+    tank_code = models.ForeignKey('TankData' , on_delete = models.CASCADE , related_name='logs')
+    destination_tank = models.ForeignKey('TankData' , on_delete = models.CASCADE , null = True , blank=True , related_name='transfer_logs')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     stock_status = models.ForeignKey('stock.StockStatus' , on_delete = models.CASCADE , null = True)
     tank_layer = models.ForeignKey('TankLayer' , on_delete = models.CASCADE, null = True)

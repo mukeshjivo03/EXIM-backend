@@ -210,6 +210,119 @@ class TankService:
         }
         
     @staticmethod
+    @transaction.atomic
+    def transfer(source_tank_code, destination_tank_code, quantity, created_by, remarks=''):
+        """
+        Transfer oil from one tank to another.
+        FIFO: consumes oldest layers from source, creates new layers in destination.
+        """
+        source_tank = TankData.objects.select_for_update().get(tank_code=source_tank_code)
+        destination_tank = TankData.objects.select_for_update().get(tank_code=destination_tank_code)
+
+        # --- Validations ---
+
+        if source_tank_code == destination_tank_code:
+            raise ValueError("Source and destination tank cannot be the same.")
+
+        # Source tank has enough oil
+        source_current = source_tank.current_capacity or Decimal('0.00')
+        if quantity > source_current:
+            raise ValueError(
+                f"Tank {source_tank_code} only has {source_current} MT. Cannot transfer {quantity} MT."
+            )
+
+        # Destination tank has enough space
+        dest_available = destination_tank.tank_capacity - (destination_tank.current_capacity or Decimal('0.00'))
+        if quantity > dest_available:
+            raise ValueError(
+                f"Tank {destination_tank_code} only has {dest_available} MT space. Cannot transfer {quantity} MT."
+            )
+
+        # Item code must match or destination must be empty
+        if destination_tank.item_code and source_tank.item_code and destination_tank.item_code != source_tank.item_code:
+            raise ValueError(
+                f"Tank {destination_tank_code} holds {destination_tank.item_code}. Cannot transfer {source_tank.item_code}."
+            )
+
+        # --- Create Transfer Log ---
+
+        log = TankLog.objects.create(
+            tank_code=source_tank,
+            destination_tank=destination_tank,
+            log_type='TRANSFER',
+            quantity=quantity,
+            created_by=created_by,
+            remarks=remarks,
+        )
+
+        # --- FIFO consumption from source & layer creation in destination ---
+
+        remaining_to_transfer = quantity
+
+        layers = (
+            TankLayer.objects
+            .filter(tank_code=source_tank, is_exhausted=False)
+            .order_by('id')
+            .select_for_update()
+        )
+
+        for layer in layers:
+            if remaining_to_transfer <= Decimal('0.00'):
+                break
+
+            if layer.quantity_remaining <= remaining_to_transfer:
+                consumed = layer.quantity_remaining
+                layer.quantity_remaining = Decimal('0.00')
+                layer.is_exhausted = True
+            else:
+                consumed = remaining_to_transfer
+                layer.quantity_remaining -= consumed
+
+            layer.save()
+
+            # Record consumption trail on source
+            TankLogConsumption.objects.create(
+                tank_log=log,
+                tank_layer=layer,
+                quantity_consumed=consumed,
+                rate=layer.rate,
+            )
+
+            # Create new layer in destination tank with same data
+            TankLayer.objects.create(
+                tank_code=destination_tank,
+                stock_status=layer.stock_status,
+                item_code=layer.item_code,
+                vendor=layer.vendor,
+                rate=layer.rate,
+                quantity_added=consumed,
+                quantity_remaining=consumed,
+                created_by=created_by,
+            )
+
+            remaining_to_transfer -= consumed
+
+        # --- Update Tank Capacities ---
+
+        source_tank.current_capacity = source_current - quantity
+        if source_tank.current_capacity == Decimal('0.00'):
+            source_tank.item_code = None
+        source_tank.save()
+
+        if destination_tank.item_code is None:
+            destination_tank.item_code = source_tank.item_code
+        destination_tank.current_capacity = (destination_tank.current_capacity or Decimal('0.00')) + quantity
+        destination_tank.save()
+
+        return {
+            'log': log,
+            'consumptions': list(log.consumptions.all()),
+            'source_tank': source_tank_code,
+            'destination_tank': destination_tank_code,
+            'quantity_transferred': quantity,
+        }
+
+    @staticmethod
     def get_outward_cost_breakdown(tank_log):
         """
         For any outward log, returns the FIFO cost breakdown.

@@ -13,7 +13,7 @@ from .models import TankLayer, TankLog, TankLogConsumption
 from .services import TankService
 from stock.models import StockStatus, StockStatusUpdateLog
 from .models import TankItem, TankData
-from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer , TransferTankSerialier
+from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankTransferSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer , TransferTankSerialier
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
 
 
@@ -440,6 +440,46 @@ class TankOutwardView(APIView):
             )
  
  
+class TankTransferView(APIView):
+    """
+    POST /tank/transfer/
+    Body: { "source_tank_code": "TNK001", "destination_tank_code": "TNK002", "quantity": 50.00, "remarks": "" }
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser]
+
+    def post(self, request):
+        serializer = TankTransferSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            result = TankService.transfer(
+                source_tank_code=serializer.validated_data['source_tank_code'],
+                destination_tank_code=serializer.validated_data['destination_tank_code'],
+                quantity=serializer.validated_data['quantity'],
+                created_by=request.user,
+                remarks=serializer.validated_data.get('remarks', ''),
+            )
+
+            return Response({
+                'message': 'Transfer successful',
+                'log': TankLogResponseSerializer(result['log']).data,
+                'source_tank': result['source_tank'],
+                'destination_tank': result['destination_tank'],
+                'quantity_transferred': result['quantity_transferred'],
+            }, status=status.HTTP_201_CREATED)
+
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'Unexpected error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 class TankStatusView(APIView):
     """
     GET /tank/<tank_code>/layers/
@@ -514,7 +554,7 @@ class TankLogView(generics.ListAPIView):
 class EmptyorSameTanks(APIView):
     def get(self, request):
         item_code = request.query_params.get('item_code')
-        empty_or_same_tanks = TankData.objects.filter(Q(item_code=item_code) |  Q(current_capacity=0))
+        empty_or_same_tanks = TankData.objects.filter(Q(item_code=item_code) | Q(current_capacity=Decimal(0.00)) | Q(current_capacity__isnull=True))
         serializer = TransferTankSerialier(empty_or_same_tanks, many=True)
         return Response(serializer.data)
     
