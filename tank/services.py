@@ -304,13 +304,15 @@ class TankService:
 
         # --- Update Tank Capacities ---
 
+        source_item_code = source_tank.item_code
+
         source_tank.current_capacity = source_current - quantity
         if source_tank.current_capacity == Decimal('0.00'):
             source_tank.item_code = None
         source_tank.save()
 
         if destination_tank.item_code is None:
-            destination_tank.item_code = source_tank.item_code
+            destination_tank.item_code = source_item_code
         destination_tank.current_capacity = (destination_tank.current_capacity or Decimal('0.00')) + quantity
         destination_tank.save()
 
