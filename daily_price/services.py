@@ -39,7 +39,7 @@ def fetch_table_manually():
                 "packing_kg":     clean_dec(row[start_col + 4]),
                 "gst_kg":         clean_dec(row[start_col + 6]),
                 "gst_ltr":        clean_dec(row[start_col + 8]),
-                "fetched_date":   date.today().isoformat()
+                "fetched_date":   date.today().isoformat(),
             })
         except IndexError:
             continue

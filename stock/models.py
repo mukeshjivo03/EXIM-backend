@@ -54,6 +54,7 @@ class StockStatus(models.Model):
     parent = models.ForeignKey('self',null=True, blank=True,on_delete=models.SET_NULL,related_name='children',)
     is_accumulator = models.BooleanField(default=False)
     remainder_action = models.CharField(max_length=20,choices=REMAINDER_ACTION_CHOICES,null=True, blank=True)
+    job_work = models.CharField(max_length=50 , blank=True , null= True)
 
     class Meta:
         db_table = 'stock_status'
@@ -68,17 +69,23 @@ class StockStatus(models.Model):
     
     def save(self ,*args , **kwargs):
 
+        if self.status == 'AT_REFINERY' and self.item_code_id == 'RM0CDRO':
+            self.quantity = self.quantity - (Decimal('0.03') * self.quantity)
+            self.item_code_id = 'RM00C01'
+
         if self.rate is not None and self.quantity is not None:
             self.total = self.rate * self.quantity
         else:
             self.total = Decimal('0.00')
-            
+
         if self.quantity is not None:
             self.quantity_in_litre = self.quantity * Decimal('1.0989')
         else:
             self.quantity_in_litre = Decimal('0.00')
             
-            
+
+
+
         is_new = self.pk is None
 
         if not is_new:
