@@ -153,11 +153,18 @@ class TankLogResponseSerializer(serializers.ModelSerializer):
     tank_layer_id = serializers.IntegerField(
         source='tank_layer.id', read_only=True
     )
- 
+    source_tank_code = serializers.CharField(
+        source='tank_code.tank_code', read_only=True
+    )
+    destination_tank_code = serializers.CharField(
+        source='destination_tank.tank_code', read_only=True, default=None
+    )
+
     class Meta:
         model = TankLog
         fields = [
-            'id', 'tank_code', 'destination_tank', 'log_type', 'quantity',
+            'id', 'log_type', 'quantity',
+            'source_tank_code', 'destination_tank_code',
             'stock_status_id', 'tank_layer_id',
             'remarks', 'created_at', 'created_by',
             'consumptions',

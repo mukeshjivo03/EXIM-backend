@@ -528,7 +528,7 @@ class TankLogsView(APIView):
             .prefetch_related(
                 'consumptions__tank_layer__stock_status__vendor_code',
             )
-            .select_related('stock_status', 'tank_layer')
+            .select_related('stock_status', 'tank_layer', 'tank_code', 'destination_tank')
             .order_by('-created_at')
         )
  
@@ -547,7 +547,12 @@ class TankConsumptionView(generics.ListAPIView):
     
 class TankLogView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = TankLog.objects.all()
+    queryset = (
+        TankLog.objects
+        .select_related('stock_status', 'tank_layer', 'tank_code', 'destination_tank')
+        .prefetch_related('consumptions__tank_layer__stock_status__vendor_code')
+        .order_by('-created_at')
+    )
     serializer_class = TankLogResponseSerializer
     
     
