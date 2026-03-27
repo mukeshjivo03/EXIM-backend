@@ -19,13 +19,14 @@ class TankDataSerializer(serializers.ModelSerializer):
     item_code = serializers.SlugRelatedField(
         slug_field='tank_item_code', 
         queryset=TankItem.objects.all(),
-        allow_null=True 
+        allow_null=True,
+        required=False   
     )
         
     class Meta:
         model = TankData
         fields = '__all__'
-        read_only_fields = ['created_at' , 'tank_']
+        read_only_fields = ['created_at' , 'tank_code']
         
         
     def validate(self, data):

@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import TankItemViews , TankItemListCreateView , TankItemColorUpdateView , TankDataView, TankDataListCrateView , TankCapacityUpdateView , TankDataSummary , TankItemWiseSummary , TankCapacityInsights ,TankRateBreakdownView , TankInwardView , TankOutwardView , TankTransferView , TankStatusView , TankLogsView , TankConsumptionView , TankLogView , EmptyorSameTanks
+from .views import TankItemViews , TankItemListCreateView , TankItemColorUpdateView , TankDataView, TankDataListCrateView , TankCapacityUpdateView , TankDataSummary , TankItemWiseSummary , TankCapacityInsights ,TankRateBreakdownView , TankInwardView , TankOutwardView , TankTransferView , TankStatusView , TankLogsView , TankConsumptionView , TankLogView , EmptyorSameTanks , ItemWiseAverage
+
 
 
 
@@ -18,7 +19,9 @@ urlpatterns = [
     path('update-capacity/<str:tank_code>/' , TankCapacityUpdateView.as_view()),
     path('item/update-color/<str:tank_item_code>/' , TankItemColorUpdateView.as_view()),
     path('item/<str:tank_item_code>/' , TankItemViews.as_view()),
-    
+    path('item-wise-average/', ItemWiseAverage.as_view()),
+
+
     path('inward/', TankInwardView.as_view()),
     path('outward/', TankOutwardView.as_view()),
     path('transfer/', TankTransferView.as_view()),

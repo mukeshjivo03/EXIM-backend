@@ -2,6 +2,8 @@ from django.db import transaction
 from decimal import Decimal
 from .models import TankData, TankLayer, TankLog, TankLogConsumption
 from stock.models import StockStatus
+from django.db.models import Sum
+
 
 
 class TankService:
@@ -405,3 +407,75 @@ class TankService:
             'total_cost': total_cost,
             'weighted_avg_rate': weighted_avg_rate,
         }
+        
+
+
+def ItemAvergaCost(itemCode):
+    
+    total_tank_capacity = TankData.objects.filter(item_code=itemCode).aggregate(total_capacity=Sum('current_capacity'))['total_capacity']
+    stockRecords = StockStatus.objects.filter(item_code=itemCode , deleted = False ,status ='IN_TANK').order_by('created_at').only('quantity_in_litre' , 'rate' ,  'created_at')
+
+    remaining = total_tank_capacity
+    weighted_sum = Decimal('0.00')
+    stock_status_quantity = Decimal('0.00')
+    breakdown = []
+    
+    for record in stockRecords:
+        if remaining <= 0:
+            break
+    
+        consumed = min(record.quantity_in_litre , remaining)
+        weighted_sum +=  record.rate * record.quantity_in_litre
+        stock_status_quantity += record.quantity_in_litre
+        remaining -= consumed
+        
+        breakdown.append({
+            'stock_id':          record.pk,
+            'created_at':        record.created_at,
+            'rate':              record.rate,
+            'batch_quantity':    record.quantity,
+            'quantity_consumed': consumed,
+            'batch_total':       consumed * record.rate,
+        })
+    
+    quantity_matched = total_tank_capacity - remaining
+    quantity_unmatched = remaining
+    
+    if quantity_matched == Decimal('0.00'):
+        return {
+            'item_code' : itemCode,
+            'tank_total_capacity' : total_tank_capacity,
+            'quantity_matched' : quantity_matched,
+            'quantity_unmatched' : quantity_unmatched,
+            'average_rate' : Decimal('0.00'),
+            'fifo_breakdown' : [],
+            'warning': (
+                'Tank has capacity but no IN_TANK stock records found. '
+                'Average cost cannot be computed.'
+            ),
+            
+        }
+        
+    print(weighted_sum)
+    average_rate = (weighted_sum / total_tank_capacity).quantize(Decimal('0.01'))
+    adjusted_average = (weighted_sum / stock_status_quantity).quantize(Decimal('0.01'))
+    warning = None
+    if quantity_unmatched > Decimal('0.00'):
+        warning = (
+            f'{quantity_unmatched} units of tank capacity could not be matched '
+            f'to any IN_TANK stock record. Average is partial.'
+        )
+
+    return {
+        'item_code':           itemCode,
+        'tank_total_capacity': total_tank_capacity,
+        'quantity_matched':    quantity_matched,
+        'quantity_unmatched':  quantity_unmatched,
+        'average_rate(IN_TANK)':        average_rate,
+        'adjusted_average(STOCKS)':    adjusted_average,
+        'warning':             warning,
+        'fifo_breakdown':      breakdown,
+    }
+    
+   
+        

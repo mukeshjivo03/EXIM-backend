@@ -342,3 +342,4 @@ class MoveView(APIView):
         
         serializer = StockStatusSerializer(new_record)
         return Response(serializer.data)
+    

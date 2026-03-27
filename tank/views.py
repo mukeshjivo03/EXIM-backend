@@ -10,7 +10,7 @@ from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField, Count , 
 from decimal import Decimal
 from rest_framework import status, serializers
 from .models import TankLayer, TankLog, TankLogConsumption
-from .services import TankService
+from .services import TankService , ItemAvergaCost
 from stock.models import StockStatus, StockStatusUpdateLog
 from .models import TankItem, TankData
 from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankTransferSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer , TransferTankSerialier
@@ -564,5 +564,9 @@ class EmptyorSameTanks(APIView):
         return Response(serializer.data)
     
 
-
-   
+class ItemWiseAverage(APIView):
+    def get(self , request):
+        item_code = request.query_params.get('item_code')
+        response = ItemAvergaCost(item_code)
+        return Response(response)
+        
