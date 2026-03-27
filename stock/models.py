@@ -1,6 +1,7 @@
 from django.db import models
 from sap_sync.models import RMProducts , Party 
-from tank.models import TankData , TankItem
+from tank.models import TankData , TankItem , TankLog
+
 from decimal import Decimal
 
 class StockStatus(models.Model):
@@ -92,7 +93,18 @@ class StockStatus(models.Model):
             for field in track_fields:
                 old_val = getattr(old_instance, field)
                 new_val = getattr(self, field)
-                if field == "status" and old_val != new_val:
+                
+                if field == "status" and new_val == "IN_TANK":
+                    TankLog.objects.create(
+                        log_type = 'INWARD',
+                        quantity = self.quantity,
+                        stock_status = self,
+                        created_by = self.created_by
+                    )
+                    
+                    
+                    
+                if old_val != new_val:
                     StockStatusUpdateLog.objects.create(
                         stock_id = self,
                         field_name = field,
