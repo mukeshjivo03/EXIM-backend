@@ -99,10 +99,11 @@ class StockStatus(models.Model):
                         log_type = 'INWARD',
                         quantity = self.quantity,
                         stock_status = self,
+                        vehicle_number = self.vehicle_number,
+                        rate = self.rate,
+                        party = self.vendor_code,
                         created_by = self.created_by
                     )
-                    
-                    
                     
                 if old_val != new_val:
                     StockStatusUpdateLog.objects.create(
