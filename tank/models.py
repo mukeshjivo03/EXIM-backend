@@ -82,7 +82,7 @@ class TankLog(models.Model):
     stock_status = models.ForeignKey('stock.StockStatus' , on_delete = models.CASCADE , null = True)
     vehicle_number = models.CharField(max_length=50 , null = True, blank=True)
     rate = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
-    party = models.ForeignKey('sap_sync.Party' , on_delete = models.SET_NULL , null = True)
+    party = models.CharField(max_length=50 , null = True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
     
