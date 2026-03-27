@@ -28,3 +28,4 @@ class StockStatusUpdateLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockStatusUpdateLog
         fields = '__all__'
+

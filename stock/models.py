@@ -83,9 +83,6 @@ class StockStatus(models.Model):
         else:
             self.quantity_in_litre = Decimal('0.00')
             
-
-
-
         is_new = self.pk is None
 
         if not is_new:
@@ -95,8 +92,7 @@ class StockStatus(models.Model):
             for field in track_fields:
                 old_val = getattr(old_instance, field)
                 new_val = getattr(self, field)
-
-                if old_val != new_val:
+                if field == "status" and old_val != new_val:
                     StockStatusUpdateLog.objects.create(
                         stock_id = self,
                         field_name = field,
@@ -110,7 +106,7 @@ class StockStatus(models.Model):
         if is_new:
             StockStatusUpdateLog.objects.create(
                 stock_id = self,
-                field_name = 'CREATED',
+                field_name = 'All',
                 old_value = '',
                 new_value = f"qty={self.quantity}, rate={self.rate}, status={self.status}",
                 updated_by = self.created_by,

@@ -343,3 +343,7 @@ class MoveView(APIView):
         serializer = StockStatusSerializer(new_record)
         return Response(serializer.data)
     
+class InTankLogView(APIView):
+    def get(delf,request):
+        queryset = StockStatusUpdateLog.objects.filter()
+    

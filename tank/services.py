@@ -448,7 +448,6 @@ def ItemAvergaCost(itemCode):
             'quantity_matched' : quantity_matched,
             'quantity_unmatched' : quantity_unmatched,
             'average_rate' : Decimal('0.00'),
-            'fifo_breakdown' : [],
             'warning': (
                 'Tank has capacity but no IN_TANK stock records found. '
                 'Average cost cannot be computed.'
@@ -458,7 +457,7 @@ def ItemAvergaCost(itemCode):
         
     print(weighted_sum)
     average_rate = (weighted_sum / total_tank_capacity).quantize(Decimal('0.01'))
-    adjusted_average = (weighted_sum / stock_status_quantity).quantize(Decimal('0.01'))
+    adjusted_average = (weighted_sum / quantity_matched).quantize(Decimal('0.01'))
     warning = None
     if quantity_unmatched > Decimal('0.00'):
         warning = (
@@ -472,9 +471,8 @@ def ItemAvergaCost(itemCode):
         'quantity_matched':    quantity_matched,
         'quantity_unmatched':  quantity_unmatched,
         'average_rate(IN_TANK)':        average_rate,
-        'adjusted_average(STOCKS)':    adjusted_average,
+        'adjusted_average(STO)':    adjusted_average,
         'warning':             warning,
-        'fifo_breakdown':      breakdown,
     }
     
    

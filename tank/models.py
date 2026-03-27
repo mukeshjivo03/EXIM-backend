@@ -89,8 +89,7 @@ class TankLog(models.Model):
     
     class Meta:
         db_table = 'tank_logs'
-        
-
+    
 
 class TankLogConsumption(models.Model):
     """
