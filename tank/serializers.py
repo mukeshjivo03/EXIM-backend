@@ -187,3 +187,8 @@ class TransferTankSerialier(serializers.ModelSerializer):
     class Meta:
         model = TankData
         fields = ['tank_code' , 'item_code','current_capacity' ,'tank_capacity']
+        
+class TankLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TankLog
+        fields = '__all__'

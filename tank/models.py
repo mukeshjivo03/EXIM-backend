@@ -78,12 +78,8 @@ class TankLog(models.Model):
     )
     
     log_type = models.CharField(max_length=10 , choices=LOG_TYPE)
-    tank_code = models.ForeignKey('TankData' , on_delete = models.CASCADE , related_name='logs')
-    destination_tank = models.ForeignKey('TankData' , on_delete = models.CASCADE , null = True , blank=True , related_name='transfer_logs')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     stock_status = models.ForeignKey('stock.StockStatus' , on_delete = models.CASCADE , null = True)
-    tank_layer = models.ForeignKey('TankLayer' , on_delete = models.CASCADE, null = True)
-    remarks = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
     

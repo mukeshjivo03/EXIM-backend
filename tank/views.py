@@ -12,8 +12,8 @@ from rest_framework import status, serializers
 from .models import TankLayer, TankLog, TankLogConsumption
 from .services import TankService , ItemAvergaCost
 from stock.models import StockStatus, StockStatusUpdateLog
-from .models import TankItem, TankData
-from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankTransferSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer , TransferTankSerialier
+from .models import TankItem, TankData 
+from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankTransferSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer , TransferTankSerialier , TankLogSerializer
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
 
 
@@ -547,13 +547,8 @@ class TankConsumptionView(generics.ListAPIView):
     
 class TankLogView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = (
-        TankLog.objects
-        .select_related('stock_status', 'tank_layer', 'tank_code', 'destination_tank')
-        .prefetch_related('consumptions__tank_layer__stock_status__vendor_code')
-        .order_by('-created_at')
-    )
-    serializer_class = TankLogResponseSerializer
+    queryset = TankLog.objects.all()
+    serializer_class = TankLogSerializer
     
     
 class EmptyorSameTanks(APIView):
