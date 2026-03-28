@@ -449,3 +449,14 @@ class BalanceSheetService:
             result = conn.execute_query(query)
             
         return result   
+    
+class GRPOServices:
+    def __init__(self):
+        self.connection = SAPConnection()
+        
+    def syncGRPOS(self):
+        with self.connection as conn:
+            query = Queries().get_open_grpos()
+            result = conn.execute_query(query)
+            
+        return result

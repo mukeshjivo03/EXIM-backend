@@ -10,6 +10,6 @@ urlpatterns = [
     path('daily-price/trends/', DailyPriceTrend.as_view()),
     path('daily-price/db-list/' , DailyPriceListView.as_view()),
     path('daily-price/range/', DailyPriceRangeView.as_view()),
-    path('jivo-rate/fetch' , JivoRatesFetch.as_view()),
+    path('jivo-rate/fetch/' , JivoRatesFetch.as_view()),
     path('jivo-rate/range/', JivoRatesWithRange.as_view()),
 ]

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet
+from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS
+
 
 
 
@@ -15,6 +16,7 @@ urlpatterns = [
     path('sap_sync/party/<str:cardCode>/' , syncPartyView.as_view()),
     path('sap_sync/rm/items/' , syncRMProductsView.as_view()),
     path('sap_sync/fg/items/' , syncFGProductsView.as_view()),
+    path('sap_sync/open-grpos/' , syncOpenGRPOS.as_view()),
 
     
     path('item/rm/<str:item_code>/' , RMProductGetandDeleteView.as_view()),

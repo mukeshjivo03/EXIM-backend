@@ -336,3 +336,28 @@ FROM OPENQUERY(HANADB112, '
                 ORDER BY "Balance"
             ')
         """
+        
+    def get_open_grpos(self):
+        return """
+        SELECT * FROM OPENQUERY(HANADB112, '
+        SELECT 
+            T0."DocNum" AS "GRPO Number",
+            T0."NumAtCard" AS "Vendor Ref No",
+            T2."U_NAME" AS "User Name",
+            T0."CardName" AS "Vendor Name",
+            T1."WhsCode" AS "Warehouse",
+            DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) AS "Pending Days"
+        FROM "JIVO_OIL_HANADB"."OPDN" T0
+        INNER JOIN "JIVO_OIL_HANADB"."PDN1" T1 ON T0."DocEntry" = T1."DocEntry"
+        
+        -- Join for User Name
+        LEFT JOIN "JIVO_OIL_HANADB"."OUSR" T2 ON T0."UserSign" = T2."USERID"
+    
+        WHERE T0."DocDate" >= ''2026-01-01'' 
+          AND T1."ItemCode" LIKE ''RM%'' 
+          AND T0."DocStatus" = ''O'' 
+          AND T1."WhsCode" IN (''BH-GJ'', ''BH-CRUDE'', ''BH-VA'')
+        ORDER BY "Pending Days" DESC
+    ')
+    """
+    
