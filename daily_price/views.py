@@ -10,7 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from .services import fetch_table_manually , fetch_jivo_rates
 from .models import DailyPrice , JivoRates
-from.serializers import DailyPriceSerializer
+from.serializers import DailyPriceSerializer , JivoRatesSerializer
 from accounts.permissions import IsAdminUser, IsManagerUser , IsFactoryUser
 
 
@@ -145,3 +145,18 @@ class JivoRatesFetch(APIView):
                 }
             )
         return Response({"status": f"Successfully processed {len(data)} rows"})
+    
+    
+class JivoRatesWithRange(APIView):
+    def get(self, request):
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+        
+        if not from_date or not to_date:
+            raise ValueError('Both from_date and to_date are required.')
+        
+        result = JivoRates.objects.filter(date__range=[from_date , to_date])
+        serialized = JivoRatesSerializer(result , many = True)
+        return Response(serialized.data)
+    
+    
