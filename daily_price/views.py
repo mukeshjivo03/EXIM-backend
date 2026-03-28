@@ -129,7 +129,7 @@ class JivoRatesFetch(APIView):
             
     def post(self, request):
         data = fetch_jivo_rates()
-        createdBy = request.get('created_by')
+        createdBy = request.data.get('created_by')
         
         if isinstance(date,dict) and "error" in data:
             return Response(data, status=400)
