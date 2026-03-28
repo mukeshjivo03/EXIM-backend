@@ -1,4 +1,5 @@
 import csv
+import io
 import requests
 from io import StringIO
 from datetime import date
@@ -44,17 +45,15 @@ def fetch_table_manually():
         except IndexError:
             continue
     return final_data
+
 def fetch_jivo_rates(creator_name="System"):
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2LwtfXKkkDiVzOc_T591-4KWwUvKW-ZaJokeixIzHkOyHNSjGv5Ilh3597ZgaMA/pub?gid=655973128&single=true&output=csv"
     
     response = requests.get(url)
     response.raise_for_status()
-    
-    # KEY FIX: Don't splitlines() — let csv.reader handle multiline quoted fields
-    import io
     rows = list(csv.reader(io.StringIO(response.text)))
 
-    # Find JIVO RATE anchor
+    # Step 1: Find JIVO RATE anchor
     anchor_row, anchor_col = None, None
     for r_idx, row in enumerate(rows):
         for c_idx, cell in enumerate(row):
@@ -65,9 +64,9 @@ def fetch_jivo_rates(creator_name="System"):
             break
 
     if anchor_row is None:
-        raise ValueError("JIVO RATE anchor not found.")
+        raise ValueError("JIVO RATE anchor not found in sheet.")
 
-    # Build commodity col map — normalize newlines in cell text
+    # Step 2: Build commodity col map — first match after anchor wins
     commodity_aliases = {
         'SOYA': 'SOYA',
         'Mustard': 'Mustard',
@@ -80,11 +79,20 @@ def fetch_jivo_rates(creator_name="System"):
     commodity_col_map = {}
     label_col = anchor_col
 
-
+    for c_idx in range(anchor_col + 1, len(header_row)):
+        normalized = ' '.join(header_row[c_idx].split())
+        if normalized in commodity_aliases:
+            commodity_name = commodity_aliases[normalized]
+            if commodity_name not in commodity_col_map:  # first match only
+                commodity_col_map[commodity_name] = c_idx
 
     print(f"Anchor: row={anchor_row}, col={anchor_col}")
     print(f"Commodity cols: {commodity_col_map}")
 
+    if not commodity_col_map:
+        raise ValueError("No commodities found in header row. Check sheet structure.")
+
+    # Step 3: Scan data rows for pack rates
     target_packs = {
         'Pouch 1 Ltr', 'Pouch 750 Gm', 'Pouch 700 Gm',
         'Bottle 1 Ltr', '15 Ltr Tin', '15 Kg Tin', '13 Kg Tin'
@@ -94,19 +102,9 @@ def fetch_jivo_rates(creator_name="System"):
     rates_to_create = []
 
     for row in rows[anchor_row + 1:]:
-        pack_label = row[label_col].strip()
-        if pack_label in target_packs:
-            soya_col = commodity_col_map.get('SOYA')
-            print(f"{pack_label} | SOYA col={soya_col} | raw value='{row[soya_col]}'")
-        for c_idx in range(anchor_col + 1, len(header_row)):
-            # Normalize: strip outer whitespace, replace internal newlines with space
-            normalized = ' '.join(header_row[c_idx].split())
-            if normalized in commodity_aliases:
-                commodity_col_map[commodity_aliases[normalized]] = c_idx
-                
-    for row in rows[anchor_row + 1:]:
         if label_col >= len(row):
             continue
+
         pack_label = row[label_col].strip()
         if not pack_label or pack_label not in target_packs:
             continue
