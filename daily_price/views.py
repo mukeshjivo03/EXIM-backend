@@ -150,7 +150,7 @@ class JivoRatesFetch(APIView):
 class JivoRatesWithRange(APIView):
     def get(self, request):
         from_date = request.query_params.get('from_date')
-        to_date = request.query_params.get('to_date')
+        to_date = request.params.get('to_date')
         
         if not from_date or not to_date:
             raise ValueError('Both from_date and to_date are required.')
