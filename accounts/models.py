@@ -45,3 +45,4 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     class Meta:
         db_table = 'users'
+        

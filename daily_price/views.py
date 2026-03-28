@@ -97,3 +97,16 @@ class DailyPriceTrend(APIView):
             "labels": unique_dates,
             "datasets": datasets
         })
+        
+        
+class DailyPriceRangeView(APIView):
+    def get(self, request):
+        from_date = request.query_params.get('from_date')
+        to_date = request.query_params.get('to_date')
+        
+        if not from_date or not to_date:
+            return Response({'error': 'Both from_date and to_date are required.'}, status=400)
+        
+        result = DailyPrice.objects.filter(date__range=[from_date, to_date])
+        serialized = DailyPriceSerializer(result, many=True)
+        return Response(serialized.data)
