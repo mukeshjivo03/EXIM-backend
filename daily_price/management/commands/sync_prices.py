@@ -24,6 +24,7 @@ class Command(BaseCommand):
                     'packing_cost_kg': row['packing_kg'],
                     'with_gst_kg': row['gst_kg'],
                     'with_gst_ltr': row['gst_ltr'],
+                    'craeted_by': 'System'
                 }
             )
             status = "Created" if created else "Updated"
@@ -40,6 +41,7 @@ class Command(BaseCommand):
                 date=row['date'],
                 defaults={
                     'rate': row['rate'],
+                    'created_by': 'System'
                 }
             )
             
