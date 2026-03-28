@@ -95,13 +95,14 @@ class StockStatus(models.Model):
                 new_val = getattr(self, field)
                 
                 if field == "status" and new_val == "IN_TANK":
+                    
                     TankLog.objects.create(
                         log_type = 'INWARD',
                         quantity = self.quantity,
                         stock_status = self,
                         vehicle_number = self.vehicle_number,
                         rate = self.rate,
-                        party = self.vendor_code,
+                        party=self.vendor_code.card_name if self.vendor_code else None,
                         created_by = self.created_by
                     )
                     
@@ -117,6 +118,17 @@ class StockStatus(models.Model):
         super().save(*args, **kwargs)
 
         if is_new:
+            if is_new and self.status == 'IN_TANK':
+                    TankLog.objects.create(
+                        log_type = 'INWARD',
+                        quantity = self.quantity,
+                        stock_status = self,
+                        vehicle_number = self.vehicle_number,
+                        rate = self.rate,
+                        party=self.vendor_code.card_name if self.vendor_code else None,
+                        created_by = self.created_by
+                    )
+                                    
             StockStatusUpdateLog.objects.create(
                 stock_id = self,
                 field_name = 'All',
