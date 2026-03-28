@@ -14,3 +14,17 @@ class DailyPrice(models.Model):
     class Meta:
         unique_together = ('commodity_name' , 'date')
         db_table  = 'daily_prices'
+        
+class JivoRates(models.Model):
+    pack_type = models.CharField(max_length=125 , blank=True , null =True)
+    commodity = models.CharField(max_length=125 , blank=True , null =True)
+    rate = models.DecimalField(max_digits=10 , decimal_places = 3     , blank = True , null = True)
+    
+    date = models.DateField()
+    created_by = models.CharField(max_length=50)   
+    
+    def __str__(self):
+        return f"{self.commodity} - {self.rate}"
+    
+    class Meta:
+        db_table  = 'jivo_rates'

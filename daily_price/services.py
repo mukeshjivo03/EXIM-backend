@@ -44,3 +44,69 @@ def fetch_table_manually():
         except IndexError:
             continue
     return final_data
+
+
+def fetch_jivo_rates(creator_name="System"):
+    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2LwtfXKkkDiVzOc_T591-4KWwUvKW-ZaJokeixIzHkOyHNSjGv5Ilh3597ZgaMA/pub?gid=655973128&single=true&output=csv"
+    
+    # 1. Fetch the CSV data
+    response = requests.get(url)
+    response.raise_for_status() # Ensure the request was successful
+    
+    # 2. Parse the CSV
+    lines = response.text.splitlines()
+    reader = csv.reader(lines)
+    
+    # Define what we are looking for (Anchors)
+    target_packs = [
+        '15 Ltr Tin', 'Pouch 1 Ltr', '15 Kg Tin NP', 
+        'Pouch 750 Gm', 'Pouch 700 Gm', 'Bottle 1 Ltr', '5 Ltr Jar'
+    ]
+    
+    # Define where the prices are relative to the anchor (Column offsets)
+    # Based on your CSV structure: Pouch 1 Ltr is at index i, Soya is i+1, Mustard is i+3, Sunflower is i+5
+    commodities_offsets = [
+        ('SOYA', 1),
+        ('Mustard', 3),
+        ('Sunflower', 5)
+    ]
+    
+    today = date.today()
+    rates_to_create = []
+
+    # 3. Iterate through rows to find anchors
+    for row in reader:
+        for i, cell in enumerate(row):
+            clean_cell = cell.strip()
+            
+            # If we hit a recognized pack type (e.g., "Pouch 1 Ltr")
+            if clean_cell in target_packs:
+                
+                # Extract rates for each commodity based on the offset
+                for commodity, offset in commodities_offsets:
+                    target_index = i + offset
+                    
+                    # Ensure we don't get an IndexError if the row is short
+                    if target_index < len(row):
+                        rate_str = row[target_index].strip()
+                        
+                        # If there is an actual rate value present
+                        if rate_str: 
+                            try:
+                                # Clean commas if any exist (e.g., "1,200.50")
+                                rate_val = float(rate_str.replace(',', ''))
+                                
+                                rates_to_create.append(
+                                    {
+                                        "pack_type":clean_cell,
+                                        "commodity":commodity,
+                                        "rate":rate_val,
+                                        "date":today,
+                                        "created_by":creator_name
+                                    }
+                                )
+                            except ValueError:
+                                # Ignore cells that have text instead of numbers
+                                pass 
+    
+    return rates_to_create

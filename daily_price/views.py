@@ -8,8 +8,8 @@ from collections import defaultdict
 from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .services import fetch_table_manually
-from .models import DailyPrice
+from .services import fetch_table_manually , fetch_jivo_rates
+from .models import DailyPrice , JivoRates
 from.serializers import DailyPriceSerializer
 from accounts.permissions import IsAdminUser, IsManagerUser , IsFactoryUser
 
@@ -110,3 +110,38 @@ class DailyPriceRangeView(APIView):
         result = DailyPrice.objects.filter(date__range=[from_date, to_date])
         serialized = DailyPriceSerializer(result, many=True)
         return Response(serialized.data)
+    
+    
+class JivoRatesFetch(APIView):
+    def get(self, request):
+        data = fetch_jivo_rates()
+        
+        if not data:
+            return Response({
+                "error": "Table not found. Check if 'Commodities' cell exists in the sheet."
+            }, status=404)
+        
+        return Response({
+            "status": "success",
+            "count": len(data),
+            "preview_data": data
+        })
+            
+    def post(self, request):
+        data = fetch_jivo_rates()
+        createdBy = request.get('created_by')
+        
+        if isinstance(date,dict) and "error" in data:
+            return Response(data, status=400)
+        print(data)
+        for row in data:
+            JivoRates.objects.update_or_create(
+                pack_type=row['pack_type'],
+                commodity=row['commodity'],
+                date=row['date'],
+                created_by=createdBy,
+                defaults={
+                    'rate': row['rate'],
+                }
+            )
+        return Response({"status": f"Successfully processed {len(data)} rows"})
