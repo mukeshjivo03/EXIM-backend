@@ -36,5 +36,5 @@ urlpatterns = [
     path('stock-status/' , include('stock.urls')),
     path('' , include('daily_price.urls')),
     path('license/' , include('license.urls')),
-    path('old-contracts/' , include('contracts.urls')),
+    path('' , include('contracts.urls')),
 ]
