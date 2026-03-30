@@ -63,7 +63,7 @@ class LoadingSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class FreightSerializer(serializers.modelSerializer):
+class FreightSerializer(serializers.ModelSerializer):
     class Meta:
         model = DomesticReports
         fields = [
