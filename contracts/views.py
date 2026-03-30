@@ -1,7 +1,7 @@
 from rest_framework import generics
 
 
-from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer
+from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer, FreightSerializer
 from .models import DomesticReports
 from accounts.permissions import IsAdminUser , IsManagerUser
 
@@ -22,3 +22,10 @@ class LoadingPostView(generics.UpdateAPIView):
     queryset = DomesticReports.objects.all()
     serializer_class = LoadingSerializer
     lookup_field = 'id'
+    
+class FrieghtPostView(generics.UpdateAPIView):
+    queryset = DomesticReports.objects.all()
+    serializer_class = FreightSerializer
+    lookup_field = 'id'
+
+    

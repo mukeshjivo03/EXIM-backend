@@ -13,6 +13,7 @@ class DomesticReports(models.Model):
         ("FACTORY" , "FACTORY"),
         ("RECIEVED" , "RECIEVED"),
     )
+    
     # ----------------------------------FORM 1------------------------------------------
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
     product_code= models.CharField(max_length=20)
