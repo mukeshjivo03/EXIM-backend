@@ -16,7 +16,6 @@ class syncLogs(models.Model):
         ('SCS' , 'SUCCESS')    
     )
     
-    
     sync_type = models.CharField(choices=SYNC_TYPE , max_length=3)
     status = models.CharField(choices=SYNC_STATUS_TYPE , max_length=3)
     triggered_by = models.CharField(max_length=50 , default='Manual')
@@ -29,7 +28,6 @@ class syncLogs(models.Model):
  
     class Meta:
         db_table = 'sync_log'   
-    
     
 
 class RMProducts(models.Model):

@@ -4,7 +4,7 @@ from sap_sync.models import Party , RMProducts
 from decimal import Decimal
 
 class DomesticReportSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = DomesticReports
         fields = '__all__'
