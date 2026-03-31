@@ -20,10 +20,6 @@ class DomesticReportListView(APIView):
         serializer = DomesticReportSerializer(data , many=True)
         return Response(serializer.data)
         
-       
-
-
-
 class ContractPostView(generics.CreateAPIView):
     permission_classes = [IsAdminUser | IsManagerUser]
     queryset = DomesticReports.objects.all()

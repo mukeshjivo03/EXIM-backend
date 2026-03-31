@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import DomesticReports
+from sap_sync.models import Party , RMProducts
 from decimal import Decimal
 
 class DomesticReportSerializer(serializers.ModelSerializer):
@@ -85,6 +86,23 @@ class FreightSerializer(serializers.ModelSerializer):
 
 
 class ContractDropdownSerializer(serializers.ModelSerializer):
+    product_name = serializers.SerializerMethodField()
+    vendor_name = serializers.SerializerMethodField()
+    
+    def get_product_name(self, obj):
+        try :
+            product = RMProducts.objects.get(item_code=obj.product_code)
+            return product.item_name
+        except RMProducts.DoesNotExist:
+            return None
+        
+    def get_vendor_name(self, obj):
+        try:
+            party = Party.objects.get(card_code=obj.vendor_code)
+            return party.card_name
+        except Party.DoesNotExist:
+            return None
+        
     class Meta:
         model = DomesticReports
-        fields = ['id' , 'po_number' , 'vendor_code' , 'product_code']
+        fields = ['id' , 'po_number' , 'vendor_code' ,'vendor_name' ,'product_code' , 'product_name']
