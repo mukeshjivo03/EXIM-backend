@@ -87,4 +87,4 @@ class FreightSerializer(serializers.ModelSerializer):
 class ContractDropdownSerializer(serializers.ModelSerializer):
     class Meta:
         model = DomesticReports
-        fields = ['po_number' , 'vendor_code' , 'product_code']
+        fields = ['id' , 'po_number' , 'vendor_code' , 'product_code']
