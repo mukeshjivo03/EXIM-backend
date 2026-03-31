@@ -62,7 +62,6 @@ class DomesticReports(models.Model):
     grpo_number = models.CharField(max_length=50, null=True , blank=True)
     
     brokerage_amount = models.DecimalField(max_digits=15, decimal_places=2 ,null=True , blank=True)
-    brokerage_rate = models.DecimalField(max_digits=15, decimal_places=2, null=True , blank=True)
     vehicle_number = models.CharField(max_length=50, null=True , blank=True)
     invoice_number= models.CharField(max_length=50, null=True , blank=True)
 

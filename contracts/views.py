@@ -9,7 +9,7 @@ from accounts.permissions import IsAdminUser , IsManagerUser
 class DomesticReportListView(generics.ListAPIView):
     permission_classes = [IsAdminUser | IsManagerUser]
     
-    queryset = DomesticReports.objects.all()
+    queryset = DomesticReports.objects.filter()
     serializer_class = DomesticReportSerializer
 
 class ContractPostView(generics.CreateAPIView):
@@ -27,5 +27,11 @@ class FrieghtPostView(generics.UpdateAPIView):
     queryset = DomesticReports.objects.all()
     serializer_class = FreightSerializer
     lookup_field = 'id'
+    
+class ContractGetView(generics.RetrieveAPIView):
+    queryset = DomesticReports.objects.all()
+    serializer_class = DomesticReportSerializer
+    lookup_field = 'id'
+
 
     

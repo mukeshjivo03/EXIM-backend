@@ -67,15 +67,19 @@ class FreightSerializer(serializers.ModelSerializer):
     class Meta:
         model = DomesticReports
         fields = [
-            'transporter_code' , 'transporter_name' , 'bility_number' , 
-            'bility_date' , 'frieght_rate' , 'freight_amount' , 
-            'grpo_date' , 'grpo_number' , 'brokerage_amount' , 
-            'brokerage_rate' , 'vehicle_number' , 'invoice_number']
-        read_only_fields = ['freight_amount' , 'brokerage_amount']
+            'transporter_code' , 'transporter_name' , 
+            'bility_number' , 'bility_date' , 
+            'grpo_date' , 'grpo_number' , 
+            
+            'brokerage_amount' ,'freight_amount' , 
+            'frieght_rate', 
+            
+            'vehicle_number' , 'invoice_number']
+        
+        read_only_fields = ['freight_amount']
         
         def update(self,instance , validated_data):
             validated_data['freight_amount'] = instance.unload_qty * validated_data['frieght_rate']
-            validated_data['brokerage_amount'] = instance.unload_qty * validated_data['brokerage_rate']
             
             return super().update(instance , validated_data)
 
