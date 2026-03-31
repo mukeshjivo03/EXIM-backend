@@ -41,10 +41,10 @@ class LoadingSerializer(serializers.ModelSerializer):
         load_qty = validated_data.get('load_qty' , instance.load_qty)
         unload_qty = validated_data.get('unload_qty' , instance.unload_qty)
         contract_rate = instance.contract_rate
-        shortage = load_qty - unload_qty
+        shortage = (load_qty - unload_qty) * 1000
 
 
-        allowed_shortage = Decimal('0.25')*load_qty
+        allowed_shortage = (Decimal('0.25') / 100 *load_qty) * 1000
         deduction_qty = shortage - allowed_shortage
 
         if deduction_qty < 0:
