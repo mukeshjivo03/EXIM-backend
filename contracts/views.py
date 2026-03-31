@@ -1,7 +1,7 @@
 from rest_framework import generics
 
 
-from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer, FreightSerializer
+from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer, FreightSerializer , ContractDropdownSerializer
 from .models import DomesticReports
 from accounts.permissions import IsAdminUser , IsManagerUser
 
@@ -24,14 +24,24 @@ class LoadingPostView(generics.UpdateAPIView):
     lookup_field = 'id'
     
 class FrieghtPostView(generics.UpdateAPIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
+    
     queryset = DomesticReports.objects.all()
     serializer_class = FreightSerializer
     lookup_field = 'id'
     
 class ContractGetView(generics.RetrieveAPIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
+    
     queryset = DomesticReports.objects.all()
     serializer_class = DomesticReportSerializer
     lookup_field = 'id'
 
+class ContractDropdownView(generics.ListAPIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
+    
+    queryset = DomesticReports.objects.all()
+    serializer_class = ContractDropdownSerializer
+    
 
     

@@ -83,3 +83,8 @@ class FreightSerializer(serializers.ModelSerializer):
             
             return super().update(instance , validated_data)
 
+
+class ContractDropdownSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DomesticReports
+        fields = ['po_number' , 'vendor_code' , 'product_code']
