@@ -48,7 +48,7 @@ class ContractGetView(generics.RetrieveAPIView):
 class ContractDropdownView(generics.ListAPIView):
     permission_classes = [IsAdminUser | IsManagerUser]
     
-    queryset = DomesticReports.objects.all()
+    queryset = DomesticReports.objects.all().order_by('po_date')
     serializer_class = ContractDropdownSerializer
     
 
