@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 def get_exim_rates(date):
-    url = "https://eximindiaonline.in:4000/forexes/get_forexes_website"
+    url = "https://eximindiaonline.in:4000/customs/get_customs_website"
 
     headers = {
         "Content-Type": "application/json",
