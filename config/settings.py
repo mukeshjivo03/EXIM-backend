@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'license',
     'planning',
     'contracts',
+    'exim_rates'   
+    
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

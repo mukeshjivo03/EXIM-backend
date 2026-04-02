@@ -37,4 +37,5 @@ urlpatterns = [
     path('' , include('daily_price.urls')),
     path('license/' , include('license.urls')),
     path('dc/' , include('contracts.urls')),
+    path('exim-rates/' , include('exim_rates.urls')),
 ]
