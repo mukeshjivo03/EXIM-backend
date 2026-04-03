@@ -425,17 +425,17 @@ def ItemAvergaCost(itemCode):
             break
     
         consumed = min(record.quantity_in_litre , remaining)
-        weighted_sum +=  record.rate * record.quantity_in_litre
+        weighted_sum +=  record.rate_in_litres * record.quantity_in_litre
         stock_status_quantity += record.quantity_in_litre
         remaining -= consumed
         
         breakdown.append({
             'stock_id':          record.pk,
             'created_at':        record.created_at,
-            'rate':              record.rate,
+            'rate':              record.rate_in_litres,
             'batch_quantity':    record.quantity,
             'quantity_consumed': consumed,
-            'batch_total':       consumed * record.rate,
+            'batch_total':       consumed * record.rate_in_litres,
         })
     
     quantity_matched = total_tank_capacity - remaining

@@ -9,12 +9,7 @@ def get_exim_rates(date):
         "Accept": "application/json, text/plain, */*",
         "Origin": "https://eximin.net",
     }
-
     payload = {"date" : date}
-
     response = requests.post(url, json=payload, headers=headers)
-
-    print(response.status_code)
-    print(response.json())
     
     return response.json()

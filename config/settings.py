@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     'license',
     'planning',
     'contracts',
-    'exim_rates'   
+    'exim_rates',
     
 ]
 

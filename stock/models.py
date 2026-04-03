@@ -40,7 +40,8 @@ class StockStatus(models.Model):
     item_code = models.ForeignKey(TankItem, on_delete=models.SET_NULL, null=True ,to_field = 'tank_item_code')
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
     vendor_code = models.ForeignKey(Party, on_delete=models.SET_NULL , null = True , to_field = 'card_code')
-    rate = models.DecimalField(max_digits=10, decimal_places=2)
+    rate = models.DecimalField(max_digits=10, decimal_places=3)
+    rate_in_litres = models.DecimalField(max_digits=10, decimal_places=3 , null = True , blank = True)
     total = models.DecimalField(max_digits=20, decimal_places=2 , editable = False , default = '0.00')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     quantity_in_litre = models.DecimalField(max_digits=10, decimal_places=2 , default=Decimal('0.00'))
@@ -73,7 +74,9 @@ class StockStatus(models.Model):
         if self.status == 'AT_REFINERY' and self.item_code_id == 'RM0CDRO':
             self.quantity = self.quantity - (Decimal('0.03') * self.quantity)
             self.item_code_id = 'RM00C01'
-
+        if self.rate is not None:
+            self.rate_in_litres = self.rate / Decimal(1.09089)
+            
         if self.rate is not None and self.quantity is not None:
             self.total = self.rate * self.quantity
         else:
