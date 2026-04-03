@@ -1,12 +1,6 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS
-
-
-
-
-
-
+from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory
 
 
 
@@ -37,6 +31,7 @@ urlpatterns = [
     path('po/<int:id>/' , DomesticContractRetrieveUpdateDeleteView.as_view()),
     
     
-    path('sap-sync/balance-sheet/' , syncBalanceSheet.as_view())
+    path('sap-sync/balance-sheet/' , syncBalanceSheet.as_view()),
+    path('sap-sync/inventory/' , syncInventory.as_view())
 
 ]

@@ -460,3 +460,14 @@ class GRPOServices:
             result = conn.execute_query(query)
             
         return result
+    
+class InventoryService:
+    def __init__(self):
+        self.connection = SAPConnection()
+        
+    def syncInventory(self):
+        with self.connection as conn:
+            query = Queries().get_inventory()
+            result = conn.execute_query(query)
+            
+        return result

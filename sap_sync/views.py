@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, Avg
 from decimal import Decimal
 
-from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices
+from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService
 from .services.connections import Queries
 
 from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
@@ -245,5 +245,11 @@ class syncOpenGRPOS(APIView):
         return Response({"open_grpos": result})
     
 
+class syncInventory(APIView):
+    permission_classes= [IsAdminUser | IsManagerUser]
+    
+    def get(self, request):
+        result = InventoryService().syncInventory()
+        return Response({"inventory": result})
 
                                     
