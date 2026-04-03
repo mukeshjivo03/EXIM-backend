@@ -10,6 +10,7 @@ class StockStatusSerializer(serializers.ModelSerializer):
     item_code = serializers.SlugRelatedField(
         slug_field='tank_item_code', 
         queryset=TankItem.objects.all()
+        
     )
 
     vendor_code = serializers.SlugRelatedField(
@@ -29,3 +30,8 @@ class StockStatusUpdateLogSerializer(serializers.ModelSerializer):
         model = StockStatusUpdateLog
         fields = '__all__'
 
+class StockStatusPatchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StockStatus
+        fields = '__all__'
+        read_only_fields = ['create_at' , 'total']

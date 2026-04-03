@@ -565,3 +565,14 @@ class ItemWiseAverage(APIView):
         response = ItemAvergaCost(item_code)
         return Response(response)
         
+class EmptyTank(APIView):
+    def patch(self , request):
+        tank_code = request.query_params.get('tank_code')
+        tank = TankData.objects.get(tank_code=tank_code)
+        
+        tank.current_capacity = Decimal(0.00)
+        tank.item_code = None
+        
+        tank.save()
+        return Response
+        

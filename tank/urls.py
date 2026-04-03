@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import TankItemViews , TankItemListCreateView , TankItemColorUpdateView , TankDataView, TankDataListCrateView , TankCapacityUpdateView , TankDataSummary , TankItemWiseSummary , TankCapacityInsights ,TankRateBreakdownView , TankInwardView , TankOutwardView , TankTransferView , TankStatusView , TankLogsView , TankConsumptionView , TankLogView , EmptyorSameTanks , ItemWiseAverage
+from .views import TankItemViews , TankItemListCreateView , TankItemColorUpdateView , TankDataView, TankDataListCrateView , TankCapacityUpdateView , TankDataSummary , TankItemWiseSummary , TankCapacityInsights ,TankRateBreakdownView , TankInwardView , TankOutwardView , TankTransferView , TankStatusView , TankLogsView , TankConsumptionView , TankLogView , EmptyorSameTanks , ItemWiseAverage , EmptyTank
+
 
 
 

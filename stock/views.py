@@ -9,7 +9,7 @@ from collections import defaultdict, OrderedDict
 
 
 from .models import StockStatus ,StockStatusUpdateLog
-from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer
+from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer
 from .services import arrive_batch , dispatch , move
 from accounts.permissions import IsAdminUser , IsFactoryUser , IsManagerUser
 from .filters import StockStatusFilters
@@ -26,10 +26,20 @@ class StockStatusListCreateView(generics.ListCreateAPIView):
 
 class StockStatusUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StockStatus.objects.all()
-    serializer_class = StockStatusSerializer
     permission_classes = [IsAdminUser | IsManagerUser]
-    lookup_field =  'id'
+    lookup_field = 'id'
 
+def get_serializer_class(self):
+    if self.request.method in ['PUT', 'PATCH']:
+        return StockStatusPatchSerializer
+    return StockStatusSerializer
+
+def get_serializer(self, *args, **kwargs):
+    if self.request.method == 'PATCH':
+        kwargs['partial'] = True
+    return super().get_serializer(*args, **kwargs)
+    
+    
 class StockUpdateLogListView(generics.ListAPIView):
     queryset = StockStatusUpdateLog.objects.all()
     serializer_class = StockStatusUpdateLogSerializer
