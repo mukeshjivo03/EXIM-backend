@@ -31,7 +31,23 @@ class StockStatusUpdateLogSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class StockStatusPatchSerializer(serializers.ModelSerializer):
+    item_code = serializers.SlugRelatedField(
+        slug_field='tank_item_code',
+        queryset=TankItem.objects.all(),
+        required=False  # ✅
+    )
+    vendor_code = serializers.SlugRelatedField(
+        slug_field='card_code',
+        queryset=Party.objects.all(),
+        required=False  # ✅
+    )
+    status = serializers.ChoiceField(
+        choices=StockStatus.STATUS_CHOICES,
+        required=False  # ✅
+    )
+    eta = serializers.DateField(required=False, allow_null=True)
+
     class Meta:
         model = StockStatus
         fields = '__all__'
-        read_only_fields = ['create_at' , 'total']
+        read_only_fields = ['created_at', 'total']
