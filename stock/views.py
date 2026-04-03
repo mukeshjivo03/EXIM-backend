@@ -29,15 +29,15 @@ class StockStatusUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView)
     permission_classes = [IsAdminUser | IsManagerUser]
     lookup_field = 'id'
 
-def get_serializer_class(self):
-    if self.request.method in ['PUT', 'PATCH']:
-        return StockStatusPatchSerializer
-    return StockStatusSerializer
-
-def get_serializer(self, *args, **kwargs):
-    if self.request.method == 'PATCH':
-        kwargs['partial'] = True
-    return super().get_serializer(*args, **kwargs)
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return StockStatusPatchSerializer
+        return StockStatusSerializer
+    
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == 'PATCH':
+            kwargs['partial'] = True
+        return super().get_serializer(*args, **kwargs)
     
     
 class StockUpdateLogListView(generics.ListAPIView):
