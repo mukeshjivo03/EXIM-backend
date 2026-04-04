@@ -492,9 +492,9 @@ FROM OPENQUERY(HANADB112, '
 
         
         """
-    def get_warehouse_inventory(self, warehouseCode):
+    def get_inventory(self):
         return f"""
-            SELECT U_Sub_Group, SUM(ABS(LITER)) AS Total
+            SELECT Warehouse as Warehouse ,U_Sub_Group as Category, SUM(ABS(LITER)) AS Total 
             FROM   
             (
                 SELECT * FROM OPENQUERY(HANADB112, '
@@ -520,7 +520,7 @@ FROM OPENQUERY(HANADB112, '
                     T0."ItemCode", T1."ItemName", T1."U_IsLitre", T1."Series", T2."ChapterID"
                 ')
             ) AS Result
-            WHERE U_Sub_Group NOT IN ('DESI GHEE')
-            AND Warehouse = '{warehouseCode}'       
-            GROUP BY U_Sub_Group
+            WHERE U_Sub_Group NOT IN ('GHEE')
+            GROUP BY U_Sub_Group , Warehouse
+            ORDER BY Warehouse
         """

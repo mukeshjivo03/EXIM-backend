@@ -18,7 +18,6 @@ class TankItem(models.Model):
     
 
 class TankData(models.Model):
-
     tank_code = models.CharField(primary_key=True, max_length=20, editable=False)
     item_code = models.ForeignKey('TankItem', on_delete=models.SET_NULL, null=True)      
     tank_capacity = models.DecimalField(max_digits=10, decimal_places=2)
