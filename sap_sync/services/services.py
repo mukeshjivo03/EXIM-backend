@@ -471,3 +471,10 @@ class InventoryService:
             result = conn.execute_query(query)
             
         return result
+    
+    def syncWarehouseInventory(self , warehouse_code):
+        with self.connection as conn:
+            query = Queries().get_warehouse_inventory(warehouse_code)
+            result = conn.execute_query(query)
+            
+        return result

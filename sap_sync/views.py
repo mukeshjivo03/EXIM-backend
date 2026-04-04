@@ -252,4 +252,4 @@ class syncInventory(APIView):
         result = InventoryService().syncInventory()
         return Response({"inventory": result})
 
-                                    
+

@@ -574,5 +574,5 @@ class EmptyTank(APIView):
         tank.item_code = None
         
         tank.save()
-        return Response
+        return Response({"Tank Emptied Successfully"})
         

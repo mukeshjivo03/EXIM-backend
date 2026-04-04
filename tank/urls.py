@@ -21,6 +21,7 @@ urlpatterns = [
     path('item/update-color/<str:tank_item_code>/' , TankItemColorUpdateView.as_view()),
     path('item/<str:tank_item_code>/' , TankItemViews.as_view()),
     path('item-wise-average/', ItemWiseAverage.as_view()),
+    path('empty-tank/', EmptyTank.as_view()),
 
 
     path('inward/', TankInwardView.as_view()),
@@ -32,7 +33,7 @@ urlpatterns = [
     path('log/', TankLogView.as_view()),
     path('get-same-tanks/', EmptyorSameTanks.as_view()),
     
-    # Keep this last — catch-all for tank_code
+    
     path('<str:tank_code>/', TankDataView.as_view()),
 ]
 
