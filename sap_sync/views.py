@@ -249,7 +249,10 @@ class syncInventory(APIView):
     permission_classes= [IsAdminUser | IsManagerUser]
     
     def get(self, request):
-        result = InventoryService().syncInventory()
+        warehouseCode = request.query_params.get('warehouse_code')
+        result = InventoryService().syncWarehouseInventory(warehouseCode)
+        
         return Response({"inventory": result})
+        
 
 
