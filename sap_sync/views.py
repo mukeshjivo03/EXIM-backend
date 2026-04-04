@@ -258,4 +258,8 @@ class syncUniqueWarehouse(APIView):
         result = InventoryService().getUniqueWarehouse()
         return Response({"unique_warehouse": result})        
 
-
+class syncFinishedInventory(APIView):
+    
+    def get(self , request):
+        result = InventoryService().syncFinishedInventory()
+        return Response({"finished_inventory": result})

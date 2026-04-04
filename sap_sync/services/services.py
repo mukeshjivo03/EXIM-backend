@@ -479,3 +479,10 @@ class InventoryService:
             result = conn.execute_query(query)
             
         return result
+    
+    def syncFinishedInventory(self):
+        with self.connection as conn:
+            query = Queries().get_finished_inventory()
+            result = conn.execute_query(query)
+            
+        return result
