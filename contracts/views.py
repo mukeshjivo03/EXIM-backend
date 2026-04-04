@@ -16,7 +16,7 @@ class DomesticReportListView(APIView):
         start_date = date(user_year , 4 , 1)
         end_date = date(user_year+ 1 , 3 , 31)
         
-        data = DomesticReports.objects.filter(po_date__range=[start_date , end_date])
+        data = DomesticReports.objects.filter(grpo_date__range=[start_date , end_date])
         serializer = DomesticReportSerializer(data , many=True)
         return Response(serializer.data)
         
@@ -24,7 +24,7 @@ class ContractPostView(generics.CreateAPIView):
     permission_classes = [IsAdminUser | IsManagerUser]
     queryset = DomesticReports.objects.all()
     serializer_class = ContractSerializer   
-
+    
 class LoadingPostView(generics.UpdateAPIView):
     permission_classes = [IsAdminUser | IsManagerUser]
     queryset = DomesticReports.objects.all()
@@ -38,7 +38,7 @@ class FrieghtPostView(generics.UpdateAPIView):
     serializer_class = FreightSerializer
     lookup_field = 'id'
     
-class ContractGetView(generics.RetrieveAPIView):
+class ContractGetView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser | IsManagerUser]
     
     queryset = DomesticReports.objects.all()
@@ -51,5 +51,6 @@ class ContractDropdownView(generics.ListAPIView):
     queryset = DomesticReports.objects.all().order_by('-created_at')
     serializer_class = ContractDropdownSerializer
     
+
 
     
