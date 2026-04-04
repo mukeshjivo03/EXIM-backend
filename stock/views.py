@@ -353,3 +353,24 @@ class MoveView(APIView):
         serializer = StockStatusSerializer(new_record)
         return Response(serializer.data)
     
+class VehicleReport(APIView):
+    permission_classes = [IsAdminUser | IsManagerUser]
+
+    def get(self, request):
+        status = request.query_params.get('status')
+
+        response = StockStatus.objects.filter(
+            status=status,
+            deleted=False
+        ).values(
+            'vehicle_number',
+            'quantity_in_litre',
+            'eta',
+            'status',
+            'job_work',
+            item_name=F('item_code__tank_item_name'),
+        )
+
+        return Response(list(response))
+
+    
