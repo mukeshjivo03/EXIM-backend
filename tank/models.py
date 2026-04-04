@@ -18,10 +18,16 @@ class TankItem(models.Model):
     
 
 class TankData(models.Model):
+    
+    TANK_TYPE = (
+        ("TANK"  , "TANK"),
+        ("TOTES"  , "TOTES")
+    )
     tank_code = models.CharField(primary_key=True, max_length=20, editable=False)
     item_code = models.ForeignKey('TankItem', on_delete=models.SET_NULL, null=True)      
     tank_capacity = models.DecimalField(max_digits=10, decimal_places=2)
     current_capacity = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
+    tank_type = models.CharField(max_length=10 , choices=TANK_TYPE , default = 'TANK' , null = True , blank = True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -31,23 +37,34 @@ class TankData(models.Model):
         
     def save(self, *args, **kwargs):
         if not self.tank_code:
-            with transaction.atomic(): 
-                existing_tanks = TankData.objects.select_for_update().values_list('tank_code', flat=True)
-                existing_numbers = set()
+            with transaction.atomic():
+                tank_type = self.tank_type or 'TANK'
 
+                if tank_type == 'TANK':
+                    prefix = 'TNK'
+                    pad = 4  
+                else:  # TOTES
+                    prefix = 'TOT'
+                    pad = 3  # TOT001
+
+                existing_tanks = TankData.objects.select_for_update().filter(
+                    tank_code__startswith=prefix
+                ).values_list('tank_code', flat=True)
+
+                existing_numbers = set()
                 for code in existing_tanks:
                     try:
-                        num = int(code.replace('TNK', ''))
+                        num = int(code.replace(prefix, ''))
                         existing_numbers.add(num)
                     except ValueError:
-                        continue 
+                        continue
 
                 next_number = 1
                 while next_number in existing_numbers:
                     next_number += 1
-                
-                self.tank_code = f"TNK{next_number:03d}"
-                
+
+            self.tank_code = f"{prefix}{next_number:0{pad}d}"
+
         super().save(*args, **kwargs)
 
     def __str__(self):
