@@ -362,86 +362,135 @@ FROM OPENQUERY(HANADB112, '
     """
     
     
-    def get_inventory(self):
+    def get_unique_warehouse(self):
         return """
-            SELECT * FROM (
-                SELECT * FROM OPENQUERY (HANADB112, 'SELECT ''New'' SAP, T0."Warehouse", CAST(T0."TransType" AS VARCHAR(20)) TransType,
-                Case When T0."TransType" in (13,14,15,16) Then ''Sales''
-                     When T0."TransNum"=14223 Then ''Purchase''
-                     When T0."TransType" in (18,19,20,21) Then ''Purchase''
-                     When T0."TransType" in (59,60,10000071,202) Then ''Production''
-                     When T0."TransType" in (67) Then ''Stocks Transfer''
-                     When T0."TransType" in (69) Then ''Landed Cost''
-                     When T0."TransType" in (162) Then ''Inventory Revaluation''
-                     Else ''Check'' End "VoucherType",
-                Case When T1."ItemCode" in (''RM0000012'', ''RM0000012'', ''RM0000012'', ''RM0000013'', ''RM0000014'') Then ''OLIVE IMPORTED''
-                     When T1."ItemCode" in (''RM0000019'') Then ''SUNFLOWER IMPORTED''
-                     When T1."ItemName" Like ''GIFT%'' Then ''BLENDED''
-                     Else T1."U_Sub_Group" End "U_Sub_Group",
-                     T2."ChapterID" "HSN",
-                Case When T1."Series"=389 then ''Finished'' When T1."Series"=392 Then ''Loose Oil'' End "Stock Type", 
-                T0."ItemCode", T1."ItemName", T1."U_IsLitre", 
-                sum(T0."InQty"- T0."OutQty") Quantity,
-                sum((T0."InQty"-T0."OutQty")* T1."SalPackUn") Liter 
-                FROM "JIVO_OIL_HANADB"."OINM" T0
-                INNER JOIN "JIVO_OIL_HANADB"."OITM" T1 ON T0."ItemCode" = T1."ItemCode"
-                Inner Join "JIVO_OIL_HANADB"."OCHP" T2 ON T2."AbsEntry"=T1."ChapterID" 
-                WHERE T0."DocDate" Between ''2025-04-01'' and CURRENT_DATE 
-                AND T1."U_IsLitre"=''Y'' 
-                AND T1."ItemCode" like ''RM%'' 
-                group by T1."ItemCode", Case When T0."TransType" in (13,14,15,16) Then ''Sales''
-                     When T0."TransNum"=14223 Then ''Purchase''
-                     When T0."TransType" in (18,19,20,21) Then ''Purchase''
-                     When T0."TransType" in (59,60,10000071,202) Then ''Production''
-                     When T0."TransType" in (67) Then ''Stocks Transfer''
-                     When T0."TransType" in (69) Then ''Landed Cost''
-                     When T0."TransType" in (162) Then ''Inventory Revaluation''
-                     Else ''Check'' End, T0."TransType",
-                Case When T1."Series"=389 then ''Finished'' When T1."Series"=392 Then ''Loose Oil'' End,
-                T1."U_Sub_Group", T0."ItemCode", T1."ItemName", T1."U_IsLitre", T0."Warehouse", T2."ChapterID"
+            SELECT DISTINCT Warehouse
+            FROM (
+            
+                -- ===== OLD SAP DATA =====
+                SELECT 
+                    'Old' AS SAP,
+                    A.Warehouse COLLATE SQL_Latin1_General_CP1_CI_AS AS Warehouse,
+                    CAST(A.TransType AS NVARCHAR(MAX)) AS TransTypeId,
+                    CASE 
+                        WHEN A.TransType IN (13,14,15,16)        THEN 'Sales'
+                        WHEN A.TransType IN (18,19,20,21)        THEN 'Purchase'
+                        WHEN A.TransType IN (59,60,10000071,202) THEN 'Production'
+                        WHEN A.TransType IN (67)                 THEN 'Stocks Transfer'
+                        WHEN A.TransType IN (69)                 THEN 'Landed Cost'
+                        WHEN A.TransType IN (162)                THEN 'Inventory Revaluation'
+                        ELSE 'Check' 
+                    END AS TransType,
+                    CASE 
+                        WHEN B.U_Type = 'Cotton Seed Oil' THEN 'Cotton Seed'
+                        WHEN B.U_Type = 'Gold'            THEN 'Blended'
+                        ELSE B.U_Type 
+                    END COLLATE SQL_Latin1_General_CP1_CI_AS AS U_Sub_Group,   -- ⚠️ named U_Sub_Group to match other UNIONs
+                    T2.ChapterID COLLATE SQL_Latin1_General_CP1_CI_AS AS ChapterID,
+                    CASE 
+                        WHEN B.Series = 1353 THEN 'Finished'
+                        WHEN B.Series = 1356 THEN 'Loose Oil'
+                    END AS [Stock Type],
+                    A.ItemCode COLLATE SQL_Latin1_General_CP1_CI_AS AS IteCode,
+                    B.ItemName COLLATE SQL_Latin1_General_CP1_CI_AS AS ItemName,
+                    B.U_IsLiter COLLATE SQL_Latin1_General_CP1_CI_AS AS IsLiter,
+                    (A.InQty - A.OutQty)               AS Quantity,
+                    (A.InQty - A.OutQty) * B.SalPackUn AS Liter
+                FROM OINM A
+                INNER JOIN OITM B  ON A.ItemCode  = B.ItemCode
+                INNER JOIN OCHP T2 ON T2.AbsEntry = B.ChapterId
+                WHERE A.DocDate BETWEEN '2025-04-01' AND '2024-09-30'
+                  AND B.U_IsLiter = 'Y'
 
-                Union All
+                UNION ALL
 
-                SELECT ''New'' SAP, T0."Warehouse", ''CB'', ''Closing'',
-                Case When T1."ItemCode" in (''RM0000012'', ''RM0000012'', ''RM0000012'', ''RM0000013'', ''RM0000014'') Then ''OLIVE IMPORTED''
-                     When T1."ItemCode" in (''RM0000019'') Then ''SUNFLOWER IMPORTED''
-                     When T1."ItemName" Like ''GIFT%'' Then ''BLENDED''
-                     Else T1."U_Sub_Group" End "U_Sub_Group",
-                     T2."ChapterID",
-                Case When T1."Series"=389 then ''Finished'' When T1."Series"=392 Then ''Loose Oil'' End "Stock Type", 
-                T0."ItemCode", T1."ItemName", T1."U_IsLitre",
-                Sum(T0."InQty"- T0."OutQty") Quantity,
-                Sum((T0."InQty"- T0."OutQty")* T1."SalPackUn") Liter 
-                FROM "JIVO_OIL_HANADB"."OINM" T0
-                INNER JOIN "JIVO_OIL_HANADB"."OITM" T1 ON T0."ItemCode" = T1."ItemCode"
-                Inner Join "JIVO_OIL_HANADB"."OCHP" T2 ON T2."AbsEntry"=T1."ChapterID"
-                WHERE T0."DocDate" <= CURRENT_DATE 
-                AND T1."U_IsLitre"=''Y'' 
-                GROUP BY T1."ItemCode", T0."Warehouse", T1."U_Sub_Group", T0."ItemCode", 
-                T1."ItemName", T1."U_IsLitre", T1."Series", T2."ChapterID"
+                -- ===== NEW SAP DATA (HANA - Transactions) =====
+                SELECT * FROM OPENQUERY(HANADB112, '
+                    SELECT ''New'' SAP, T0."Warehouse", CAST(T0."TransType" AS VARCHAR(20)) TransType,
+                    CASE 
+                        WHEN T0."TransType" IN (13,14,15,16)        THEN ''Sales''
+                        WHEN T0."TransNum" = 14223                  THEN ''Purchase''
+                        WHEN T0."TransType" IN (18,19,20,21)        THEN ''Purchase''
+                        WHEN T0."TransType" IN (59,60,10000071,202) THEN ''Production''
+                        WHEN T0."TransType" IN (67)                 THEN ''Stocks Transfer''
+                        WHEN T0."TransType" IN (69)                 THEN ''Landed Cost''
+                        WHEN T0."TransType" IN (162)                THEN ''Inventory Revaluation''
+                        ELSE ''Check'' 
+                    END "VoucherType",
+                    CASE 
+                        WHEN T1."ItemCode" IN (''RM0000012'',''RM0000013'',''RM0000014'') THEN ''OLIVE IMPORTED''
+                        WHEN T1."ItemCode" IN (''RM0000019'')                             THEN ''SUNFLOWER IMPORTED''
+                        WHEN T1."ItemName" LIKE ''GIFT%''                                 THEN ''BLENDED''
+                        ELSE T1."U_Sub_Group" 
+                    END "U_Sub_Group",
+                    T2."ChapterID" "HSN",
+                    CASE WHEN T1."Series"=389 THEN ''Finished'' WHEN T1."Series"=392 THEN ''Loose Oil'' END "Stock Type",
+                    T0."ItemCode", T1."ItemName", T1."U_IsLitre",
+                    SUM(T0."InQty" - T0."OutQty") Quantity,
+                    SUM((T0."InQty" - T0."OutQty") * T1."SalPackUn") Liter
+                    FROM "JIVO_OIL_HANADB"."OINM" T0
+                    INNER JOIN "JIVO_OIL_HANADB"."OITM" T1 ON T0."ItemCode" = T1."ItemCode"
+                    INNER JOIN "JIVO_OIL_HANADB"."OCHP" T2 ON T2."AbsEntry" = T1."ChapterID"
+                    WHERE T0."DocDate" BETWEEN ''2025-04-01'' AND CURRENT_DATE
+                      AND T1."U_IsLitre" = ''Y''
+                    GROUP BY T1."ItemCode", T0."TransType", T0."TransNum",
+                    CASE WHEN T1."Series"=389 THEN ''Finished'' WHEN T1."Series"=392 THEN ''Loose Oil'' END,
+                    T1."U_Sub_Group", T0."ItemCode", T1."ItemName", T1."U_IsLitre", T0."Warehouse", T2."ChapterID"
+                ')
 
-                Union All
+                UNION ALL
 
-                SELECT ''New'' SAP, T0."Warehouse", ''OB'', ''Opening'',
-                Case When T1."ItemCode" in (''RM0000012'', ''RM0000012'', ''RM0000012'', ''RM0000013'', ''RM0000014'') Then ''OLIVE IMPORTED''
-                     When T1."ItemCode" in (''RM0000019'') Then ''SUNFLOWER IMPORTED''
-                     When T1."ItemName" Like ''GIFT%'' Then ''BLENDED''
-                     Else T1."U_Sub_Group" End "U_Sub_Group", 
-                     T2."ChapterID",
-                Case When T1."Series"=389 then ''Finished'' When T1."Series"=392 Then ''Loose Oil'' End "Stock Type", 
-                T0."ItemCode", T1."ItemName", T1."U_IsLitre",
-                Sum(T0."InQty"- T0."OutQty") Quantity,
-                Sum((T0."InQty"- T0."OutQty")* T1."SalPackUn") Liter 
-                FROM "JIVO_OIL_HANADB"."OINM" T0
-                INNER JOIN "JIVO_OIL_HANADB"."OITM" T1 ON T0."ItemCode" = T1."ItemCode"
-                Inner Join "JIVO_OIL_HANADB"."OCHP" T2 ON T2."AbsEntry"=T1."ChapterID" 
-                WHERE T0."DocDate" < ''2025-04-01'' 
-                AND T1."U_IsLitre"=''Y'' 
-                GROUP BY T1."ItemCode", T0."Warehouse", T1."U_Sub_Group", T0."ItemCode", 
-                T1."ItemName", T1."U_IsLitre", T1."Series", T2."ChapterID"')
+                -- ===== NEW SAP DATA (HANA - Closing Balance) =====
+                SELECT * FROM OPENQUERY(HANADB112, '
+                    SELECT ''New'' SAP, T0."Warehouse", ''CB'', ''Closing'',
+                    CASE 
+                        WHEN T1."ItemCode" IN (''RM0000012'',''RM0000013'',''RM0000014'') THEN ''OLIVE IMPORTED''
+                        WHEN T1."ItemCode" IN (''RM0000019'')                             THEN ''SUNFLOWER IMPORTED''
+                        WHEN T1."ItemName" LIKE ''GIFT%''                                 THEN ''BLENDED''
+                        ELSE T1."U_Sub_Group" 
+                    END "U_Sub_Group",
+                    T2."ChapterID",
+                    CASE WHEN T1."Series"=389 THEN ''Finished'' WHEN T1."Series"=392 THEN ''Loose Oil'' END "Stock Type",
+                    T0."ItemCode", T1."ItemName", T1."U_IsLitre",
+                    SUM(T0."InQty" - T0."OutQty") Quantity,
+                    SUM((T0."InQty" - T0."OutQty") * T1."SalPackUn") Liter
+                    FROM "JIVO_OIL_HANADB"."OINM" T0
+                    INNER JOIN "JIVO_OIL_HANADB"."OITM" T1 ON T0."ItemCode" = T1."ItemCode"
+                    INNER JOIN "JIVO_OIL_HANADB"."OCHP" T2 ON T2."AbsEntry" = T1."ChapterID"
+                    WHERE T0."DocDate" <= CURRENT_DATE
+                      AND T1."U_IsLitre" = ''Y''
+                    GROUP BY T1."ItemCode", T0."Warehouse", T1."U_Sub_Group",
+                    T0."ItemCode", T1."ItemName", T1."U_IsLitre", T1."Series", T2."ChapterID"
+                ')
 
-            ) AS Result
-            WHERE U_Sub_Group NOT IN ('GHEE')
+                UNION ALL
+
+                -- ===== NEW SAP DATA (HANA - Opening Balance) =====
+                SELECT * FROM OPENQUERY(HANADB112, '
+                    SELECT ''New'' SAP, T0."Warehouse", ''OB'', ''Opening'',
+                    CASE 
+                        WHEN T1."ItemCode" IN (''RM0000012'',''RM0000013'',''RM0000014'') THEN ''OLIVE IMPORTED''
+                        WHEN T1."ItemCode" IN (''RM0000019'')                             THEN ''SUNFLOWER IMPORTED''
+                        WHEN T1."ItemName" LIKE ''GIFT%''                                 THEN ''BLENDED''
+                        ELSE T1."U_Sub_Group" 
+                    END "U_Sub_Group",
+                    T2."ChapterID",
+                    CASE WHEN T1."Series"=389 THEN ''Finished'' WHEN T1."Series"=392 THEN ''Loose Oil'' END "Stock Type",
+                    T0."ItemCode", T1."ItemName", T1."U_IsLitre",
+                    SUM(T0."InQty" - T0."OutQty") Quantity,
+                    SUM((T0."InQty" - T0."OutQty") * T1."SalPackUn") Liter
+                    FROM "JIVO_OIL_HANADB"."OINM" T0
+                    INNER JOIN "JIVO_OIL_HANADB"."OITM" T1 ON T0."ItemCode" = T1."ItemCode"
+                    INNER JOIN "JIVO_OIL_HANADB"."OCHP" T2 ON T2."AbsEntry" = T1."ChapterID"
+                    WHERE T0."DocDate" < ''2025-04-01''
+                      AND T1."U_IsLitre" = ''Y''
+                    GROUP BY T1."ItemCode", T0."Warehouse", T1."U_Sub_Group",
+                    T0."ItemCode", T1."ItemName", T1."U_IsLitre", T1."Series", T2."ChapterID"
+                ')
+
+            ) AS FullResult
+
+        
         """
     def get_warehouse_inventory(self, warehouseCode):
         return f"""

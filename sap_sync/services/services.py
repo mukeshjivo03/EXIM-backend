@@ -465,12 +465,13 @@ class InventoryService:
     def __init__(self):
         self.connection = SAPConnection()
         
-    def syncInventory(self):
+    def getUniqueWarehouse(self):
         with self.connection as conn:
-            query = Queries().get_inventory()
+            query = Queries().get_unique_warehouse()
             result = conn.execute_query(query)
             
         return result
+            
     
     def syncWarehouseInventory(self , warehouse_code):
         with self.connection as conn:
