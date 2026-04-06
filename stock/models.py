@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone 
+from datetime import datetime
 from sap_sync.models import RMProducts , Party 
 from tank.models import TankData , TankItem , TankLog
 
@@ -55,6 +57,7 @@ class StockStatus(models.Model):
     
     parent = models.ForeignKey('self',null=True, blank=True,on_delete=models.SET_NULL,related_name='children',)
     is_accumulator = models.BooleanField(default=False)
+    arrival_date = models.DateTimeField(null=True, blank=True)
     remainder_action = models.CharField(max_length=20,choices=REMAINDER_ACTION_CHOICES,null=True, blank=True)
     job_work = models.CharField(max_length=50 , blank=True , null= True)
 
@@ -77,11 +80,15 @@ class StockStatus(models.Model):
         if self.rate is not None:
             self.rate_in_litres = self.rate / Decimal(1.09089)
             
+        if self.status == 'OUT_SIDE_FACTORY':
+            self.arrival_date = timezone.now()
+            
         if self.rate is not None and self.quantity is not None:
             self.total = self.rate * self.quantity
         else:
             self.total = Decimal('0.00')
 
+        
         if self.quantity is not None:
             self.quantity_in_litre = self.quantity * Decimal('1.0989')
         else:
