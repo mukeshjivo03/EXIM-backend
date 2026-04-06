@@ -31,7 +31,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 # Add your local IP and 'localhost'
-ALLOWED_HOSTS = ['192.168.1.30', '127.0.0.1', 'localhost','103.89.45.75']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

@@ -30,7 +30,7 @@ class TankDataView(generics.RetrieveDestroyAPIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         
-        return [IsAdminUser()]
+        return [(IsAdminUser | IsManagerUser)()]
 
 
 class TankDataListCrateView(generics.ListCreateAPIView):
@@ -47,7 +47,7 @@ class TankCapacityUpdateView(generics.UpdateAPIView):
     queryset = TankData.objects.all()
     serializer_class = TankDataCapacitySerializer
     lookup_field = 'tank_code'
-    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser | IsManagerUser]
     
     
 
@@ -61,7 +61,7 @@ class TankItemViews(generics.RetrieveDestroyAPIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         
-        return [IsAdminUser()]
+        return [(IsAdminUser | IsManagerUser)()]
     
 class TankItemListCreateView(generics.ListCreateAPIView):
     queryset = TankItem.objects.all()
