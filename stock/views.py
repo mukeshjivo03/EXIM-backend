@@ -11,22 +11,32 @@ from collections import defaultdict, OrderedDict
 from .models import StockStatus ,StockStatusUpdateLog
 from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer
 from .services import arrive_batch , dispatch , move
-from accounts.permissions import IsAdminUser , IsFactoryUser , IsManagerUser
 from .filters import StockStatusFilters
 from tank.models import TankData
-
+from accounts.permissions import HasAppPermission
 
 class StockStatusListCreateView(generics.ListCreateAPIView):
+    def  get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAuthenticated() , HasAppPermission('stock.add_stockstatus')]
+        
+        return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
+        
     queryset = StockStatus.objects.filter(deleted=False)
     serializer_class = StockStatusSerializer
-    permission_classes = [IsAdminUser | IsManagerUser]
     filter_backends = (filters.DjangoFilterBackend,) 
     filterset_class = StockStatusFilters
 
 
 class StockStatusUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('stock.delete_stockstatus')]
+        if self.request.method in ['PUT' , 'PATCH']:
+            return [IsAuthenticated() , HasAppPermission('stock.change_stockstatus')]
+        return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
+        
     queryset = StockStatus.objects.all()
-    permission_classes = [IsAdminUser | IsManagerUser]
     lookup_field = 'id'
 
     def get_serializer_class(self):
@@ -41,15 +51,16 @@ class StockStatusUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView)
     
     
 class StockUpdateLogListView(generics.ListAPIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_stockupdatelog')]
     queryset = StockStatusUpdateLog.objects.all()
     serializer_class = StockStatusUpdateLogSerializer
-    permission_classes = [IsAdminUser | IsManagerUser]
 
 
 class StockStatusInsights(APIView):
     
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
-
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
     def get(self, request):
         queryset = StockStatus.objects.filter(deleted=False)
         filterset = StockStatusFilters(request.GET, queryset=queryset)
@@ -81,7 +92,9 @@ class StockStatusInsights(APIView):
 
 
 class StockStatusSummary(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
+
     def get(self, request):
         queryset = StockStatus.objects.filter(deleted=False)
 
@@ -109,7 +122,9 @@ class StockStatusSummary(APIView):
         })
 
 class OutsideFactoryStock(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
+
     def get(self,request):
         queryset = StockStatus.objects.filter(deleted=False, status='OUT_SIDE_FACTORY')
         serializer = StockStatusSerializer(queryset, many=True)
@@ -117,7 +132,9 @@ class OutsideFactoryStock(APIView):
     
     
 class GetUniqueRM(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.add_stockstatus')]
+
     def get(self, request):
         codes = (
             StockStatus.objects
@@ -128,7 +145,9 @@ class GetUniqueRM(APIView):
         return Response(list(codes))
 
 class GetStockEntrybyRM(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return[IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
+
     def get(self, request):
         item_code = request.query_params.get('item_code')
 
@@ -183,7 +202,9 @@ ITEM_CODE_DISPLAY_ORDER = [
 ]
 
 class StockDashboard(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
+
     def get(self, request):
         tank_qs = (
             StockStatus.objects
@@ -311,6 +332,9 @@ class StockDashboard(APIView):
 
 
 class Dispatch(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.change_stockstatus')]
+
     def post(self,request):
         dispatch_status = request.data.get('destination_status')
         source_id = request.data.get('stock_id')
@@ -325,6 +349,9 @@ class Dispatch(APIView):
         return Response(serializer.data)
     
 class ArriveBatch(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.change_stockstatus')]
+    
     def post(self,request):
         otw_id = request.data.get('stock_id')
         action = request.data.get('action')
@@ -340,6 +367,9 @@ class ArriveBatch(APIView):
         return Response(serializer.data)
     
 class MoveView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
+
     def post(self,request):
         stock_id =  request.data.get('stock_id')
         new_quantity = request.data.get('new_quantity')
@@ -354,8 +384,8 @@ class MoveView(APIView):
         return Response(serializer.data)
     
 class VehicleReport(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
-
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_vehicle_report')]
     def get(self, request):
         status = request.query_params.get('status')
 

@@ -28,6 +28,11 @@ class syncLogs(models.Model):
  
     class Meta:
         db_table = 'sync_log'   
+        permissions = [
+            ('sync_balance_sheet' , 'Can sync Balance Sheet'),
+            ('sync_open_grpos' , 'Can sync open GRPOS'),
+            ('sync_inventory' , 'Can sync inventory'),
+        ]
     
 
 class RMProducts(models.Model):
@@ -51,6 +56,7 @@ class RMProducts(models.Model):
 
     class Meta:
         db_table = 'rm_goods'
+        permissions = [('sync_rm' , 'Can sync RM')]
         
 
 class FGProducts(models.Model):
@@ -69,6 +75,8 @@ class FGProducts(models.Model):
     
     class Meta:
         db_table = 'fg_goods'
+        permissions = [('sync_fg' , 'Can sync FG')]
+
 
 
 
@@ -81,6 +89,8 @@ class Party(models.Model):
     
     class Meta:
         db_table = 'Party'
+        permissions = [('sync_party' , 'Can sync Party')]
+
         
 class DomesticContracts(models.Model):
     po_number = models.CharField(max_length=50) 
@@ -112,6 +122,7 @@ class DomesticContracts(models.Model):
     class Meta:
         db_table = 'domestic_contracts'
         unique_together = ('po_number', 'grpo_no')
+        permissions  = [('sync_po' , 'Can sync PO based on GRPO')]
     
     
     

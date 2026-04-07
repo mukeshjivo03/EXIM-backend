@@ -1,13 +1,13 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission
 
-class IsAdminUser(permissions.BasePermission):
+
+class HasAppPermission(BasePermission):
+    def __init__(self, perm: str):
+        self.perm = perm
+
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == 'ADM'
-    
-class IsManagerUser(permissions.BasePermission):    
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == 'MNG'
-    
-class IsFactoryUser(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == 'FTR'
+        return (
+            request.user
+            and request.user.is_authenticated
+            and request.user.has_perm(self.perm)
+        )

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import TankItemViews , TankItemListCreateView , TankItemColorUpdateView , TankDataView, TankDataListCrateView , TankCapacityUpdateView , TankDataSummary , TankItemWiseSummary , TankCapacityInsights ,TankRateBreakdownView , TankInwardView , TankOutwardView , TankTransferView , TankStatusView , TankLogsView , TankConsumptionView , TankLogView , EmptyorSameTanks , ItemWiseAverage , EmptyTank
+from .views import TankItemViews , TankItemListCreateView , TankItemColorUpdateView , TankDataView, TankDataListCrateView , TankCapacityUpdateView , TankDataSummary , TankItemWiseSummary , TankCapacityInsights ,TankRateBreakdownView   , TankLogView  , ItemWiseAverage , EmptyTank
 
 
 
@@ -24,14 +24,14 @@ urlpatterns = [
     path('empty-tank/', EmptyTank.as_view()),
 
 
-    path('inward/', TankInwardView.as_view()),
-    path('outward/', TankOutwardView.as_view()),
-    path('transfer/', TankTransferView.as_view()),
-    path('layers/<str:tank_code>/', TankStatusView.as_view()),
-    path('logs/<str:tank_code>/', TankLogsView.as_view()),
-    path('consumption/', TankConsumptionView.as_view()),
+    # path('inward/', TankInwardView.as_view()),
+    # path('outward/', TankOutwardView.as_view()),
+    # path('transfer/', TankTransferView.as_view()),
+    # path('layers/<str:tank_code>/', TankStatusView.as_view()),
+    # path('logs/<str:tank_code>/', TankLogsView.as_view()),
+    # path('consumption/', TankConsumptionView.as_view()),
     path('log/', TankLogView.as_view()),
-    path('get-same-tanks/', EmptyorSameTanks.as_view()),
+    # path('get-same-tanks/', EmptyorSameTanks.as_view()),
     
     
     path('<str:tank_code>/', TankDataView.as_view()),

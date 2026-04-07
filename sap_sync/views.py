@@ -8,16 +8,15 @@ from decimal import Decimal
 from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService
 from .services.connections import Queries
 
-from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
 from .serializers import RMProductSerializer, FGProductSerializer , PartySerializer , SyncLogSerializer, DomesticContractSerializer
 from .models import RMProducts , FGProducts , Party , syncLogs, DomesticContracts
-
+from accounts.permissions import HasAppPermission
       
 # Sync Views
       
 class syncPartyView(APIView):
-    
-    permission_classes = [IsAdminUser]
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('sap_sync.sync_party')]
     def get(self, request, cardCode):
         try:
             party_obj = PartyServices().syncParty(cardCode)
@@ -31,7 +30,9 @@ class syncPartyView(APIView):
 
         
 class syncRMProductsView(APIView):
-    permission_classes = [IsAdminUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_rm')]
+
     def get(self, request):
         try:
             result = ProductServices().syncRMProducts()
@@ -43,7 +44,9 @@ class syncRMProductsView(APIView):
             return Response({'success': False, 'error': str(e)}, status=500)
         
 class syncFGProductsView(APIView):
-    permission_classes = [IsAdminUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_fg')]
+
     def get(self, request):
         try:
             result = ProductServices().syncFGProducts()
@@ -56,7 +59,9 @@ class syncFGProductsView(APIView):
         
         
 class syncSingleRMProductView(APIView):
-    permission_classes = [IsAdminUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_rm')]
+
     def get(self, request, itemCode):
         try:
             result = ProductServices().syncRMProduct(itemCode)
@@ -67,7 +72,9 @@ class syncSingleRMProductView(APIView):
             return Response({'success': False, 'error': str(e)}, status=500)
         
 class syncSingleFGProductView(APIView):
-    permission_classes = [IsAdminUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_fg')]
+
     def get(self, request, itemCode):
         try:
             result = ProductServices().syncFGProduct(itemCode)
@@ -82,8 +89,12 @@ class syncSingleFGProductView(APIView):
 # Model Views 
         
 class RMProductGetandDeleteView(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAdminUser]
-    
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('sap_sync.delete_rmproducts')]
+        
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_rmproducts')]
+        
     queryset = RMProducts.objects.all()
     serializer_class = RMProductSerializer 
     lookup_field = 'item_code'
@@ -91,8 +102,8 @@ class RMProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     
     
 class RMProductListView(generics.ListAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
-
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_rmproducts')]
     queryset = RMProducts.objects.all()
     serializer_class = RMProductSerializer
 
@@ -112,7 +123,8 @@ class RMProductListView(generics.ListAPIView):
 
 
 class RMProductSummaryView(APIView):
-    permission_classes = [IsAdminUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_rmproducts')]
 
     def get(self, request):
         queryset = RMProducts.objects.exclude(total_qty=0)
@@ -139,7 +151,8 @@ class RMProductSummaryView(APIView):
 
 
 class RMProductVarietyListView(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_rmproducts')]
 
     def get(self, request):
         varieties = RMProducts.objects.values_list('u_variety', flat=True).distinct().order_by('u_variety')
@@ -148,8 +161,12 @@ class RMProductVarietyListView(APIView):
         })
         
 class FGProductGetandDeleteView(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAdminUser]
-    
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('sap_sync.delete_fgproducts')]
+        
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_fgproducts')]
+        
     queryset = FGProducts.objects.all()
     serializer_class = FGProductSerializer 
     lookup_field = 'item_code'
@@ -157,8 +174,9 @@ class FGProductGetandDeleteView(generics.RetrieveDestroyAPIView):
     
     
 class FGProductListView(generics.ListAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
-    
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_fgproducts')]
+
     queryset = FGProducts.objects.all()
     serializer_class = FGProductSerializer
     
@@ -172,16 +190,21 @@ class FGProductListView(generics.ListAPIView):
         })
     
 class PartyGetandDeleteView(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAdminUser]
-    
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('sap_sync.delete_party')]
+        
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_party')]
+        
     queryset = Party.objects.all()
     serializer_class = PartySerializer
     lookup_field = 'card_code'
     
 
 class PartyListView(generics.ListAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
-    
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_party')]
+
     queryset = Party.objects.all()
     serializer_class =  PartySerializer
     
@@ -195,70 +218,90 @@ class PartyListView(generics.ListAPIView):
         })    
     
 class SyncLogListView(generics.ListAPIView):
-    permission_classes = [IsAdminUser]
-    
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_synclogs')]
+
     queryset = syncLogs.objects.all()
     serializer_class = SyncLogSerializer
     
     
 class syncPOView(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
-
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_po')]
     def get(self, request):
         result = POService().syncPOs()
         return Response({"records_synced": result})
     
 
 class syncSinglePOView(APIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_po')]
 
     def get(self, request, grpo_no):
         result = POService().syncPO(grpo_no)
         return Response({"po_details": result})
     
-    
+
 class DomesticContactListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_domesticcontracts')]
+
     queryset = DomesticContracts.objects.all()
     serializer_class = DomesticContractSerializer
     
 class DomesticContractRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [IsAuthenticated() , HasAppPermission('sap_sync.delete_domesticcontracts')]
+        if self.request.method in ['PUT' , 'PATCH']:
+            return [IsAuthenticated() , HasAppPermission('sap_sync.change_domesticcontracts')]
+            
+        return [IsAuthenticated() , HasAppPermission('sap_sync.view_domesticcontracts')]
+        
     queryset = DomesticContracts.objects.all()
     serializer_class = DomesticContractSerializer
     lookup_field = 'id'
-    
-    
+
+
+
 class syncBalanceSheet(APIView):
-    permission_classes = [IsAdminUser  |  IsManagerUser]
-    
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
+
     def get(self, request):
         result = BalanceSheetService().syncBalanceSheet()
         return Response({"balance_sheet": result})
     
     
 class syncOpenGRPOS(APIView):
-    permission_classes = [IsAdminUser  |  IsManagerUser]
-    
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_open_grpos')]
+
     def get(self, request):
         result = GRPOServices().syncGRPOS()
         return Response({"open_grpos": result})
     
 
 class syncInventory(APIView):
-    permission_classes= [IsAdminUser | IsManagerUser]
-    
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_inventory')]
+
     def get(self, request):
         result = InventoryService().syncWarehouseWiseInventory()
         
         return Response({"inventory": result})
     
 class syncUniqueWarehouse(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_inventory')]
+    
     def get(self , request):
         result = InventoryService().getUniqueWarehouse()
         return Response({"unique_warehouse": result})        
 
 class syncFinishedInventory(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_inventory')]
     
     def get(self , request):
         result = InventoryService().syncFinishedInventory()

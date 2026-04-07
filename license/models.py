@@ -51,6 +51,8 @@ class AdvanceLicenseLines(models.Model):
     
     class Meta:
         db_table = 'advance_license_lines'
+        permissions = [('view_line_insights' ,  'Can see line Insights')]
+
         
 
         
@@ -104,6 +106,8 @@ class DFIALicenseLines(models.Model):
     
     class Meta:
         db_table = 'dfia_license_lines'
+        permissions = [('view_dfia_line_insights' ,  'Can see DFIA line Insights')]
+
         
         
     

@@ -77,5 +77,6 @@ class DomesticReports(models.Model):
 
     class Meta:
         db_table = 'contracts'
+
         
     

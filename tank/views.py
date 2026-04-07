@@ -9,80 +9,80 @@ from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField, Count , 
 
 from decimal import Decimal
 from rest_framework import status, serializers
-from .models import TankLayer, TankLog, TankLogConsumption
-from .services import TankService , ItemAvergaCost
+from .models import  TankLog
+from .services import  ItemAvergaCost
 from stock.models import StockStatus, StockStatusUpdateLog
 from .models import TankItem, TankData 
-from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer , TankInwardSerializer , TankOutwardSerializer , TankTransferSerializer , TankLayerResponseSerializer , TankLogResponseSerializer ,TankConsumptionSerializer, TankLogConsumptionResponseSerializer , TransferTankSerialier , TankLogSerializer
-from accounts.permissions import IsAdminUser , IsManagerUser , IsFactoryUser
-
+from .serializers import TankItemSerializer, TankDataSerializer , TankItemColorSerialier ,TankDataCapacitySerializer  ,TankLogSerializer , TankLogResponseSerializer
+from accounts.permissions import HasAppPermission
 
     
 # TANK DATA VIEWS
   
 class TankDataView(generics.RetrieveDestroyAPIView):
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('tank.delete_tankdata')]
+        
+        return [IsAuthenticated() , HasAppPermission('tank.view_tankdata')]
+
     queryset = TankData.objects.all()
     serializer_class = TankDataSerializer
-    permission_classes = [IsAuthenticated]
     lookup_field = 'tank_code'
     
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAuthenticated()]
-        
-        return [(IsAdminUser | IsManagerUser)()]
-
 
 class TankDataListCrateView(generics.ListCreateAPIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated() , HasAppPermission('tank.add_tankdata')]
+        
+        return [IsAuthenticated() , HasAppPermission('tank.view_tankdata')]
     queryset = TankData.objects.all()
     serializer_class = TankDataSerializer
-    
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAuthenticated()]
-        
-        return [IsAuthenticated(), (IsAdminUser | IsManagerUser)()]
+      
 
 class TankCapacityUpdateView(generics.UpdateAPIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.change_tankdata')]
     queryset = TankData.objects.all()
     serializer_class = TankDataCapacitySerializer
     lookup_field = 'tank_code'
-    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser | IsManagerUser]
     
     
 
 # TANK ITEM VIEWS
 class TankItemViews(generics.RetrieveDestroyAPIView):
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('tank.delete_tankitem')]
+            
+        return [IsAuthenticated() , HasAppPermission('tank.view_tankitem')]
+
     queryset = TankItem.objects.all()
     serializer_class = TankItemSerializer
     lookup_field = 'tank_item_code'
     
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAuthenticated()]
-        
-        return [(IsAdminUser | IsManagerUser)()]
-    
+
 class TankItemListCreateView(generics.ListCreateAPIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated() , HasAppPermission('tank.add_tankitem')]
+        return [IsAuthenticated() , HasAppPermission('tank.view_tankitem')]
+    
     queryset = TankItem.objects.all()
     serializer_class = TankItemSerializer
     
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [IsAuthenticated()]
-
-        return [IsAuthenticated(), (IsAdminUser | IsManagerUser)()]  
-   
 class TankItemColorUpdateView(generics.UpdateAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('tank.change_tankitem')]
     queryset = TankItem.objects.all()
     serializer_class = TankItemColorSerialier
     lookup_field = 'tank_item_code'
 
 
 class TankDataSummary(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser | IsFactoryUser]
-
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.view_tankdata')]
     def get(self, request):
         queryset = TankData.objects.filter(is_active=True)
 
@@ -113,8 +113,8 @@ class TankDataSummary(APIView):
 
 
 class TankItemWiseSummary(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser | IsFactoryUser]
-
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.view_tankdata')]
     def get(self, request):
         queryset = TankData.objects.filter(is_active=True, item_code__isnull=False)
 
@@ -156,8 +156,9 @@ class TankItemWiseSummary(APIView):
 
 
 class TankCapacityInsights(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser | IsFactoryUser]
-
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.view_tankdata')]
+    
     def get(self, request):
         aggregate = TankData.objects.aggregate(
             total_capacity=Sum('tank_capacity'),
@@ -189,18 +190,6 @@ class TankCapacityInsights(APIView):
         })
 
 def allocate_fifo(total_qty, completed_entries):
-    """
-    FIFO: remaining stock = newest deliveries.
-    Walk newest → oldest, allocating until total_qty is filled.
-
-    Args:
-        total_qty: float — total current_capacity for this item across all tanks
-        completed_entries: list of dicts, ordered newest-first, with
-                          'rate', 'quantity', 'vendor'
-
-    Returns:
-        list of dicts: [{'rate': float, 'qty': float, 'vendor': str}, ...]
-    """
     remaining = float(total_qty)
     allocations = []
 
@@ -230,17 +219,6 @@ def allocate_fifo(total_qty, completed_entries):
 
 
 def distribute_to_tank(tank_qty, item_total, item_allocations):
-    """
-    Proportionally distribute item-level FIFO allocations to a single tank.
-
-    Args:
-        tank_qty: float — this tank's current_capacity
-        item_total: float — total current_capacity for this item across ALL tanks
-        item_allocations: list from allocate_fifo()
-
-    Returns:
-        list of dicts with proportional quantities, and weighted avg rate
-    """
     if item_total <= 0 or tank_qty <= 0:
         return [], 0
 
@@ -266,7 +244,8 @@ def distribute_to_tank(tank_qty, item_total, item_allocations):
 
 
 class TankRateBreakdownView(APIView):
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        return [IsAuthenticated]
 
     def get(self, request):
 
@@ -364,208 +343,203 @@ class TankRateBreakdownView(APIView):
 
 
  
-class TankInwardView(APIView):
-    """
-    POST /tank/inward/
-    Body: { "tank_code": "TNK001", "stock_status_id": 45, "quantity": 30.00 }
-    """
-    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser]
+# class TankInwardView(APIView):
  
-    def post(self, request):
-        serializer = TankInwardSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+#     def post(self, request):
+#         serializer = TankInwardSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
  
-        try:
-            result = TankService.inward(
-                tank_code=serializer.validated_data['tank_code'],
-                stock_status_id=serializer.validated_data['stock_status_id'],
-                quantity=serializer.validated_data['quantity'],
-                created_by=request.user,
-            )
+#         try:
+#             result = TankService.inward(
+#                 tank_code=serializer.validated_data['tank_code'],
+#                 stock_status_id=serializer.validated_data['stock_status_id'],
+#                 quantity=serializer.validated_data['quantity'],
+#                 created_by=request.user,
+#             )
  
-            return Response({
-                'message': 'Inward entry successful',
-                'layer': TankLayerResponseSerializer(result['layer']).data,
-                'log': TankLogResponseSerializer(result['log']).data,
-                'stock_split': result['stock_split'],
-                'remainder_quantity': result['remainder_quantity'],
-            }, status=status.HTTP_201_CREATED)
+#             return Response({
+#                 'message': 'Inward entry successful',
+#                 'layer': TankLayerResponseSerializer(result['layer']).data,
+#                 'log': TankLogResponseSerializer(result['log']).data,
+#                 'stock_split': result['stock_split'],
+#                 'remainder_quantity': result['remainder_quantity'],
+#             }, status=status.HTTP_201_CREATED)
  
-        except ValueError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return Response(
-                {'error': f'Unexpected error: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+#         except ValueError as e:
+#             return Response(
+#                 {'error': str(e)},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#         except Exception as e:
+#             return Response(
+#                 {'error': f'Unexpected error: {str(e)}'},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
  
  
-class TankOutwardView(APIView):
-    """
-    POST /tank/outward/
-    Body: { "tank_code": "TNK001", "quantity": 50.00, "remarks": "Production batch #123" }
-    """
-    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser]
+# class TankOutwardView(APIView):
  
-    def post(self, request):
-        serializer = TankOutwardSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+#     def post(self, request):
+#         serializer = TankOutwardSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
  
-        try:
-            result = TankService.outward(
-                tank_code=serializer.validated_data['tank_code'],
-                quantity=serializer.validated_data['quantity'],
-                created_by=request.user,
-                remarks=serializer.validated_data.get('remarks', ''),
-            )
+#         try:
+#             result = TankService.outward(
+#                 tank_code=serializer.validated_data['tank_code'],
+#                 quantity=serializer.validated_data['quantity'],
+#                 created_by=request.user,
+#                 remarks=serializer.validated_data.get('remarks', ''),
+#             )
  
-            return Response({
-                'message': 'Outward entry successful',
-                'log': TankLogResponseSerializer(result['log']).data,
-                'cost_breakdown': result['cost_breakdown'],
-            }, status=status.HTTP_201_CREATED)
+#             return Response({
+#                 'message': 'Outward entry successful',
+#                 'log': TankLogResponseSerializer(result['log']).data,
+#                 'cost_breakdown': result['cost_breakdown'],
+#             }, status=status.HTTP_201_CREATED)
  
-        except ValueError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return Response(
-                {'error': f'Unexpected error: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+#         except ValueError as e:
+#             return Response(
+#                 {'error': str(e)},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#         except Exception as e:
+#             return Response(
+#                 {'error': f'Unexpected error: {str(e)}'},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
  
  
-class TankTransferView(APIView):
-    """
-    POST /tank/transfer/
-    Body: { "source_tank_code": "TNK001", "destination_tank_code": "TNK002", "quantity": 50.00, "remarks": "" }
-    """
-    permission_classes = [IsAuthenticated, IsAdminUser | IsFactoryUser]
+# class TankTransferView(APIView):
+#     """
+#     POST /tank/transfer/
+#     Body: { "source_tank_code": "TNK001", "destination_tank_code": "TNK002", "quantity": 50.00, "remarks": "" }
+#     """
+#     def get_permissions(self):
+        return [IsAuthenticated, IsAdminUser | IsFactoryUser]
 
-    def post(self, request):
-        serializer = TankTransferSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+#     def post(self, request):
+#         serializer = TankTransferSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
 
-        try:
-            result = TankService.transfer(
-                source_tank_code=serializer.validated_data['source_tank_code'],
-                destination_tank_code=serializer.validated_data['destination_tank_code'],
-                quantity=serializer.validated_data['quantity'],
-                created_by=request.user,
-                remarks=serializer.validated_data.get('remarks', ''),
-            )
+#         try:
+#             result = TankService.transfer(
+#                 source_tank_code=serializer.validated_data['source_tank_code'],
+#                 destination_tank_code=serializer.validated_data['destination_tank_code'],
+#                 quantity=serializer.validated_data['quantity'],
+#                 created_by=request.user,
+#                 remarks=serializer.validated_data.get('remarks', ''),
+#             )
 
-            return Response({
-                'message': 'Transfer successful',
-                'log': TankLogResponseSerializer(result['log']).data,
-                'source_tank': result['source_tank'],
-                'destination_tank': result['destination_tank'],
-                'quantity_transferred': result['quantity_transferred'],
-            }, status=status.HTTP_201_CREATED)
+#             return Response({
+#                 'message': 'Transfer successful',
+#                 'log': TankLogResponseSerializer(result['log']).data,
+#                 'source_tank': result['source_tank'],
+#                 'destination_tank': result['destination_tank'],
+#                 'quantity_transferred': result['quantity_transferred'],
+#             }, status=status.HTTP_201_CREATED)
 
-        except ValueError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return Response(
-                {'error': f'Unexpected error: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+#         except ValueError as e:
+#             return Response(
+#                 {'error': str(e)},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#         except Exception as e:
+#             return Response(
+#                 {'error': f'Unexpected error: {str(e)}'},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
 
 
-class TankStatusView(APIView):
-    """
-    GET /tank/<tank_code>/layers/
-    Returns active layers with cost breakdown for a specific tank.
-    """
-    permission_classes = [IsAuthenticated]
+# class TankStatusView(APIView):
+#     """
+#     GET /tank/<tank_code>/layers/
+#     Returns active layers with cost breakdown for a specific tank.
+#     """
+#     def get_permissions(self):
+        return [IsAuthenticated]
  
-    def get(self, request, tank_code):
-        try:
-            tank = TankData.objects.get(tank_code=tank_code)
-        except TankData.DoesNotExist:
-            return Response(
-                {'error': f'Tank {tank_code} not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+#     def get(self, request, tank_code):
+#         try:
+#             tank = TankData.objects.get(tank_code=tank_code)
+#         except TankData.DoesNotExist:
+#             return Response(
+#                 {'error': f'Tank {tank_code} not found'},
+#                 status=status.HTTP_404_NOT_FOUND
+#             )
  
-        tank_status = TankService.get_tank_status(tank_code)
+#         tank_status = TankService.get_tank_status(tank_code)
  
-        return Response({
-            'tank_code': tank.tank_code,
-            'tank_capacity': tank.tank_capacity,
-            'current_capacity': tank.current_capacity,
-            **tank_status,
-        })
+#         return Response({
+#             'tank_code': tank.tank_code,
+#             'tank_capacity': tank.tank_capacity,
+#             'current_capacity': tank.current_capacity,
+#             **tank_status,
+#         })
  
  
-class TankLogsView(APIView):
-    """
-    GET /tank/<tank_code>/logs/
-    Returns all inward/outward events for a tank (passbook view).
-    """
-    permission_classes = [IsAuthenticated]
+# class TankLogsView(APIView):
+#     def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.view_tanklog')]
+
+#     def get(self, request, tank_code):
+#         try:
+#             tank = TankData.objects.get(tank_code=tank_code)
+#         except TankData.DoesNotExist:
+#             return Response(
+#                 {'error': f'Tank {tank_code} not found'},
+#                 status=status.HTTP_404_NOT_FOUND
+#             )
  
-    def get(self, request, tank_code):
-        try:
-            tank = TankData.objects.get(tank_code=tank_code)
-        except TankData.DoesNotExist:
-            return Response(
-                {'error': f'Tank {tank_code} not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+#         logs = (
+#             TankLog.objects
+#             .filter(tank_code=tank)
+#             .prefetch_related(
+#                 'consumptions__tank_layer__stock_status__vendor_code',
+#             )
+#             .select_related('stock_status', 'tank_layer', 'tank_code', 'destination_tank')
+#             .order_by('-created_at')
+#         )
  
-        logs = (
-            TankLog.objects
-            .filter(tank_code=tank)
-            .prefetch_related(
-                'consumptions__tank_layer__stock_status__vendor_code',
-            )
-            .select_related('stock_status', 'tank_layer', 'tank_code', 'destination_tank')
-            .order_by('-created_at')
-        )
+#         serializer = TankLogResponseSerializer(logs, many=True)
  
-        serializer = TankLogResponseSerializer(logs, many=True)
+#         return Response({
+#             'tank_code': tank.tank_code,
+#             'logs': serializer.data,
+#         })
  
-        return Response({
-            'tank_code': tank.tank_code,
-            'logs': serializer.data,
-        })
- 
-class TankConsumptionView(generics.ListAPIView):
+# class TankConsumptionView(generics.ListAPIView):
     
-    permission_classes = [IsAuthenticated]
-    queryset = TankLogConsumption.objects.all()
-    serializer_class = TankConsumptionSerializer
+#     def get_permissions(self):
+        return [IsAuthenticated]
+#     queryset = TankLogConsumption.objects.all()
+#     serializer_class = TankConsumptionSerializer
     
 class TankLogView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.view_tanklog')]
     queryset = TankLog.objects.all()
     serializer_class = TankLogSerializer
     
     
-class EmptyorSameTanks(APIView):
-    def get(self, request):
-        item_code = request.query_params.get('item_code')
-        empty_or_same_tanks = TankData.objects.filter(Q(item_code=item_code) | Q(current_capacity=Decimal(0.00)) | Q(current_capacity__isnull=True))
-        serializer = TransferTankSerialier(empty_or_same_tanks, many=True)
-        return Response(serializer.data)
+# class EmptyorSameTanks(APIView):
+#     def get(self, request):
+#         item_code = request.query_params.get('item_code')
+#         empty_or_same_tanks = TankData.objects.filter(Q(item_code=item_code) | Q(current_capacity=Decimal(0.00)) | Q(current_capacity__isnull=True))
+#         serializer = TransferTankSerialier(empty_or_same_tanks, many=True)
+#         return Response(serializer.data)
     
 
 class ItemWiseAverage(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.view_itemwise_average')]
     def get(self , request):
         item_code = request.query_params.get('item_code')
         response = ItemAvergaCost(item_code)
         return Response(response)
         
 class EmptyTank(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.change_tankdata')]
     def patch(self , request):
         tank_code = request.query_params.get('tank_code')
         tank = TankData.objects.get(tank_code=tank_code)

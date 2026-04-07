@@ -11,11 +11,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .services import fetch_table_manually , fetch_jivo_rates
 from .models import DailyPrice , JivoRates
 from.serializers import DailyPriceSerializer , JivoRatesSerializer
-from accounts.permissions import IsAdminUser, IsManagerUser , IsFactoryUser
-
+from accounts.permissions import HasAppPermission
 
 class DailyPriceListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('daily_price.view_dailyprice')]
+
     queryset = DailyPrice.objects.all()
     serializer_class = DailyPriceSerializer
     filter_backends = [DjangoFilterBackend]
@@ -25,11 +26,10 @@ class DailyPriceListView(generics.ListAPIView):
 class PriceFetchView(APIView):
     def get_permissions(self):
         if self.request.method == "POST":
-            return [IsAuthenticated(), (IsAdminUser | IsManagerUser)()]
+            return [IsAuthenticated() , HasAppPermission('daily_price.add_dailyprice')]
+        
+        return [IsAuthenticated() , HasAppPermission('daily_price.fetch_daily_price' , 'daily_price.view_dailyprice')]
 
-        return [IsAuthenticated(), (IsAdminUser | IsManagerUser)()]
-        
-        
     def get(self, request):
         data = fetch_table_manually()
         if not data:
@@ -66,7 +66,8 @@ class PriceFetchView(APIView):
 
 
 class DailyPriceTrend(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('daily_price.view_daily_price_graph')]
     def get(self,request):
         end_date = date.today()
         start_date = end_date - timedelta(days=7)
@@ -100,6 +101,8 @@ class DailyPriceTrend(APIView):
         
         
 class DailyPriceRangeView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('daily_price.view_dailyprice')]
     def get(self, request):
         from_date = request.query_params.get('from_date')
         to_date = request.query_params.get('to_date')
@@ -113,6 +116,12 @@ class DailyPriceRangeView(APIView):
     
     
 class JivoRatesFetch(APIView):
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAuthenticated(), HasAppPermission('daily_price.add_jivorates')]
+        
+        return [IsAuthenticated() , HasAppPermission('daily_price.fetch_jivo_rates' , 'daily_price.view_jivorates')]
+
     def get(self, request):
         data = fetch_jivo_rates()
         
@@ -148,6 +157,9 @@ class JivoRatesFetch(APIView):
     
     
 class JivoRatesWithRange(APIView):
+    def get_permissions(self):
+        return  [IsAuthenticated(), HasAppPermission('daily_price.view_jivorates')]
+
     def get(self, request):
         from_date = request.query_params.get('from_date')
         to_date = request.query_params.get('to_date')

@@ -489,7 +489,7 @@ FROM OPENQUERY(HANADB112, '
                 ')
 
             ) AS FullResult
-            WHERE Warehouse IN ('BH-CRUDE' ,'BH-GJ' ,'BH-EX' ,'BH-PC' ,'GP-FG' ,'BH-VA' ,'BH-EC' ,'BH-PF')
+            WHERE Warehouse IN ('BH-CRUDE' ,'BH-GJ' ,'BH-EX' ,'BH-PC' ,'GP-FG' ,'BH-VA' ,'BH-EC' ,'BH-PF', 'BH-LO')
 
         """
     def get_inventory(self):
@@ -520,7 +520,7 @@ FROM OPENQUERY(HANADB112, '
                         T0."ItemCode", T1."ItemName", T1."U_IsLitre", T1."Series", T2."ChapterID"
                     ')
                 ) AS Result
-                WHERE U_Sub_Group NOT IN ('GHEE')  AND Warehouse IN ('BH-CRUDE' ,'BH-GJ' ,'BH-EX' ,'BH-PC' ,'BH-VA'  ,'BH-PF')
+                WHERE U_Sub_Group NOT IN ('GHEE')  AND Warehouse IN ('BH-CRUDE' ,'BH-GJ' ,'BH-EX' ,'BH-PC' ,'BH-VA'  ,'BH-PF' , 'BH-LO')
                 GROUP BY U_Sub_Group , Warehouse
                 ORDER BY Warehouse
         """

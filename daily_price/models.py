@@ -14,7 +14,13 @@ class DailyPrice(models.Model):
     class Meta:
         unique_together = ('commodity_name' , 'date')
         db_table  = 'daily_prices'
-        
+        permissions = [
+            ("fetch_daily_price" , "Can fetch Daily Prices"),
+            ("view_daily_price_graph" , "Can see daily price grpah")
+        ]
+
+
+
 class JivoRates(models.Model):
     pack_type = models.CharField(max_length=125 , blank=True , null =True)
     commodity = models.CharField(max_length=125 , blank=True , null =True)
@@ -28,3 +34,6 @@ class JivoRates(models.Model):
     
     class Meta:
         db_table  = 'jivo_rates'
+        permissions = [
+            ("fetch_jivo_rate"  , "Can fetch jivo rates"),
+        ]

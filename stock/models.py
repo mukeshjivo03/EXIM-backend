@@ -63,6 +63,7 @@ class StockStatus(models.Model):
 
     class Meta:
         db_table = 'stock_status'
+        permissions = [('view_vehicle_report' , 'Can view Vehicle Report')]
         
     def __str__(self):
         return f"{self.item_code} - {self.status}"

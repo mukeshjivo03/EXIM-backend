@@ -34,6 +34,7 @@ class TankData(models.Model):
     
     class Meta:
         db_table = 'tank_data'
+        permissions = [('view_itemwise_average' , 'Can See Item Average')]
         
     def save(self, *args, **kwargs):
         if not self.tank_code:
@@ -70,20 +71,20 @@ class TankData(models.Model):
     def __str__(self):
         return f"{self.tank_code} - {self.item_code}"
     
-class TankLayer(models.Model):
-    tank_code = models.ForeignKey('TankData' , on_delete = models.CASCADE)
-    stock_status = models.ForeignKey('stock.StockStatus' , on_delete = models.CASCADE)
-    item_code = models.ForeignKey('TankItem' , on_delete = models.CASCADE)
-    vendor = models.ForeignKey('sap_sync.Party' , on_delete = models.CASCADE)
-    rate = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity_added = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
-    quantity_remaining = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
-    is_exhausted = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True , null = True)
-    created_by = models.CharField(max_length=50 , null = True)
+# class TankLayer(models.Model):
+#     tank_code = models.ForeignKey('TankData' , on_delete = models.CASCADE)
+#     stock_status = models.ForeignKey('stock.StockStatus' , on_delete = models.CASCADE)
+#     item_code = models.ForeignKey('TankItem' , on_delete = models.CASCADE)
+#     vendor = models.ForeignKey('sap_sync.Party' , on_delete = models.CASCADE)
+#     rate = models.DecimalField(max_digits=10, decimal_places=2)
+#     quantity_added = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
+#     quantity_remaining = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
+#     is_exhausted = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True , null = True)
+#     created_by = models.CharField(max_length=50 , null = True)
     
-    class Meta:
-        db_table = 'tank_layer'
+#     class Meta:
+#         db_table = 'tank_layer'
 
 class TankLog(models.Model):
     
@@ -106,24 +107,24 @@ class TankLog(models.Model):
         db_table = 'tank_logs'
     
 
-class TankLogConsumption(models.Model):
-    """
-    For OUTWARD logs only.
-    Records which layers were consumed and by how much.
-    This is the FIFO cost trail.
-    """
-    tank_log = models.ForeignKey(
-        TankLog, on_delete=models.CASCADE, related_name='consumptions'
-    )
-    tank_layer = models.ForeignKey(
-        TankLayer, on_delete=models.CASCADE, related_name='consumptions'
-    )
-    quantity_consumed = models.DecimalField(max_digits=10, decimal_places=2)
-    rate = models.DecimalField(max_digits=10, decimal_places=2)  # Snapshot from layer at time of consumption
-    created_at = models.DateTimeField(auto_now_add=True)
+# class TankLogConsumption(models.Model):
+#     """
+#     For OUTWARD logs only.
+#     Records which layers were consumed and by how much.
+#     This is the FIFO cost trail.
+#     """
+#     tank_log = models.ForeignKey(
+#         TankLog, on_delete=models.CASCADE, related_name='consumptions'
+#     )
+#     tank_layer = models.ForeignKey(
+#         TankLayer, on_delete=models.CASCADE, related_name='consumptions'
+#     )
+#     quantity_consumed = models.DecimalField(max_digits=10, decimal_places=2)
+#     rate = models.DecimalField(max_digits=10, decimal_places=2)  # Snapshot from layer at time of consumption
+#     created_at = models.DateTimeField(auto_now_add=True)
  
-    class Meta:
-        db_table = 'tank_log_consumption'
+#     class Meta:
+#         db_table = 'tank_log_consumption'
  
-    def __str__(self):
-        return f"Log {self.tank_log.id} | Layer {self.tank_layer.id} | Consumed: {self.quantity_consumed} @ {self.rate}"
+#     def __str__(self):
+#         return f"Log {self.tank_log.id} | Layer {self.tank_layer.id} | Consumed: {self.quantity_consumed} @ {self.rate}"

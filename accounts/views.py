@@ -9,24 +9,20 @@ from rest_framework.permissions import IsAuthenticated , AllowAny
 
 from .models import User
 from .serializers import UserSerializer , UserRegistrationSerializer , MyTokenObtainSerializer
-from .permissions import IsAdminUser , IsManagerUser , IsFactoryUser
  
 # User Management 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
-    permission_classes = [IsAdminUser]
 
 class ListUservView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]  
     
     
 class GetDeleteUpdate(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
     lookup_field = 'id'
    
 # LOGIN

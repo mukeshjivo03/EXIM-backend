@@ -2,13 +2,16 @@ from rest_framework import generics
 from datetime import date
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer, FreightSerializer , ContractDropdownSerializer
 from .models import DomesticReports
-from accounts.permissions import IsAdminUser , IsManagerUser
+from accounts.permissions import HasAppPermission
 
 
 class DomesticReportListView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('contracts.view_demesticreports')]
     def get(self,request):
         year = request.query_params.get('year')
         user_year = int(year)
@@ -21,33 +24,46 @@ class DomesticReportListView(APIView):
         return Response(serializer.data)
         
 class ContractPostView(generics.CreateAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('contracts.add_domesticreports')]
+
     queryset = DomesticReports.objects.all()
     serializer_class = ContractSerializer   
     
 class LoadingPostView(generics.UpdateAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('contracts.change_domesticreports')]
+
     queryset = DomesticReports.objects.all()
     serializer_class = LoadingSerializer
     lookup_field = 'id'
     
 class FrieghtPostView(generics.UpdateAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('contracts.change_domesticreports')]
     
     queryset = DomesticReports.objects.all()
     serializer_class = FreightSerializer
     lookup_field = 'id'
     
 class ContractGetView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
+
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('contracts.delete_domesticreports')]
+        if self.request.method in ['PUT' , 'PATCH']:
+            return [IsAuthenticated(), HasAppPermission('contracts.change_domesticreports')] 
+
+        return [IsAuthenticated(), HasAppPermission('contract.view_domesticreports')]
+
     
     queryset = DomesticReports.objects.all()
     serializer_class = DomesticReportSerializer
     lookup_field = 'id'
 
 class ContractDropdownView(generics.ListAPIView):
-    permission_classes = [IsAdminUser | IsManagerUser]
-    
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('contract.view_domesticreports')]
     queryset = DomesticReports.objects.all().order_by('-created_at')
     serializer_class = ContractDropdownSerializer
     
