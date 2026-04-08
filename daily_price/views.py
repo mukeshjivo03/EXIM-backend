@@ -26,9 +26,12 @@ class DailyPriceListView(generics.ListAPIView):
 class PriceFetchView(APIView):
     def get_permissions(self):
         if self.request.method == "POST":
-            return [IsAuthenticated() , HasAppPermission('daily_price.add_dailyprice')]
-        
-        return [IsAuthenticated() , HasAppPermission('daily_price.fetch_daily_price' , 'daily_price.view_dailyprice')]
+            return [IsAuthenticated(), HasAppPermission("daily_price.add_dailyprice")]
+    
+        return [
+            IsAuthenticated(),
+            HasAppPermission("daily_price.fetch_daily_price", "daily_price.view_dailyprice"),
+        ]
 
     def get(self, request):
         data = fetch_table_manually()
