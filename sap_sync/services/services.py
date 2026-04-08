@@ -495,3 +495,5 @@ class InventoryService:
                query = Queries().get_total_finsihed_qty()
                result = conn.execute_query(query)
            return result
+    
+    

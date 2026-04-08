@@ -311,7 +311,7 @@ class syncFinishedInventory(APIView):
 
 class DirectorDashboard(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('accounts.view_director_report')]
+        return [IsAuthenticated()]
     
     def get(self, request):
         

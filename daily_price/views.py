@@ -124,7 +124,7 @@ class JivoRatesFetch(APIView):
         if self.request.method == "POST":
             return [IsAuthenticated(), HasAppPermission('daily_price.add_jivorates')]
         
-        return [IsAuthenticated() , HasAppPermission('daily_price.fetch_jivo_rates' , 'daily_price.view_jivorates')]
+        return [IsAuthenticated() , HasAppPermission('daily_price.fetch_jivo_rates'), HasAppPermission('daily_price.view_jivorates')]
 
     def get(self, request):
         data = fetch_jivo_rates()
