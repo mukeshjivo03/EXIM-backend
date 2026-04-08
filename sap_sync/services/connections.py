@@ -557,3 +557,34 @@ FROM OPENQUERY(HANADB112, '
             GROUP BY U_Sub_Group , Warehouse
             ORDER BY Warehouse
     """
+
+    def get_total_finsihed_qty(self):
+        return """
+        SELECT  SUM(LITER) AS 'Finished Qty'
+            FROM   
+            (
+                SELECT * FROM OPENQUERY(HANADB112, '
+                    SELECT ''New'' SAP, T0."Warehouse", ''CB'', ''Closing'',
+                    CASE 
+                        WHEN T1."ItemCode" IN (''RM0000012'',''RM0000013'',''RM0000014'') THEN ''OLIVE IMPORTED''
+                        WHEN T1."ItemCode" IN (''RM0000019'')                             THEN ''SUNFLOWER IMPORTED''
+                        WHEN T1."ItemName" LIKE ''GIFT%''                                 THEN ''BLENDED''
+                        ELSE T1."U_Sub_Group" 
+                    END "U_Sub_Group",
+                    T2."ChapterID",
+                    CASE WHEN T1."Series"=389 THEN ''Finished'' WHEN T1."Series"=392 THEN ''Loose Oil'' END "Stock Type",
+                    T0."ItemCode", T1."ItemName", T1."U_IsLitre",
+                    SUM(T0."InQty" - T0."OutQty") Quantity,
+                    SUM((T0."InQty" - T0."OutQty") * T1."SalPackUn") Liter
+                    FROM "JIVO_OIL_HANADB"."OINM" T0
+                    INNER JOIN "JIVO_OIL_HANADB"."OITM" T1 ON T0."ItemCode" = T1."ItemCode"
+                    INNER JOIN "JIVO_OIL_HANADB"."OCHP" T2 ON T2."AbsEntry" = T1."ChapterID"
+                    WHERE T0."DocDate" <= CURRENT_DATE
+                      AND T1."U_IsLitre" = ''Y''
+                      AND T1."ItemCode" LIKE ''FG%''
+                    GROUP BY T1."ItemCode", T0."Warehouse", T1."U_Sub_Group",
+                    T0."ItemCode", T1."ItemName", T1."U_IsLitre", T1."Series", T2."ChapterID"
+                ')
+            ) AS Result
+            WHERE U_Sub_Group NOT IN ('GHEE') AND Warehouse in ('BH-EC' , 'GP-FG') 
+        """

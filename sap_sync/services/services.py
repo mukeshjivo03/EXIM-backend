@@ -465,6 +465,7 @@ class InventoryService:
     def __init__(self):
         self.connection = SAPConnection()
         
+      
     def getUniqueWarehouse(self):
         with self.connection as conn:
             query = Queries().get_unique_warehouse()
@@ -480,9 +481,17 @@ class InventoryService:
             
         return result
     
+    
     def syncFinishedInventory(self):
         with self.connection as conn:
             query = Queries().get_finished_inventory()
             result = conn.execute_query(query)
             
         return result
+
+    
+    def synfinishedTotal(self):
+           with self.connection as conn:
+               query = Queries().get_total_finsihed_qty()
+               result = conn.execute_query(query)
+           return result

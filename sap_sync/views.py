@@ -2,7 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg , Q
+from django.db.models.functions import Round, Coalesce
 from decimal import Decimal
 
 from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService
@@ -10,6 +11,7 @@ from .services.connections import Queries
 
 from .serializers import RMProductSerializer, FGProductSerializer , PartySerializer , SyncLogSerializer, DomesticContractSerializer
 from .models import RMProducts , FGProducts , Party , syncLogs, DomesticContracts
+from stock.models import StockStatus
 from accounts.permissions import HasAppPermission
       
 # Sync Views
@@ -306,3 +308,45 @@ class syncFinishedInventory(APIView):
     def get(self , request):
         result = InventoryService().syncFinishedInventory()
         return Response({"finished_inventory": result})
+
+class DirectorDashboard(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_director_report')]
+    
+    def get(self, request):
+        
+        finished_raw = InventoryService().synfinishedTotal()
+        finished_qty_liter = finished_raw[0].get("Finished Qty", 0) if finished_raw else 0
+        finished_qty_mts = round(Decimal(str(finished_qty_liter)) * Decimal('0.000989'))
+
+        statuses = [
+            "ON_THE_WAY", "UNDER_LOADING", "AT_REFINERY", 
+            "MUNDRA_PORT", "ON_THE_SEA", "IN_CONTRACT"
+        ]
+        
+        aggregations = {}
+        for status in statuses:
+            prefix = status.lower()
+            
+            aggregations[f"{prefix}_liter"] = Coalesce(
+                Round(Sum("quantity_in_litre", filter=Q(status=status)), precision=0),
+                Decimal('0') 
+            )
+            
+            aggregations[f"{prefix}_mts"] = Coalesce(
+                Round(Sum("quantity", filter=Q(status=status)) / Decimal('1000'), precision=0),
+                Decimal('0')
+            )
+
+        # Added .filter(delete=False) right here
+        totals = StockStatus.objects.filter(deleted=False).aggregate(**aggregations)
+        
+        return Response({
+            "finished": {"liter" : finished_qty_liter , "mts" : finished_qty_mts},
+            "otw": {"liter": totals["on_the_way_liter"], "mts": totals["on_the_way_mts"]},
+            "under_loading": {"liter": totals["under_loading_liter"], "mts": totals["under_loading_mts"]},
+            "at_refinery": {"liter": totals["at_refinery_liter"], "mts": totals["at_refinery_mts"]},
+            "mundra_port": {"liter": totals["mundra_port_liter"], "mts": totals["mundra_port_mts"]},
+            "on_the_sea": {"liter": totals["on_the_sea_liter"], "mts": totals["on_the_sea_mts"]},
+            "in_contract": {"liter": totals["in_contract_liter"], "mts": totals["in_contract_mts"]}
+        })

@@ -62,6 +62,7 @@ class StockStatusInsights(APIView):
     def get_permissions(self):
         return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
     def get(self, request):
+
         queryset = StockStatus.objects.filter(deleted=False)
         filterset = StockStatusFilters(request.GET, queryset=queryset)
         if filterset.is_valid():
@@ -77,7 +78,6 @@ class StockStatusInsights(APIView):
 
         if total_qty > 0:
             avg_price_per_kg = round(total_value / total_qty, 2)
-            # 1 litre = 1 kg * 1.0989, so price_per_ltr = price_per_kg / 1.0989
             avg_price_per_ltr = round(avg_price_per_kg / Decimal('1.0989'), 2)
         else:
             avg_price_per_kg = Decimal('0.00')

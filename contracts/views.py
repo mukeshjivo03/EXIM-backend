@@ -11,7 +11,7 @@ from accounts.permissions import HasAppPermission
 
 class DomesticReportListView(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('contracts.view_demesticreports')]
+        return [IsAuthenticated() , HasAppPermission('contracts.view_domesticreports')]
     def get(self,request):
         year = request.query_params.get('year')
         user_year = int(year)
