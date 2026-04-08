@@ -54,7 +54,7 @@ class ContractGetView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT' , 'PATCH']:
             return [IsAuthenticated(), HasAppPermission('contracts.change_domesticreports')] 
 
-        return [IsAuthenticated(), HasAppPermission('contract.view_domesticreports')]
+        return [IsAuthenticated(), HasAppPermission('contracts.view_domesticreports')]
 
     
     queryset = DomesticReports.objects.all()
@@ -63,7 +63,8 @@ class ContractGetView(generics.RetrieveUpdateDestroyAPIView):
 
 class ContractDropdownView(generics.ListAPIView):
     def get_permissions(self):
-        return [IsAuthenticated(), HasAppPermission('contract.view_domesticreports')]
+        return [IsAuthenticated(), HasAppPermission('contracts.view_domesticreports')]
+    
     queryset = DomesticReports.objects.all().order_by('-created_at')
     serializer_class = ContractDropdownSerializer
     
