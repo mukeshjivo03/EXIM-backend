@@ -6,7 +6,6 @@ from django.db.models import Sum, Count, Avg , Q
 from django.db.models.functions import Round, Coalesce
 from decimal import Decimal
 
-
 from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService
 from .services.connections import Queries
 
@@ -321,6 +320,16 @@ class DirectorDashboard(APIView):
         finished_qty_liter = finished_raw[0].get("Finished Qty", 0) if finished_raw else 0
         finished_qty_mts = round(Decimal(str(finished_qty_liter)) * Decimal('0.000989'))
 
+        ec = InventoryService().syncWarehouseTotal('BH-EC')
+        ec_ltr = ec[0].get('Liter')
+        ec_mts = round(Decimal(str(ec_ltr)) * Decimal('0.000989'))
+
+        fg = InventoryService().syncWarehouseTotal('GP-FG')
+        fg_ltr = fg[0].get('Liter')
+        fg_mts = round(Decimal(str(fg_ltr)) * Decimal('0.000989'))
+
+
+
         in_tank_liter = TankData.objects.aggregate(
             total_liter=Sum("current_capacity", filter=Q(is_active=True)) 
         )
@@ -354,7 +363,11 @@ class DirectorDashboard(APIView):
         
         
         return Response({
-            "finished": {"liter" : finished_qty_liter , "mts" : finished_qty_mts},
+            "finished": {
+                "total" : {"liter" : finished_qty_liter , "mts" : finished_qty_mts},
+                "BH-EC" : {"liter" : ec_ltr , "mts" : ec_mts},
+                "GP-FG" : {"liter" : fg_ltr , "mts" : fg_mts},
+            },
             "at_factory" : {
 
                 "total" : {"total_lts" : total_at_factory_lts , "total_mts" : total_at_factory_mts},

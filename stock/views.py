@@ -3,9 +3,10 @@ from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Sum, Case, When, DecimalField, Value , Count , F
+from django.db.models import Sum, Case, When, DecimalField, Value , Count , F , ExpressionWrapper , FloatField
 from decimal import Decimal
 from collections import defaultdict, OrderedDict
+from django.db.models.functions import Round
 
 
 from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession
@@ -288,10 +289,14 @@ class StockDashboard(APIView):
         total_in_factory = 0
         total_outside_factory = 0
         status_vendor_totals = defaultdict(float)
-        
+        status_totals = defaultdict(float)
+
+
         ordered_items = [ic for ic in ITEM_CODE_DISPLAY_ORDER if ic in all_items]
         ordered_items += sorted(all_items - set(ITEM_CODE_DISPLAY_ORDER))
-        
+
+
+
         for item_code in ordered_items:
             in_fac  = in_factory_map.get(item_code, 0)
             out_fac = outside_factory_map.get(item_code, 0)
@@ -306,6 +311,7 @@ class StockDashboard(APIView):
                     status_data[key] = val
                     row_total += val
                     status_vendor_totals[key] += val
+                    status_totals[status] += val
 
             items.append({
                 'item_code': item_code,
@@ -332,10 +338,12 @@ class StockDashboard(APIView):
             },
             'status_vendors': ordered_status_vendors,
             'items': items,
+            
             'totals': {
                 'in_factory': total_in_factory,
                 'outside_factory': total_outside_factory,
                 'status_vendor_totals': dict(status_vendor_totals),
+                'status_totals' : dict(status_totals),
                 'grand_total': grand_total,
             },
         })
@@ -412,9 +420,10 @@ class MoveView(APIView):
 class VehicleReport(APIView):
     def get_permissions(self):
         return [IsAuthenticated() , HasAppPermission('stock.view_vehicle_report')]
+
     def get(self, request):
         status = request.query_params.get('status')
-
+        
         response = StockStatus.objects.filter(
             status=status,
             deleted=False
@@ -425,10 +434,16 @@ class VehicleReport(APIView):
             'status',
             'job_work',
             item_name=F('item_code__tank_item_name'),
+        ).annotate(
+            quantity_in_mts=Round(
+                ExpressionWrapper(
+                    F('quantity_in_litre') / Decimal('1.0989') / 1000,
+                    output_field=FloatField()
+                ), 3
+            )
         )
-
+    
         return Response(list(response))
-
 
 # views.py
 class StockChangeSessionListView(generics.ListAPIView):
@@ -445,6 +460,7 @@ class StockChangeSessionListView(generics.ListAPIView):
         action = self.request.query_params.get('action')
         if action:
             queryset = queryset.filter(action=action)
+        # filter by user — /api/stock/logs/?changed_by=harshit
         changed_by = self.request.query_params.get('changed_by')
         if changed_by:
             queryset = queryset.filter(changed_by_label=changed_by)

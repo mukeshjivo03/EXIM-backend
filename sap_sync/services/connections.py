@@ -591,7 +591,7 @@ FROM OPENQUERY(HANADB112, '
 
     def get_warehouse_total(self , warehouseCode):
         return f"""
-        SELECT  Warehouse  , SUM(LITER) AS 'Total Qty'
+        SELECT  Warehouse  , SUM(LITER) AS 'Liter'
             FROM   
             (
                 SELECT * FROM OPENQUERY(HANADB112, '
@@ -617,5 +617,5 @@ FROM OPENQUERY(HANADB112, '
                     T0."ItemCode", T1."ItemName", T1."U_IsLitre", T1."Series", T2."ChapterID"
                 ')
             ) AS Result
-            WHERE U_Sub_Group NOT IN ('GHEE') AND Warehouse  = {warehouseCode} GROUP BY Warehouse
+            WHERE U_Sub_Group NOT IN ('GHEE') AND Warehouse  = '{warehouseCode}' GROUP BY Warehouse
             """

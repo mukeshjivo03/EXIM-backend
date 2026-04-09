@@ -495,5 +495,13 @@ class InventoryService:
                query = Queries().get_total_finsihed_qty()
                result = conn.execute_query(query)
            return result
+
+    def syncWarehouseTotal(self , whsCode):
+        with self.connection as conn:
+            query = Queries().get_warehouse_total(whsCode)
+            result = conn.execute_query(query)
+        
+        return result   
+
     
     
