@@ -6,12 +6,14 @@ from django.db.models import Sum, Count, Avg , Q
 from django.db.models.functions import Round, Coalesce
 from decimal import Decimal
 
+
 from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService
 from .services.connections import Queries
 
 from .serializers import RMProductSerializer, FGProductSerializer , PartySerializer , SyncLogSerializer, DomesticContractSerializer
 from .models import RMProducts , FGProducts , Party , syncLogs, DomesticContracts
 from stock.models import StockStatus
+from tank.models import TankData
 from accounts.permissions import HasAppPermission
       
 # Sync Views
@@ -319,9 +321,15 @@ class DirectorDashboard(APIView):
         finished_qty_liter = finished_raw[0].get("Finished Qty", 0) if finished_raw else 0
         finished_qty_mts = round(Decimal(str(finished_qty_liter)) * Decimal('0.000989'))
 
+        in_tank_liter = TankData.objects.aggregate(
+            total_liter=Sum("current_capacity", filter=Q(is_active=True)) 
+        )
+        in_tank_mts = round((Decimal(in_tank_liter['total_liter']) / Decimal('1.0989'))/1000)
+
+        
         statuses = [
             "ON_THE_WAY", "UNDER_LOADING", "AT_REFINERY", 
-            "MUNDRA_PORT", "ON_THE_SEA", "IN_CONTRACT"
+            "MUNDRA_PORT", "ON_THE_SEA", "IN_CONTRACT" , "OUT_SIDE_FACTORY"
         ]
         
         aggregations = {}
@@ -329,20 +337,31 @@ class DirectorDashboard(APIView):
             prefix = status.lower()
             
             aggregations[f"{prefix}_liter"] = Coalesce(
-                Round(Sum("quantity_in_litre", filter=Q(status=status)), precision=0),
+                Round(Sum("quantity_in_litre", filter=Q(status = status)), precision=0),
                 Decimal('0') 
             )
             
             aggregations[f"{prefix}_mts"] = Coalesce(
-                Round(Sum("quantity", filter=Q(status=status)) / Decimal('1000'), precision=0),
+                Round(Sum("quantity", filter=Q(status = status)) / Decimal('1000'), precision=0),
                 Decimal('0')
             )
 
         # Added .filter(delete=False) right here
         totals = StockStatus.objects.filter(deleted=False).aggregate(**aggregations)
         
+        total_at_factory_lts = Decimal(totals['out_side_factory_liter']) +  Decimal(in_tank_liter['total_liter'])
+        total_at_factory_mts = Decimal(totals['out_side_factory_mts'] ) +   Decimal(in_tank_mts)
+        
+        
         return Response({
             "finished": {"liter" : finished_qty_liter , "mts" : finished_qty_mts},
+            "at_factory" : {
+
+                "total" : {"total_lts" : total_at_factory_lts , "total_mts" : total_at_factory_mts},
+                "in_tank" : {"liter" : in_tank_liter , "mts" : in_tank_mts },
+                "outside_factory" : {"liter": totals["out_side_factory_liter"] , "mts" : totals["out_side_factory_mts"]}
+            },    
+                
             "otw": {"liter": totals["on_the_way_liter"], "mts": totals["on_the_way_mts"]},
             "under_loading": {"liter": totals["under_loading_liter"], "mts": totals["under_loading_mts"]},
             "at_refinery": {"liter": totals["at_refinery_liter"], "mts": totals["at_refinery_mts"]},

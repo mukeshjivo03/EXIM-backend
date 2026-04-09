@@ -8,9 +8,9 @@ from decimal import Decimal
 from collections import defaultdict, OrderedDict
 
 
-from .models import StockStatus ,StockStatusUpdateLog
-from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer
-from .services import arrive_batch , dispatch , move
+from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession
+from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer
+from .services import arrive_batch , dispatch , move , create_audit, TRACKED_FIELDS
 from .filters import StockStatusFilters
 from tank.models import TankData
 from accounts.permissions import HasAppPermission
@@ -22,6 +22,11 @@ class StockStatusListCreateView(generics.ListCreateAPIView):
         
         return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
         
+    def perform_create(self, serializer):
+        changed_by = self.request.user.email
+        stock = serializer.save(created_by=changed_by)
+        create_audit(stock, changed_by_label=changed_by, action='CREATE')
+
     queryset = StockStatus.objects.filter(deleted=False)
     serializer_class = StockStatusSerializer
     filter_backends = (filters.DjangoFilterBackend,) 
@@ -35,7 +40,13 @@ class StockStatusUpdateRetrieveDeleteView(generics.RetrieveUpdateDestroyAPIView)
         if self.request.method in ['PUT' , 'PATCH']:
             return [IsAuthenticated() , HasAppPermission('stock.change_stockstatus')]
         return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
-        
+    
+    def perform_update(self, serializer):
+        changed_by = self.request.user.email
+        old_snapshot = {f: str(getattr(serializer.instance, f)) for f in TRACKED_FIELDS}
+        stock = serializer.save(created_by=changed_by)
+        create_audit(stock, changed_by_label=changed_by, action='UPDATE', old_snapshot=old_snapshot)
+
     queryset = StockStatus.objects.all()
     lookup_field = 'id'
 
@@ -330,59 +341,74 @@ class StockDashboard(APIView):
         })
 
 
-
 class Dispatch(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('stock.change_stockstatus')]
+        return [IsAuthenticated(), HasAppPermission('stock.change_stockstatus')]
 
-    def post(self,request):
+    def post(self, request):
         dispatch_status = request.data.get('destination_status')
         source_id = request.data.get('stock_id')
         dispatch_quantity = request.data.get('quantity')
         action = request.data.get('action')
         created_by = request.data.get('created_by')
-        
+
         stock = StockStatus.objects.get(id=source_id)
-        new_record = dispatch(stock, dispatch_quantity, dispatch_status , created_by , action)
-        
+        old_snapshot = {f: str(getattr(stock, f)) for f in TRACKED_FIELDS}
+
+        new_record = dispatch(stock, dispatch_quantity, dispatch_status, created_by, action)
+
+        create_audit(new_record, changed_by_label=created_by, action='CREATE', note=f"dispatched from #{source_id}")
+        create_audit(stock, changed_by_label=created_by, action='UPDATE', old_snapshot=old_snapshot, note="dispatch source reduced")
+
         serializer = StockStatusSerializer(new_record)
         return Response(serializer.data)
-    
+
+
 class ArriveBatch(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('stock.change_stockstatus')]
-    
-    def post(self,request):
+        return [IsAuthenticated(), HasAppPermission('stock.change_stockstatus')]
+
+    def post(self, request):
         otw_id = request.data.get('stock_id')
         action = request.data.get('action')
         destination_status = request.data.get('destination_status')
         weighed_qty = request.data.get('weighed_qty')
         created_by = request.data.get('created_by')
-        
+
         otw_record = StockStatus.objects.get(id=otw_id)
-        
-        accumulator = arrive_batch(otw_record, weighed_qty, created_by ,action, destination_status) 
-        
+        old_snapshot = {f: str(getattr(otw_record, f)) for f in TRACKED_FIELDS}
+
+        accumulator = arrive_batch(otw_record, weighed_qty, created_by, action, destination_status)
+
+        create_audit(accumulator, changed_by_label=created_by, action='CREATE', note="batch arrival")
+        create_audit(otw_record, changed_by_label=created_by, action='UPDATE', old_snapshot=old_snapshot, note="otw closed")
+
         serializer = StockStatusSerializer(accumulator)
         return Response(serializer.data)
-    
+
+
 class MoveView(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
+        return [IsAuthenticated(), HasAppPermission('stock.view_stockstatus')]
 
-    def post(self,request):
-        stock_id =  request.data.get('stock_id')
+    def post(self, request):
+        stock_id = request.data.get('stock_id')
         new_quantity = request.data.get('new_quantity')
         action = request.data.get('action')
         created_by = request.data.get('created_by')
         new_status = request.data.get('new_status')
-        
+
         stock = StockStatus.objects.get(id=stock_id)
-        new_record = move(stock, new_quantity, action, new_status,created_by)
-        
+        old_snapshot = {f: str(getattr(stock, f)) for f in TRACKED_FIELDS}
+
+        new_record = move(stock, new_quantity, action, new_status, created_by)
+
+        create_audit(new_record, changed_by_label=created_by, action='UPDATE', old_snapshot=old_snapshot, note=f"move → {new_status}")
+
         serializer = StockStatusSerializer(new_record)
         return Response(serializer.data)
     
+
 class VehicleReport(APIView):
     def get_permissions(self):
         return [IsAuthenticated() , HasAppPermission('stock.view_vehicle_report')]
@@ -403,4 +429,25 @@ class VehicleReport(APIView):
 
         return Response(list(response))
 
+
+# views.py
+class StockChangeSessionListView(generics.ListAPIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('stock.view_stockstatus')]
+    
+    serializer_class = StockStatusChangeSessionSerializer
+
+    def get_queryset(self):
+        queryset = StockStatusChangeSession.objects.prefetch_related('field_logs').order_by('-timestamp')
+        stock_id = self.request.query_params.get('stock_id')
+        if stock_id:
+            queryset = queryset.filter(stock_id=stock_id)
+        action = self.request.query_params.get('action')
+        if action:
+            queryset = queryset.filter(action=action)
+        changed_by = self.request.query_params.get('changed_by')
+        if changed_by:
+            queryset = queryset.filter(changed_by_label=changed_by)
+            
+        return queryset
     

@@ -1,10 +1,14 @@
 from django.db import models
 from django.utils import timezone 
 from datetime import datetime
+import uuid
+from django.conf import settings
+from decimal import Decimal
+
+
 from sap_sync.models import RMProducts , Party 
 from tank.models import TankData , TankItem , TankLog
 
-from decimal import Decimal
 
 class StockStatus(models.Model):
     STATUS_CHOICES = (
@@ -32,6 +36,7 @@ class StockStatus(models.Model):
     )
 
     STORAGE_STATUSES = frozenset([
+        'IN_CONTRACT'
         'AT_REFINERY',
         'KANDLA_STORAGE',
         'MUNDRA_PORT',
@@ -73,80 +78,6 @@ class StockStatus(models.Model):
         return self.status in self.STORAGE_STATUSES
     
     
-    def save(self ,*args , **kwargs):
-
-        if self.status == 'AT_REFINERY' and self.item_code_id == 'RM0CDRO':
-            self.quantity = self.quantity - (Decimal('0.03') * self.quantity)
-            self.item_code_id = 'RM00C01'
-        if self.rate is not None:
-            self.rate_in_litres = self.rate / Decimal(1.09089)
-            
-        if self.status == 'OUT_SIDE_FACTORY':
-            self.arrival_date = timezone.now()
-            
-        if self.rate is not None and self.quantity is not None:
-            self.total = self.rate * self.quantity
-        else:
-            self.total = Decimal('0.00')
-
-        
-        if self.quantity is not None:
-            self.quantity_in_litre = self.quantity * Decimal('1.0989')
-        else:
-            self.quantity_in_litre = Decimal('0.00')
-            
-        is_new = self.pk is None
-
-        if not is_new:
-            old_instance = StockStatus.objects.get(pk=self.pk)
-            track_fields = ['status' , 'rate' ,'quantity']
-
-            for field in track_fields:
-                old_val = getattr(old_instance, field)
-                new_val = getattr(self, field)
-                
-                if field == "status" and new_val == "IN_TANK":
-                    
-                    TankLog.objects.create(
-                        log_type = 'INWARD',
-                        quantity = self.quantity,
-                        stock_status = self,
-                        vehicle_number = self.vehicle_number,
-                        rate = self.rate,
-                        party=self.vendor_code.card_name if self.vendor_code else None,
-                        created_by = self.created_by
-                    )
-                    
-                if old_val != new_val:
-                    StockStatusUpdateLog.objects.create(
-                        stock_id = self,
-                        field_name = field,
-                        old_value = old_val,
-                        new_value = new_val,
-                        updated_by = self.created_by,
-                    )
-
-        super().save(*args, **kwargs)
-
-        if is_new:
-            if is_new and self.status == 'IN_TANK':
-                    TankLog.objects.create(
-                        log_type = 'INWARD',
-                        quantity = self.quantity,
-                        stock_status = self,
-                        vehicle_number = self.vehicle_number,
-                        rate = self.rate,
-                        party=self.vendor_code.card_name if self.vendor_code else None,
-                        created_by = self.created_by
-                    )
-                                    
-            StockStatusUpdateLog.objects.create(
-                stock_id = self,
-                field_name = 'All',
-                old_value = '',
-                new_value = f"qty={self.quantity}, rate={self.rate}, status={self.status}",
-                updated_by = self.created_by,
-            )
 
 
 
@@ -183,3 +114,27 @@ class DebitEntry(models.Model):
 
     def __str__(self):
         return f"Debit {self.quantity} MTS @ {self.rate} — {self.stock}"
+    
+
+class StockStatusChangeSession(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    stock = models.ForeignKey(StockStatus, on_delete=models.CASCADE, related_name='change_sessions')
+    action = models.CharField(max_length=10, choices=[('CREATE', 'Create'), ('UPDATE', 'Update')])
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    changed_by_label = models.CharField(max_length=100)  # denormalized fallback
+    timestamp = models.DateTimeField(auto_now_add=True)
+    note = models.CharField(max_length=255, blank=True)  # optional reason/context
+
+    class Meta:
+        db_table = 'stock_change_sessions'
+        ordering = ['-timestamp']
+
+
+class StockStatusFieldLog(models.Model):
+    session = models.ForeignKey(StockStatusChangeSession, on_delete=models.CASCADE, related_name='field_logs')
+    field_name = models.CharField(max_length=100)
+    old_value = models.JSONField(null=True)   # preserves type: Decimal → str in JSON is fine
+    new_value = models.JSONField(null=True)
+
+    class Meta:
+        db_table = 'stock_field_logs'
