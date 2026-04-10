@@ -408,56 +408,61 @@ from django.db.models import Sum
     #         'weighted_avg_rate': weighted_avg_rate,
     #     }
         
-
-
 def ItemAvergaCost(itemCode):
     
-    total_tank_capacity = TankData.objects.filter(item_code=itemCode).aggregate(total_capacity=Sum('current_capacity'))['total_capacity']
-    stockRecords = StockStatus.objects.filter(item_code=itemCode , deleted = False ,status ='IN_TANK').order_by('created_at').only('quantity_in_litre' , 'rate' ,  'created_at')
+    total_tank_capacity = TankData.objects.filter(item_code=itemCode).aggregate(
+        total_capacity=Sum('current_capacity')
+    )['total_capacity']
+    
+    stockRecords = StockStatus.objects.filter(
+    item_code=itemCode, deleted=False, status='IN_TANK'
+    ).order_by('created_at').only('quantity_in_litre', 'rate_in_litres', 'created_at')
+    
 
     remaining = total_tank_capacity
     weighted_sum = Decimal('0.00')
     stock_status_quantity = Decimal('0.00')
     breakdown = []
-    
+
     for record in stockRecords:
         if remaining <= 0:
             break
-    
-        consumed = min(record.quantity_in_litre , remaining)
-        weighted_sum +=  record.rate_in_litres * record.quantity_in_litre
-        stock_status_quantity += record.quantity_in_litre
-        remaining -= consumed
         
+        quantity = record.quantity_in_litre or Decimal('0.00')
+        rate     = record.rate_in_litres    or Decimal('0.00')
+        consumed = min(quantity, remaining)
+    
+        weighted_sum          += rate * consumed   # ← consumed, not full quantity
+        stock_status_quantity += quantity
+        remaining             -= consumed
+    
         breakdown.append({
             'stock_id':          record.pk,
             'created_at':        record.created_at,
-            'rate':              record.rate_in_litres,
-            'batch_quantity':    record.quantity,
+            'rate_in_litres':    rate,
+            'batch_quantity':    quantity,
             'quantity_consumed': consumed,
-            'batch_total':       consumed * record.rate_in_litres,
+            'batch_total':       consumed * rate,
         })
-    
     quantity_matched = total_tank_capacity - remaining
     quantity_unmatched = remaining
     
     if quantity_matched == Decimal('0.00'):
         return {
-            'item_code' : itemCode,
-            'tank_total_capacity' : total_tank_capacity,
-            'quantity_matched' : quantity_matched,
-            'quantity_unmatched' : quantity_unmatched,
-            'average_rate' : Decimal('0.00'),
+            'item_code':           itemCode,
+            'tank_total_capacity': total_tank_capacity,
+            'quantity_matched':    quantity_matched,
+            'quantity_unmatched':  quantity_unmatched,
+            'average_rate':        Decimal('0.00'),
             'warning': (
                 'Tank has capacity but no IN_TANK stock records found. '
                 'Average cost cannot be computed.'
             ),
-            
         }
-        
-    print(weighted_sum)
+
     average_rate = (weighted_sum / total_tank_capacity).quantize(Decimal('0.01'))
     adjusted_average = (weighted_sum / quantity_matched).quantize(Decimal('0.01'))
+    
     warning = None
     if quantity_unmatched > Decimal('0.00'):
         warning = (
@@ -466,14 +471,12 @@ def ItemAvergaCost(itemCode):
         )
 
     return {
-        'item_code':           itemCode,
-        'tank_total_capacity': total_tank_capacity,
-        'quantity_matched':    quantity_matched,
-        'quantity_unmatched':  quantity_unmatched,
-        'average_rate(IN_TANK)':        average_rate,
-        'adjusted_average(STO)':    adjusted_average,
-        'warning':             warning,
+        'item_code':               itemCode,
+        'tank_total_capacity':     total_tank_capacity,
+        'quantity_matched':        quantity_matched,
+        'quantity_unmatched':      quantity_unmatched,
+        'average_rate(IN_TANK)':   average_rate,
+        'adjusted_average(STO)':   adjusted_average,
+        'breakdown':               breakdown,
+        'warning':                 warning,
     }
-    
-   
-        

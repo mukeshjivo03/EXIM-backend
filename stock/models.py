@@ -69,7 +69,16 @@ class StockStatus(models.Model):
     class Meta:
         db_table = 'stock_status'
         permissions = [('view_vehicle_report' , 'Can view Vehicle Report')]
-        
+    
+    def save(self, *args, **kwargs):
+        if self.quantity and self.rate and self.item_code:
+            density = Decimal('1.0989')  # kg per litre (1kg = 1.11 litres)
+
+            self.quantity_in_litre = (self.quantity * density).quantize(Decimal('0.01'))
+            self.rate_in_litres    = (self.rate / density).quantize(Decimal('0.001'))
+        # cnvert to c01 and less the quntity    
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"{self.item_code} - {self.status}"
     
