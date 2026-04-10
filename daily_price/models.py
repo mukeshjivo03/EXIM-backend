@@ -35,5 +35,5 @@ class JivoRates(models.Model):
     class Meta:
         db_table  = 'jivo_rates'
         permissions = [
-            ("fetch_jivo_rate"  , "Can fetch jivo rates"),
+            ("fetch_jivo_rates"  , "Can fetch jivo rates"),
         ]

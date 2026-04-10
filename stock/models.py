@@ -71,12 +71,16 @@ class StockStatus(models.Model):
         permissions = [('view_vehicle_report' , 'Can view Vehicle Report')]
     
     def save(self, *args, **kwargs):
+        if self.item_code.tank_item_code == 'RM0CDRO' and self.status == 'AT_REFINERY' and self.quantity is not None:
+            self.item_code = TankItem.objects.get(tank_item_code='RM00C01')  # ✅ swap the FK to a different object
+            deduction_qty = Decimal('0.03') * self.quantity
+            self.quantity = self.quantity - deduction_qty
+    
         if self.quantity and self.rate and self.item_code:
-            density = Decimal('1.0989')  # kg per litre (1kg = 1.11 litres)
-
+            density = Decimal('1.0989')
             self.quantity_in_litre = (self.quantity * density).quantize(Decimal('0.01'))
             self.rate_in_litres    = (self.rate / density).quantize(Decimal('0.001'))
-        # cnvert to c01 and less the quntity    
+    
         super().save(*args, **kwargs)
     
     def __str__(self):

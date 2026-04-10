@@ -28,7 +28,6 @@ class PriceFetchView(APIView):
         if self.request.method == "POST":
             return [IsAuthenticated(), HasAppPermission("daily_price.add_dailyprice")]
         
-        # Instantiate the permission class twice, once for each permission
         return [
             IsAuthenticated(), 
             HasAppPermission("daily_price.fetch_daily_price"), 

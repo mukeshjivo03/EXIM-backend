@@ -80,17 +80,26 @@ class StockStatusInsights(APIView):
         if filterset.is_valid():
             queryset = filterset.qs
             insights = queryset.aggregate(
-            total_value=Sum("total"),
-            total_qty=Sum('quantity'),
-            total_count=Count('id')
+            total_value=Sum(F('quantity') * F('rate')),
+            total_qty = Sum('quantity'),
+            total_qty_kg=Sum('quantity'),
+            total_qty_litre=Sum('quantity_in_litre'),
+            total_count=Count('id'),
+            weighted_sum_kg=Sum(F('rate') * F('quantity')),
+            weighted_sum_liter=Sum(F('quantity_in_litre') * F('rate_in_litres')),
+            
         )
 
-        total_value = insights['total_value'] or Decimal('0.00')
-        total_qty = insights['total_qty'] or Decimal('0.00')
 
-        if total_qty > 0:
-            avg_price_per_kg = round(total_value / total_qty, 2)
-            avg_price_per_ltr = round(avg_price_per_kg / Decimal('1.0989'), 2)
+        total_value = insights['total_value'] or Decimal('0.00')
+        total_qty_kg = insights['total_qty_kg'] or Decimal('0.00')
+        total_qty_litre = insights['total_qty_litre'] or Decimal('0.00')
+        weighted_sum_litre = insights['weighted_sum_liter'] or Decimal('0.00')
+        weighted_sum_kg = insights['weighted_sum_kg'] or Decimal('0.00')
+
+        if total_qty_kg > 0:
+            avg_price_per_ltr = round(weighted_sum_litre / total_qty_litre, 2)
+            avg_price_per_kg = round(weighted_sum_kg / total_qty_kg, 2)
         else:
             avg_price_per_kg = Decimal('0.00')
             avg_price_per_ltr = Decimal('0.00')
@@ -218,23 +227,32 @@ class StockDashboard(APIView):
         return [IsAuthenticated() , HasAppPermission('stock.view_stockstatus')]
 
     def get(self, request):
-        tank_qs = (
-            StockStatus.objects
-            .filter(deleted=False, status='IN_TANK')
-            .values('item_code_id')
-            .annotate(qty=Sum('quantity'))
-        )
+        rmcode = request.query_params.get('rmcode')
+        status_filter = request.query_params.get('status')
+        vendor = request.query_params.get('vendor')
+
+        def apply_common_filters(qs):
+            if rmcode:
+                qs = qs.filter(item_code__tank_item_code=rmcode)
+            if vendor:
+                qs = qs.filter(vendor_code__card_code=vendor)
+            if status_filter:
+                qs = qs.filter(status=status_filter)
+            return qs
+
+        tank_qs = apply_common_filters(
+            StockStatus.objects.filter(deleted=False, status='IN_TANK')
+        ).values('item_code_id').annotate(qty=Sum('quantity'))
+
         in_factory_map = {
-            row['item_code_id']: float(row['qty'] or 0)  for row in tank_qs
+            row['item_code_id']: float(row['qty'] or 0) for row in tank_qs
         }
 
         # ────────────────────────────────────────────────────────────
-        outside_qs = (
-            StockStatus.objects
-            .filter(deleted=False, status='OUT_SIDE_FACTORY')
-            .values('item_code_id')
-            .annotate(qty=Sum('quantity'))
-        )
+        outside_qs = apply_common_filters(
+            StockStatus.objects.filter(deleted=False, status='OUT_SIDE_FACTORY')
+        ).values('item_code_id').annotate(qty=Sum('quantity'))
+
         outside_factory_map = {
             row['item_code_id']: float(row['qty'] or 0) for row in outside_qs
         }
@@ -242,13 +260,9 @@ class StockDashboard(APIView):
         # ────────────────────────────────────────────────────────────
         # 3.  ALL OTHER STATUSES  (with vendor sub-columns)
         # ────────────────────────────────────────────────────────────
-        stock_qs = (
-            StockStatus.objects
-            .filter(deleted=False)
-            .exclude(status='OUT_SIDE_FACTORY')
-            .values('item_code_id', 'status', vendor_name=F('vendor_code__card_name'))
-            .annotate(qty=Sum('quantity'))
-        )
+        stock_qs = apply_common_filters(
+            StockStatus.objects.filter(deleted=False).exclude(status='OUT_SIDE_FACTORY')
+        ).values('item_code_id', 'status', vendor_name=F('vendor_code__card_name')).annotate(qty=Sum('quantity'))
 
         # status_vendors : {status: {vendor_name, ...}}
         status_vendors = defaultdict(set)
@@ -257,13 +271,13 @@ class StockDashboard(APIView):
         all_items = set()
 
         for row in stock_qs:
-            item   = row['item_code_id']
-            status = row['status']
-            vendor = row['vendor_name']
-            qty    = float(row['qty'] or 0)
+            item        = row['item_code_id']
+            row_status  = row['status']
+            row_vendor  = row['vendor_name']
+            qty         = float(row['qty'] or 0)
 
-            status_vendors[status].add(vendor)
-            item_data[item][(status, vendor)] = qty
+            status_vendors[row_status].add(row_vendor)
+            item_data[item][(row_status, row_vendor)] = qty
             all_items.add(item)
 
         # Merge item codes from all three sources
