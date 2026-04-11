@@ -532,6 +532,7 @@ class TankLogView(generics.ListAPIView):
 class ItemWiseAverage(APIView):
     def get_permissions(self):
         return [IsAuthenticated(), HasAppPermission('tank.view_itemwise_average')]
+    
     def get(self , request):
         item_code = request.query_params.get('item_code')
         response = ItemAvergaCost(item_code)

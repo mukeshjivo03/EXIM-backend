@@ -484,6 +484,9 @@ class StockChangeSessionListView(generics.ListAPIView):
 
 
 class OpeningStock(APIView):
+    def get_permission(self):
+        return [IsAuthenticated() , HasAppPermission('account.add_opening_rate')]
+    
     def post(self , request):
         post_rate_liter = request.data.get('rate')
         item_code = request.data.get('item_code')
