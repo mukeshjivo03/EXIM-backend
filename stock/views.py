@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics , status
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 from rest_framework.permissions import IsAuthenticated
@@ -13,7 +13,8 @@ from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,Sto
 from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer
 from .services import arrive_batch , dispatch , move , create_audit, TRACKED_FIELDS
 from .filters import StockStatusFilters
-from tank.models import TankData
+from tank.models import TankData ,TankItem
+from sap_sync.models import Party
 from accounts.permissions import HasAppPermission
 
 class StockStatusListCreateView(generics.ListCreateAPIView):
@@ -480,4 +481,32 @@ class StockChangeSessionListView(generics.ListAPIView):
             queryset = queryset.filter(changed_by_label=changed_by)
             
         return queryset
-    
+
+
+class OpeningStock(APIView):
+    def post(self , request):
+        post_rate_liter = request.data.get('rate')
+        item_code = request.data.get('item_code')
+        if not all([post_rate_liter, item_code, quantity_liter]):
+            return Response(
+                {'error': 'rate, item_code and quantity are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        tank_item = TankItem.objects.get(tank_item_code  = item_code)
+        vendor = Party.objects.get(card_code = 'VENDA000004')
+        quantity_liter = request.data.get('quantity')
+        quantity_in_kg = Decimal(str(quantity_liter)) / Decimal('1.0989')
+        rate_kg = Decimal(str(post_rate_liter)) * Decimal('1.0989')
+
+        StockStatus.objects.create(
+            item_code = tank_item,
+            status = 'IN_TANK',
+            vendor_code = vendor,
+            rate = rate_kg,
+            quantity =  quantity_in_kg,
+            location = 'Sonipat Factory'
+        )
+
+        return Response({f"Opening Rate for {tank_item} Updated"})
+
