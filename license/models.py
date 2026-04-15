@@ -86,7 +86,8 @@ class AdvanceLicenseExportLines(models.Model):
         if license:
             total_export = license.export_lines.aggregate(total_export=Sum('export_in_mts'))['total_export'] or 0
             balance = license.to_be_exported - total_export
-            
+            if balance <= 0:
+                raise ValueError('Total export cannot exceed to be exported quantity')
                             
             license.total_export = total_export
             license.balance = balance
