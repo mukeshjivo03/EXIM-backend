@@ -60,7 +60,7 @@ class AdvanceLicenseImportLines(models.Model):
         
         if license:
             total_import = license.import_lines.aggregate(total_import=Sum('import_in_mts'))['total_import'] or 0
-            to_be_exported = Decimal(total_import) - (Decimal(0.03) * Decimal(total_import))
+            to_be_exported = Decimal(total_import) - (Decimal(0.031) * Decimal(total_import))
             
             
             license.total_import = total_import
@@ -78,21 +78,33 @@ class AdvanceLicenseExportLines(models.Model):
     
     class Meta:
         db_table = 'advance_license_export_lines'
-        
-    def save(self, *args , **kwargs):
-        license =  self.license_no
-        super().save(*args, **kwargs)
-        
+            
+    def save(self, *args, **kwargs):
+        license = self.license_no
+    
         if license:
-            total_export = license.export_lines.aggregate(total_export=Sum('export_in_mts'))['total_export'] or 0
+            total_export = license.export_lines.aggregate(
+                total_export=Sum('export_in_mts')
+            )['total_export'] or Decimal('0')
+    
+            # Add current line's value since it's not in DB yet (new record)
+            if not self.pk:
+                total_export += Decimal(str(self.export_in_mts))
+    
             balance = license.to_be_exported - total_export
-            if balance <= 0:
-                raise ValueError('Total export cannot exceed to be exported quantity')
-                            
+    
+            if balance < 0:
+                raise ValueError("Total export cannot exceed the to_be_exported quantity.")
+    
+            # Validation passed — save line first, then update header
+            super().save(*args, **kwargs)
+    
             license.total_export = total_export
             license.balance = balance
             license.save()
-        
+    
+        else:
+            super().save(*args, **kwargs)  # always save even if no license linked
 
         
 
