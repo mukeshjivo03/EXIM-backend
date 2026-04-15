@@ -48,7 +48,7 @@ class DFIAExportLines(serializers.ModelSerializer):
 
 class DFIALicenseListSerializer(serializers.ModelSerializer):
     dfia_import_lines = DFIAImportLines(many=True, read_only=True)
-    dfia__export_lines = DFIAExportLines(many=True, read_only=True)
+    dfia_export_lines = DFIAExportLines(many=True, read_only=True)
     class Meta:
         model = DFIALicenseHeader
         fields = '__all__'
