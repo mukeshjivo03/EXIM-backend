@@ -115,15 +115,13 @@ class DFIALicenseHeader(models.Model):
     issue_date = models.DateField()
     
     export_validity = models.DateField()
-    export_in_mts = models.DecimalField(max_digits=8 , decimal_places = 3)
     
     fob_value_inr = models.DecimalField(max_digits = 12 , decimal_places = 3)
     fob_value_usd = models.DecimalField(max_digits = 12 , decimal_places = 3)
     fob_exchange_rate = models.DecimalField(max_digits = 8 , decimal_places = 3)
     
     import_validity = models.DateField()
-    import_in_mts = models.DecimalField(max_digits = 12 , decimal_places = 3)
-    
+        
     cif_value_inr = models.DecimalField(max_digits = 12, decimal_places = 3)
     cif_value_usd = models.DecimalField(max_digits = 12  , decimal_places = 3)
     cif_exchange_rate = models.DecimalField(max_digits=8 , decimal_places = 3)
