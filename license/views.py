@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from django.db.models import Sum
 from rest_framework.permissions import IsAuthenticated
 
-from .models import AdvanceLicenseHeaders, AdvanceLicenseLines , DFIALicenseHeader , DFIALicenseLines
-from .serializers import AdvanceLicenseHeaderSerialzer, AdvanceLicenseLineSerialzer, AdvanceLicenseHeaderCreateSerialzer, DFIALicenseheaderCreateSerializer , DFIALicenseLineSerializer ,DFIALicenseListSerializer
+from .models import AdvanceLicenseHeaders, AdvanceLicenseImportLines , AdvanceLicenseExportLines , DFIALicenseHeader , DFIALicenseLines
+from .serializers import AdvanceLicenseHeaderSerialzer, AdvanceLicenseImportLine , AdvanceLicenseExportLine , AdvanceLicenseHeaderCreateSerialzer, DFIALicenseheaderCreateSerializer , DFIALicenseLineSerializer ,DFIALicenseListSerializer
 from accounts.permissions import HasAppPermission
 
 class AdvanceLicenseHeadersListCreateView(generics.ListCreateAPIView):
@@ -36,43 +36,67 @@ class AdvanceLicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestro
     lookup_field = 'license_no'
         
     
-class AdvanceLicenseLinesListCreateView(generics.ListCreateAPIView):
+class AdvanceLicenseImportListCreateView(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [IsAuthenticated() , HasAppPermission('license.add_advancelicenselines')]
+            return [IsAuthenticated() , HasAppPermission('license.add_advancelicenseimportlines')]
         
-        return [IsAuthenticated() , HasAppPermission('license.view_advancelicenselines')]
-    queryset = AdvanceLicenseLines.objects.all()
-    serializer_class = AdvanceLicenseLineSerialzer
+        return [IsAuthenticated() , HasAppPermission('license.view_advancelicenseimportlines')]
+    queryset = AdvanceLicenseImportLines.objects.all()
+    serializer_class = AdvanceLicenseImportLine
     
-class AdvanceLicenseLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+class AdvanceLicenseImportLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == 'DELETE':
-            return [IsAuthenticated() , HasAppPermission('license.delete_advancelicenselines')]
+            return [IsAuthenticated() , HasAppPermission('license.delete_advancelicenseimportlines')]
         if self.request.method in ['PUT' , 'PATCH']:
-            return [IsAuthenticated() , HasAppPermission('license.change_advancelicenselines')]
+            return [IsAuthenticated() , HasAppPermission('license.change_advancelicenseimportlines')]
 
-        return [IsAuthenticated() , HasAppPermission('license.view_advancelicenselines')]
+        return [IsAuthenticated() , HasAppPermission('license.view_advancelicenseimport3lines')]
 
-    queryset = AdvanceLicenseLines.objects.all()
-    serializer_class = AdvanceLicenseLineSerialzer
+    queryset = AdvanceLicenseImportLines.objects.all()
+    serializer_class = AdvanceLicenseImportLine
+    lookup_field = 'id'
+    
+    
+ 
+class AdvanceLicenseExportListCreateView(generics.ListCreateAPIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated() , HasAppPermission('license.add_advancelicenseexportlines')]
+        
+        return [IsAuthenticated() , HasAppPermission('license.view_advancelicenseexportlines')]
+    queryset = AdvanceLicenseExportLines .objects.all()
+    serializer_class = AdvanceLicenseExportLine
+    
+class AdvanceLicenseExportLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('license.delete_advancelicenseimportlines')]
+        if self.request.method in ['PUT' , 'PATCH']:
+            return [IsAuthenticated() , HasAppPermission('license.change_advancelicenseimportlines')]
+
+        return [IsAuthenticated() , HasAppPermission('license.view_advancelicenseimport3lines')]
+
+    queryset = AdvanceLicenseExportLines.objects.all()
+    serializer_class = AdvanceLicenseExportLine
     lookup_field = 'id'
     
     
         
-class AdvanceLicenseLinesInsights(APIView):
-    def get_permissions(self):
-        return [IsAuthenticated(), HasAppPermission('license.view_line_insights')]
-    def get(self, request, pk):
-        insights = AdvanceLicenseLines.objects.filter(license_no=pk).aggregate(
-            total_boe_value_usd = Sum('boe_value_usd'),
-            total_sb_value_usd = Sum('sb_value_usd'),
-            total_balance = Sum('balance'),
-            total_import_in_mts = Sum('import_in_mts'),
-            total_export_in_mts = Sum('export_in_mts')
-        )
+# class AdvanceLicenseLinesInsights(APIView):
+#     def get_permissions(self):
+#         return [IsAuthenticated(), HasAppPermission('license.view_line_insights')]
+#     def get(self, request, pk):
+#         insights = AdvanceLicenseLines.objects.filter(license_no=pk).aggregate(
+#             total_boe_value_usd = Sum('boe_value_usd'),
+#             total_sb_value_usd = Sum('sb_value_usd'),
+#             total_balance = Sum('balance'),
+#             total_import_in_mts = Sum('import_in_mts'),
+#             total_export_in_mts = Sum('export_in_mts')
+#         )
         
-        return Response(insights)
+#         return Response(insights)
     
     
 

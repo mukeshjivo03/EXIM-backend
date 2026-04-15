@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AdvanceLicenseHeadersListCreateView , AdvanceLicenseLinesListCreateView , AdvanceLicenseHeaderRetrieveUpdateDeleteView ,AdvanceLicenseLinesRetrieveUpdateDeleteView,AdvanceLicenseLinesInsights,DFIALicenseHeaderCreateView , DFIALicenseLinesListView , DFIALicenseLinesCreateView,DFIALicenseLinesRetrieveUpdateDeleteView  ,DFIALicenseHeaderListView, DFIALicenseHeaderRetrieveUpdateDeleteView ,DFIALinesInsightView 
+from .views import AdvanceLicenseHeadersListCreateView , AdvanceLicenseImportListCreateView ,AdvanceLicenseImportLinesRetrieveUpdateDeleteView,AdvanceLicenseExportListCreateView,AdvanceLicenseExportLinesRetrieveUpdateDeleteView,AdvanceLicenseHeaderRetrieveUpdateDeleteView ,DFIALicenseHeaderCreateView , DFIALicenseLinesListView , DFIALicenseLinesCreateView,DFIALicenseLinesRetrieveUpdateDeleteView  ,DFIALicenseHeaderListView, DFIALicenseHeaderRetrieveUpdateDeleteView ,DFIALinesInsightView 
 
 
 
@@ -8,9 +8,15 @@ urlpatterns = [
     path('advance-license-headers/', AdvanceLicenseHeadersListCreateView.as_view(), name='advance-license-headers-list-create'),
     path('advance-license-header/<str:license_no>/', AdvanceLicenseHeaderRetrieveUpdateDeleteView.as_view(), name='advance-license-retrieve-delete'),
 
-    path('advance-license-lines/', AdvanceLicenseLinesListCreateView.as_view(), name='advance-license-lines-list-create'),
-    path('advance-license-lines/<int:id>/', AdvanceLicenseLinesRetrieveUpdateDeleteView.as_view(), name='advance-license-lines-retrieve-update-delete'),
-    path('advance-license-lines/insight/<str:pk>/', AdvanceLicenseLinesInsights.as_view(), name='advance-license-lines-insight'),
+    path('advance-license-import-lines/', AdvanceLicenseImportListCreateView.as_view(), name='advance-license-lines-list-create'),
+    path('advance-license-import-lines/<int:id>/', AdvanceLicenseImportLinesRetrieveUpdateDeleteView.as_view(), name='advance-license-lines-retrieve-update-delete'),
+    
+    path('advance-license-export-lines/', AdvanceLicenseExportListCreateView.as_view(), name='advance-license-lines-list-create'),
+    path('advance-license-export-lines/<int:id>/', AdvanceLicenseExportLinesRetrieveUpdateDeleteView.as_view(), name='advance-license-lines-retrieve-update-delete'),
+    
+    
+    
+    # path('advance-license-lines/insight/<str:pk>/', AdvanceLicenseLinesInsights.as_view(), name='advance-license-lines-insight'),
     
     path('dfia-license-header/create/', DFIALicenseHeaderCreateView.as_view(), name='dfia-license-header-list-create'),
     path('dfia-license-header/list/' , DFIALicenseHeaderListView.as_view() , name = 'dfia-license-lines-list-create'),
