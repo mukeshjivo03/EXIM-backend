@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AdvanceLicenseHeadersListCreateView , AdvanceLicenseImportListCreateView ,AdvanceLicenseImportLinesRetrieveUpdateDeleteView,AdvanceLicenseExportListCreateView,AdvanceLicenseExportLinesRetrieveUpdateDeleteView,AdvanceLicenseHeaderRetrieveUpdateDeleteView ,DFIALicenseHeaderCreateView , DFIALicenseLinesListView , DFIALicenseLinesCreateView,DFIALicenseLinesRetrieveUpdateDeleteView  ,DFIALicenseHeaderListView, DFIALicenseHeaderRetrieveUpdateDeleteView ,DFIALinesInsightView 
+from .views import AdvanceLicenseHeadersListCreateView , AdvanceLicenseImportListCreateView ,AdvanceLicenseImportLinesRetrieveUpdateDeleteView,AdvanceLicenseExportListCreateView,AdvanceLicenseExportLinesRetrieveUpdateDeleteView,AdvanceLicenseHeaderRetrieveUpdateDeleteView ,DFIALicenseHeaderCreateView , DFIALicenseImportLinesListView , DFIALicenseImportLinesCreateView,DFIALicenseImportLinesRetrieveUpdateDeleteView , DFIALicenseExportLinesListView , DFIALicenseExportLinesCreateView,DFIALicenseExportLinesRetrieveUpdateDeleteView  ,DFIALicenseHeaderListView, DFIALicenseHeaderRetrieveUpdateDeleteView 
 
 
 
@@ -22,10 +22,18 @@ urlpatterns = [
     path('dfia-license-header/list/' , DFIALicenseHeaderListView.as_view() , name = 'dfia-license-lines-list-create'),
     path('dfia-license-header/<str:file_no>/', DFIALicenseHeaderRetrieveUpdateDeleteView.as_view(), name='dfia-license-retrieve-update-delete'),
     
-    path('dfia-license-lines/create/' , DFIALicenseLinesCreateView.as_view() , name = 'dfia-license-lines-list-create'),
-    path('dfia-license-lines/list/' , DFIALicenseLinesListView.as_view() , name = 'dfia-license-lines-list-create'),
-    path('dfia-license-lines/<int:id>/' , DFIALicenseLinesRetrieveUpdateDeleteView.as_view() , name = 'dfia-license-lines-list-create'),
-    path('dfia-license-lines/insight/<str:pk>/' , DFIALinesInsightView.as_view() , name = 'dfia-license-lines-isngiht')
+    path('dfia-license-import-lines/create/' , DFIALicenseImportLinesCreateView.as_view() , name = 'dfia-license-lines-list-create'),
+    path('dfia-license-import-lines/list/' , DFIALicenseImportLinesListView.as_view() , name = 'dfia-license-lines-list-create'),
+    path('dfia-license-import-lines/<int:id>/' , DFIALicenseImportLinesRetrieveUpdateDeleteView.as_view() , name = 'dfia-license-lines-list-create'),
+    
+    
+    
+    path('dfia-license-export-lines/create/' , DFIALicenseExportLinesCreateView.as_view() , name = 'dfia-license-lines-list-create'),
+    path('dfia-license-export-lines/list/' , DFIALicenseExportLinesListView.as_view() , name = 'dfia-license-lines-list-create'),
+    path('dfia-license-export-lines/<int:id>/' , DFIALicenseExportLinesRetrieveUpdateDeleteView.as_view() , name = 'dfia-license-lines-list-create'),
+    
+    
+    # path('dfia-license-lines/insight/<str:pk>/' , DFIALinesInsightView.as_view() , name = 'dfia-license-lines-isngiht')
 
 ]
     

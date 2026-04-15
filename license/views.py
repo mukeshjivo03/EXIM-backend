@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from django.db.models import Sum
 from rest_framework.permissions import IsAuthenticated
 
-from .models import AdvanceLicenseHeaders, AdvanceLicenseImportLines , AdvanceLicenseExportLines , DFIALicenseHeader , DFIALicenseLines
-from .serializers import AdvanceLicenseHeaderSerialzer, AdvanceLicenseImportLine , AdvanceLicenseExportLine , AdvanceLicenseHeaderCreateSerialzer, DFIALicenseheaderCreateSerializer , DFIALicenseLineSerializer ,DFIALicenseListSerializer
+from .models import AdvanceLicenseHeaders, AdvanceLicenseImportLines , AdvanceLicenseExportLines , DFIALicenseHeader , DFIALicenseExportLines , DFIALicenseImportLines
+from .serializers import AdvanceLicenseHeaderSerialzer, AdvanceLicenseImportLine , AdvanceLicenseExportLine , AdvanceLicenseHeaderCreateSerialzer, DFIALicenseheaderCreateSerializer , DFIAImportLines , DFIAExportLines ,DFIALicenseListSerializer
 from accounts.permissions import HasAppPermission
 
 class AdvanceLicenseHeadersListCreateView(generics.ListCreateAPIView):
@@ -112,6 +112,7 @@ class DFIALicenseHeaderListView(generics.ListAPIView):
         return [IsAuthenticated(), HasAppPermission('license.view_dfialicenseheader')]
     queryset = DFIALicenseHeader.objects.all()
     serializer_class = DFIALicenseListSerializer
+    
 
 class DFIALicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
@@ -131,21 +132,21 @@ class DFIALicenseHeaderRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAP
     
     
 
-class DFIALicenseLinesCreateView(generics.CreateAPIView):
+class DFIALicenseImportLinesCreateView(generics.CreateAPIView):
     def get_permissions(self):
-        return  [IsAuthenticated(), HasAppPermission('license.add_dfialicenselines')]
-    queryset = DFIALicenseLines.objects.all()
-    serializer_class = DFIALicenseLineSerializer  # ← fixed
+        return  [IsAuthenticated(), HasAppPermission('license.add_dfialicenseimportlines')]
+    queryset = DFIALicenseImportLines.objects.all()
+    serializer_class = DFIAImportLines  
 
-class DFIALicenseLinesListView(generics.ListAPIView):
+class DFIALicenseImportLinesListView(generics.ListAPIView):
     def get_permissions(self):
         return  [IsAuthenticated(), HasAppPermission('license.view_dfialicenselines')]
     
-    queryset = DFIALicenseLines.objects.all()
-    serializer_class = DFIALicenseLineSerializer  # ← fixed
+    queryset = DFIALicenseImportLines.objects.all()
+    serializer_class = DFIAImportLines  
     
 
-class DFIALicenseLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+class DFIALicenseImportLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         if self.request.method == 'DELETE':
             return [IsAuthenticated() , HasAppPermission('license.delete_dfialicenselines')]
@@ -154,26 +155,56 @@ class DFIALicenseLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPI
 
         return [IsAuthenticated() , HasAppPermission('license.view_dfialicenselines')]
 
-    queryset = DFIALicenseLines.objects.all()
-    serializer_class = DFIALicenseLineSerializer
+    queryset = DFIALicenseImportLines.objects.all()
+    serializer_class = DFIAImportLines  
     lookup_field = 'id'
     
-class DFIALinesInsightView(APIView):
+
+
+class DFIALicenseExportLinesCreateView(generics.CreateAPIView):
     def get_permissions(self):
-        return  [IsAuthenticated(), HasAppPermission('license.view_dfia_line_insights')]
+        return  [IsAuthenticated(), HasAppPermission('license.add_dfialicenseimportlines')]
+    queryset = DFIALicenseExportLines.objects.all()
+    serializer_class = DFIAExportLines  
 
-    def get(self, request, pk):
-        insights = DFIALicenseLines.objects.filter(license_no=pk).aggregate(
-            total_balance=Sum('balance'),
-            total_to_be_imported=Sum('to_be_imported_in_mts'),
-            total_exported_in_mts=Sum('exported_in_mts'),
-            total_sb_value_inr=Sum('sb_value_inr'),
-        )
+class DFIALicenseExportLinesListView(generics.ListAPIView):
+    def get_permissions(self):
+        return  [IsAuthenticated(), HasAppPermission('license.view_dfialicenselines')]
+    
+    queryset = DFIALicenseExportLines.objects.all()
+    serializer_class = DFIAExportLines 
+    
 
-        return Response(insights)
+class DFIALicenseExportLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated() , HasAppPermission('license.delete_dfialicenselines')]
+        if self.request.method in ['PUT' , 'PATCH']:
+            return [IsAuthenticated() , HasAppPermission('license.change_dfialicenselines')]
+
+        return [IsAuthenticated() , HasAppPermission('license.view_dfialicenselines')]
+
+    
+    queryset = DFIALicenseExportLines.objects.all()
+    serializer_class = DFIAExportLines  
+    lookup_field = 'id'
+    
+
 
     
     
 
 
-    
+    # class DFIALinesInsightView(APIView):
+#     def get_permissions(self):
+#         return  [IsAuthenticated(), HasAppPermission('license.view_dfia_line_insights')]
+
+#     def get(self, request, pk):
+#         insights = DFIALicenseLines.objects.filter(license_no=pk).aggregate(
+#             total_balance=Sum('balance'),
+#             total_to_be_imported=Sum('to_be_imported_in_mts'),
+#             total_exported_in_mts=Sum('exported_in_mts'),
+#             total_sb_value_inr=Sum('sb_value_inr'),
+#         )
+
+#         return Response(insights)
