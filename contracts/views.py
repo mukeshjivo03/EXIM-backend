@@ -19,7 +19,7 @@ class DomesticReportListView(APIView):
         # start_date = date(user_year , 4 , 1)
         
         
-        start_date = date(user_year , 1 , 1)
+        start_date = date(user_year , 2 , 1)
         end_date = date(user_year+ 1 , 3 , 31)
         
         data = DomesticReports.objects.filter(grpo_date__range=[start_date , end_date])
