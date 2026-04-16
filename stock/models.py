@@ -118,19 +118,25 @@ class StockStatus(models.Model):
             and old_status != 'IN_TANK'
             and self.status == 'IN_TANK'
             and old_quantity is not None
-            and old_quantity > self.quantity       # only if there's an actual loss
+            and old_quantity != self.quantity       # only if there's an actual loss
         ):
             diff = old_quantity - self.quantity
-            DebitEntry.objects.create(
-                stock=self,
-                quantity=diff,
-                rate=self.rate,
-                responsible_party=self.vendor_code,
-                vehicle_number=self.vehicle_number,
-                responsible_transporter=self.transporter,
-                reason=f"Quantity loss on IN_TANK transition (was {old_quantity}, now {self.quantity})",
-                created_by=self.created_by,
-            )
+            if diff != Decimal('0.00'):
+                if diff > 0:
+                    reason = f"Quantity loss on IN_TANK transition (was {old_quantity}, now {self.quantity})"
+                else:
+                    reason = f"Quantity gain on IN_TANK transition (was {old_quantity}, now {self.quantity})"
+    
+                DebitEntry.objects.create(
+                    stock=self,
+                    quantity=diff,
+                    rate=self.rate,
+                    responsible_party=self.vendor_code,
+                    vehicle_number=self.vehicle_number,
+                    responsible_transporter=self.transporter,
+                    reason=reason,
+                    created_by=self.created_by,
+                )
         
 
     
