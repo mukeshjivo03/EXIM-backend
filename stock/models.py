@@ -91,6 +91,9 @@ class StockStatus(models.Model):
             deduction_qty = Decimal('0.03') * self.quantity
             self.quantity = self.quantity - deduction_qty
 
+        if self.status == 'OUT_SIDE_FACTORY':
+            self.arrival_date =  timezone.now()
+            
         # ── density conversions ──────────────────────────────────────────────
         if self.quantity and self.rate and self.item_code:
             density = Decimal('1.0989')
@@ -123,14 +126,17 @@ class StockStatus(models.Model):
             diff = old_quantity - self.quantity
             if diff != Decimal('0.00'):
                 if diff > 0:
+                    tyepe = 'LOSS'
                     reason = f"Quantity loss on IN_TANK transition (was {old_quantity}, now {self.quantity})"
                 else:
+                    type = 'GAIN'
                     reason = f"Quantity gain on IN_TANK transition (was {old_quantity}, now {self.quantity})"
     
                 DebitEntry.objects.create(
                     stock=self,
                     quantity=diff,
                     rate=self.rate,
+                    type=type,
                     responsible_party=self.vendor_code,
                     vehicle_number=self.vehicle_number,
                     responsible_transporter=self.transporter,
@@ -166,7 +172,13 @@ class StockStatusUpdateLog(models.Model):
 
 
 class DebitEntry(models.Model):
+    TYPE_CHOICES = (
+        ('LOSS', 'Loss'),
+        ('GAIN', 'Gain'),
+    )
+    
     stock = models.ForeignKey(StockStatus, on_delete=models.SET_NULL, null=True, related_name='debits')
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES, editable=False)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     rate = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=20, decimal_places=2, editable=False)
