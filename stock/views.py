@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Sum, Case, When, DecimalField, Value , Count , F , ExpressionWrapper , FloatField
+from django.db.models import Sum, Case, When, DecimalField, Value , Count , F , ExpressionWrapper , FloatField , Count
 from decimal import Decimal
 from collections import defaultdict, OrderedDict
 from django.db.models.functions import Round
@@ -528,7 +528,7 @@ class DebitEntryInsights(APIView):
     def get(self, request):
         insights = DebitEntry.objects.values('type').annotate(
             total_qty=Sum('quantity'),
-            total_records = Sum('id'),
+            total_records = Count('id'),
             total_value=Sum(ExpressionWrapper(F('quantity') * F('rate'), output_field=DecimalField(max_digits=20, decimal_places=2)))
         )
 
