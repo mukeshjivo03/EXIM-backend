@@ -48,40 +48,89 @@ class StockStatus(models.Model):
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
     vendor_code = models.ForeignKey(Party, on_delete=models.SET_NULL , null = True , to_field = 'card_code')
     rate = models.DecimalField(max_digits=10, decimal_places=3)
-    rate_in_litres = models.DecimalField(max_digits=10, decimal_places=3 , null = True , blank = True)
-    total = models.DecimalField(max_digits=20, decimal_places=2 , editable = False , default = '0.00')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=20, decimal_places=2 , editable = False , default = '0.00')
+
+    rate_in_litres = models.DecimalField(max_digits=10, decimal_places=3 , null = True , blank = True)
     quantity_in_litre = models.DecimalField(max_digits=10, decimal_places=2 , default=Decimal('0.00'))
+    job_work = models.CharField(max_length=50 , blank=True , null= True)
+
     vehicle_number = models.CharField(max_length=50 , null = True, blank=True)
     transporter = models.CharField(max_length=255 , null = True, blank=True)
     location = models.CharField(max_length=255  , null = True, blank=True)
     eta = models.DateField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.CharField(max_length=50)
-    deleted = models.BooleanField(default=False)
-    
+
     parent = models.ForeignKey('self',null=True, blank=True,on_delete=models.SET_NULL,related_name='children',)
     is_accumulator = models.BooleanField(default=False)
     arrival_date = models.DateTimeField(null=True, blank=True)
     remainder_action = models.CharField(max_length=20,choices=REMAINDER_ACTION_CHOICES,null=True, blank=True)
-    job_work = models.CharField(max_length=50 , blank=True , null= True)
+
+
+    # BOE Fields 
+    # boe_number = models.CharField(max_length=100 , null = True, blank=True)
+    # boe_date = models.DateField(null=True, blank=True)
+    # net_weight = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
+    # gross_weight = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
+    # invoice_number = models.CharField(max_length=100, null=True, blank=True)
+    # usd_price = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True)
+    
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=50)
+    deleted = models.BooleanField(default=False)
+    
 
     class Meta:
         db_table = 'stock_status'
         permissions = [('view_vehicle_report' , 'Can view Vehicle Report')]
     
     def save(self, *args, **kwargs):
+        # ── existing RM0CDRO swap logic ──────────────────────────────────────
         if self.item_code.tank_item_code == 'RM0CDRO' and self.status == 'AT_REFINERY' and self.quantity is not None:
-            self.item_code = TankItem.objects.get(tank_item_code='RM00C01')  # ✅ swap the FK to a different object
+            self.item_code = TankItem.objects.get(tank_item_code='RM00C01')
             deduction_qty = Decimal('0.03') * self.quantity
             self.quantity = self.quantity - deduction_qty
     
+        # ── density conversions ──────────────────────────────────────────────
         if self.quantity and self.rate and self.item_code:
             density = Decimal('1.0989')
             self.quantity_in_litre = (self.quantity * density).quantize(Decimal('0.01'))
             self.rate_in_litres    = (self.rate / density).quantize(Decimal('0.001'))
     
+        # ── capture pre-save state ───────────────────────────────────────────
+        is_new = self.pk is None
+        old_status = None
+        old_quantity = None
+    
+        if not is_new:
+            try:
+                prev = StockStatus.objects.only('status', 'quantity').get(pk=self.pk)
+                old_status = prev.status
+                old_quantity = prev.quantity
+            except StockStatus.DoesNotExist:
+                pass
+            
         super().save(*args, **kwargs)
+    
+        # ── DebitEntry on → IN_TANK transition ───────────────────────────────
+        if (
+            not is_new
+            and old_status != 'IN_TANK'
+            and self.status == 'IN_TANK'
+            and old_quantity is not None
+            and old_quantity > self.quantity       # only if there's an actual loss
+        ):
+            diff = old_quantity - self.quantity
+            DebitEntry.objects.create(
+                stock=self,
+                quantity=diff,
+                rate=self.rate,
+                responsible_party=self.vendor_code,
+                reason=f"Quantity loss on IN_TANK transition (was {old_quantity}, now {self.quantity})",
+                created_by=self.created_by,
+            )
+        
+
     
     def __str__(self):
         return f"{self.item_code} - {self.status}"
