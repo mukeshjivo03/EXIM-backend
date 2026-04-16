@@ -520,3 +520,16 @@ class DebitEntryListView(generics.ListAPIView):
     queryset = DebitEntry.objects.all()
     serializer_class = DebitEntrySerializer
 
+
+class DebitEntryInsights(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_debitentry')]
+    
+    def get(self, request):
+        insights = DebitEntry.objects.values('type').annotate(
+            total_qty=Sum('quantity'),
+            total_records = Sum('id'),
+            total_value=Sum(ExpressionWrapper(F('quantity') * F('rate'), output_field=DecimalField(max_digits=20, decimal_places=2)))
+        )
+
+        return Response(insights)
