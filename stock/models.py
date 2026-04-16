@@ -90,18 +90,18 @@ class StockStatus(models.Model):
             self.item_code = TankItem.objects.get(tank_item_code='RM00C01')
             deduction_qty = Decimal('0.03') * self.quantity
             self.quantity = self.quantity - deduction_qty
-    
+
         # ── density conversions ──────────────────────────────────────────────
         if self.quantity and self.rate and self.item_code:
             density = Decimal('1.0989')
             self.quantity_in_litre = (self.quantity * density).quantize(Decimal('0.01'))
             self.rate_in_litres    = (self.rate / density).quantize(Decimal('0.001'))
-    
+
         # ── capture pre-save state ───────────────────────────────────────────
         is_new = self.pk is None
         old_status = None
         old_quantity = None
-    
+
         if not is_new:
             try:
                 prev = StockStatus.objects.only('status', 'quantity').get(pk=self.pk)
@@ -109,9 +109,9 @@ class StockStatus(models.Model):
                 old_quantity = prev.quantity
             except StockStatus.DoesNotExist:
                 pass
-            
+
         super().save(*args, **kwargs)
-    
+
         # ── DebitEntry on → IN_TANK transition ───────────────────────────────
         if (
             not is_new
@@ -126,6 +126,8 @@ class StockStatus(models.Model):
                 quantity=diff,
                 rate=self.rate,
                 responsible_party=self.vendor_code,
+                vehicle_number=self.vehicle_number,
+                responsible_transporter=self.transporter,
                 reason=f"Quantity loss on IN_TANK transition (was {old_quantity}, now {self.quantity})",
                 created_by=self.created_by,
             )
@@ -163,6 +165,8 @@ class DebitEntry(models.Model):
     rate = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=20, decimal_places=2, editable=False)
     responsible_party = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, to_field='card_code')
+    vehicle_number = models.CharField(max_length=50, null=True, blank=True)
+    responsible_transporter = models.CharField(max_length=255, null=True, blank=True)  # denormalized fallback
     reason = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
