@@ -126,7 +126,7 @@ class StockStatus(models.Model):
             diff = old_quantity - self.quantity
             if diff != Decimal('0.00'):
                 if diff > 0:
-                    tyepe = 'LOSS'
+                    type = 'LOSS'
                     reason = f"Quantity loss on IN_TANK transition (was {old_quantity}, now {self.quantity})"
                 else:
                     type = 'GAIN'
@@ -188,6 +188,7 @@ class DebitEntry(models.Model):
     reason = models.CharField(max_length=255, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
+    
 
     class Meta:
         db_table = 'stock_debit_entries'

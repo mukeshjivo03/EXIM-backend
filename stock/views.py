@@ -9,8 +9,8 @@ from collections import defaultdict, OrderedDict
 from django.db.models.functions import Round
 
 
-from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession
-from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer
+from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession , DebitEntry
+from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer , DebitEntrySerializer
 from .services import arrive_batch , dispatch , move , create_audit, TRACKED_FIELDS
 from .filters import StockStatusFilters
 from tank.models import TankData ,TankItem
@@ -512,4 +512,11 @@ class OpeningStock(APIView):
         )
 
         return Response({f"Opening Rate for {tank_item} Updated"})
+    
+class DebitEntryListView(generics.ListAPIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_debitentry')]
+    
+    queryset = DebitEntry.objects.all()
+    serializer_class = DebitEntrySerializer
 

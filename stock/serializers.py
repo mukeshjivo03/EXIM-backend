@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StockStatus , StockStatusUpdateLog , StockStatusFieldLog , StockStatusChangeSession 
+from .models import StockStatus , StockStatusUpdateLog , StockStatusFieldLog , StockStatusChangeSession , DebitEntry
 from sap_sync.models import RMProducts , Party
 from tank.models import TankData , TankItem
 
@@ -64,3 +64,9 @@ class StockStatusChangeSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockStatusChangeSession
         fields = ['id', 'stock', 'action', 'changed_by_label', 'note', 'timestamp', 'field_logs']
+        
+class DebitEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DebitEntry
+        fields = '__all__'
+        read_only_fields = ['total', 'created_at']
