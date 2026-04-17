@@ -3,6 +3,7 @@ from datetime import date
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
 
 from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer, FreightSerializer , ContractDropdownSerializer
 from .models import DomesticReports
@@ -18,14 +19,18 @@ class DomesticReportListView(APIView):
         
         # start_date = date(user_year , 4 , 1)
         
-        
         start_date = date(user_year , 2 , 1)
         end_date = date(user_year+ 1 , 3 , 31)
+        print(start_date , end_date)
         
-        data = DomesticReports.objects.filter(grpo_date__range=[start_date , end_date])
+        # data = DomesticReports.objects.filter(grpo_date__range=[start_date , end_date])
+        data = DomesticReports.objects.filter( po_date__range=[start_date, end_date])
+
         serializer = DomesticReportSerializer(data , many=True)
         return Response(serializer.data)
         
+        
+
 class ContractPostView(generics.CreateAPIView):
     def get_permissions(self):
         return [IsAuthenticated() , HasAppPermission('contracts.add_domesticreports')]
