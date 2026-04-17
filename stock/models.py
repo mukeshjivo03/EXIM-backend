@@ -99,6 +99,9 @@ class StockStatus(models.Model):
             density = Decimal('1.0989')
             self.quantity_in_litre = (self.quantity * density).quantize(Decimal('0.01'))
             self.rate_in_litres    = (self.rate / density).quantize(Decimal('0.001'))
+            
+        if self.quantity <= Decimal('0.00'):
+            self.deleted = True
 
         # ── capture pre-save state ───────────────────────────────────────────
         is_new = self.pk is None
