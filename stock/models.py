@@ -155,6 +155,7 @@ class StockStatus(models.Model):
                     stock_status=self,
                     vehicle_number=self.vehicle_number,
                     rate=self.rate,
+                    party=self.vendor_code.card_name if self.vendor_code else None,
                     created_by = self.created_by
                 )
 
