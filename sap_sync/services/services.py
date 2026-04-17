@@ -445,10 +445,17 @@ class BalanceSheetService:
         
     def syncBalanceSheet(self):
         with self.connection as conn:
-            query = Queries.get_balance_sheet()
+            query = Queries().get_balance_sheet()
             result = conn.execute_query(query)
             
         return result   
+    
+    def syncInsights(self):
+        with self.connection as conn:
+            query = Queries().balance_sheet_insights()
+            result = conn.execute_query(query)
+            
+        return result
     
 class GRPOServices:
     def __init__(self):

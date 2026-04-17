@@ -550,4 +550,9 @@ class EmptyTank(APIView):
         
         tank.save()
         return Response({"Tank Emptied Successfully"})
-        
+    
+    
+class InTankStock(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('tank.view_tankdata')]
+    
