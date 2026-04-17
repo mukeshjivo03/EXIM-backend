@@ -325,15 +325,15 @@ class DirectorDashboard(APIView):
         
         finished_raw = InventoryService().synfinishedTotal()
         finished_qty_liter = finished_raw[0].get("Finished Qty", 0) if finished_raw else 0
-        finished_qty_mts = round(Decimal(str(finished_qty_liter)) / Decimal('1.0989'))
+        finished_qty_mts = round(Decimal(str(finished_qty_liter)) / Decimal('1098.9'))
 
         ec = InventoryService().syncWarehouseTotal('BH-EC')
         ec_ltr = ec[0].get('Liter')
-        ec_mts = round(Decimal(str(ec_ltr)) / Decimal('1.0989'))
+        ec_mts = round(Decimal(str(ec_ltr)) / Decimal('1098.9'))
 
         fg = InventoryService().syncWarehouseTotal('GP-FG')
         fg_ltr = fg[0].get('Liter')
-        fg_mts = round(Decimal(str(fg_ltr)) / Decimal('1.0989'))
+        fg_mts = round(Decimal(str(fg_ltr)) / Decimal('1098.9'))
 
 
 
