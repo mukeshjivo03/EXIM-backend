@@ -102,6 +102,8 @@ class StockStatus(models.Model):
             
         if self.quantity <= Decimal('0.00'):
             self.deleted = True
+            
+
 
         # ── capture pre-save state ───────────────────────────────────────────
         is_new = self.pk is None
@@ -134,7 +136,7 @@ class StockStatus(models.Model):
                 else:
                     type = 'GAIN'
                     reason = f"Quantity gain on IN_TANK transition (was {old_quantity}, now {self.quantity})"
-    
+
                 DebitEntry.objects.create(
                     stock=self,
                     quantity=diff,
@@ -146,7 +148,16 @@ class StockStatus(models.Model):
                     reason=reason,
                     created_by=self.created_by,
                 )
-        
+
+                TankLog.objects.create(
+                    log_type='INWARD',
+                    quantity=self.quantity,
+                    stock_status=self,
+                    vehicle_number=self.vehicle_number,
+                    rate=self.rate,
+                    party=self.vendor_code.card_name if self.vendor_code else None,
+                    created_by = self.created_by
+                )
 
     
     def __str__(self):
