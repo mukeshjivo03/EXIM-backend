@@ -24,7 +24,7 @@ class DomesticReportListView(APIView):
         print(start_date , end_date)
         
         # data = DomesticReports.objects.filter(grpo_date__range=[start_date , end_date])
-        data = DomesticReports.objects.filter( po_date__range=[start_date, end_date])
+        data = DomesticReports.objects.filter( po_date__range=[start_date, end_date]).order_by('po_date')
 
         serializer = DomesticReportSerializer(data , many=True)
         return Response(serializer.data)

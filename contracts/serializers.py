@@ -4,6 +4,20 @@ from sap_sync.models import Party , RMProducts
 from decimal import Decimal
 
 class DomesticReportSerializer(serializers.ModelSerializer):
+    product_name = serializers.SerializerMethodField()
+    vendor_name = serializers.SerializerMethodField()
+
+    def get_product_name(self, obj):
+        try:
+            return RMProducts.objects.get(item_code=obj.product_code).item_name
+        except RMProducts.DoesNotExist:
+            return None
+
+    def get_vendor_name(self, obj):
+        try:
+            return Party.objects.get(card_code=obj.vendor_code).card_name
+        except Party.DoesNotExist:
+            return None
 
     class Meta:
         model = DomesticReports
