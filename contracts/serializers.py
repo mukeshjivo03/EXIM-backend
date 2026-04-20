@@ -82,21 +82,29 @@ class FreightSerializer(serializers.ModelSerializer):
     class Meta:
         model = DomesticReports
         fields = [
-            'transporter_code' , 'transporter_name' , 
-            'bility_number' , 'bility_date' , 
-            'grpo_date' , 'grpo_number' , 
-            
-            'brokerage_amount' ,'freight_amount' , 
-            'frieght_rate', 
-            
+            'transporter_code' , 'transporter_name' ,
+            'bility_number' , 'bility_date' ,
+            'grpo_date' , 'grpo_number' ,
+
+            'brokerage_amount' ,'freight_amount' ,
+            'frieght_rate',
+
             'vehicle_number' , 'invoice_number']
-        
+
         read_only_fields = ['freight_amount']
-        
-        def update(self,instance , validated_data):
-            validated_data['freight_amount'] = instance.unload_qty * validated_data['frieght_rate']
-            
-            return super().update(instance , validated_data)
+
+    def to_internal_value(self, data):
+        # Accept both 'freight_rate' (correct spelling) and 'frieght_rate' (legacy DB spelling)
+        mutable = data.copy() if hasattr(data, 'copy') else dict(data)
+        if 'freight_rate' in mutable and 'frieght_rate' not in mutable:
+            mutable['frieght_rate'] = mutable.pop('freight_rate')
+        return super().to_internal_value(mutable)
+
+    def update(self, instance, validated_data):
+        frieght_rate = validated_data.get('frieght_rate', instance.frieght_rate or 0)
+        unload_qty = instance.unload_qty or 0
+        validated_data['freight_amount'] = Decimal(str(unload_qty)) * Decimal(str(frieght_rate))
+        return super().update(instance, validated_data)
 
 
 class ContractDropdownSerializer(serializers.ModelSerializer):
