@@ -74,6 +74,7 @@ class AdvanceLicenseExportLines(models.Model):
     license_no = models.ForeignKey(AdvanceLicenseHeaders, on_delete=models.SET_NULL, null=True, related_name = 'export_lines' , to_field = 'license_no')
     shipping_bill_no = models.CharField(max_length = 50)
     sb_value_usd = models.DecimalField(max_digits=12, decimal_places = 3)
+    sb_date = models.DateField(null=True , blank=True)
     export_in_mts = models.DecimalField(max_digits=8, decimal_places = 3)
     
     class Meta:
@@ -188,6 +189,7 @@ class DFIALicenseExportLines(models.Model):
     license_no = models.ForeignKey(DFIALicenseHeader , on_delete = models.SET_NULL , null = True , to_field = 'file_no' , related_name = 'dfia_export_lines')
     shipping_bill_no = models.CharField(max_length = 50)
     sb_value_usd = models.DecimalField(max_digits=12, decimal_places = 3)
+    sb_date = models.DateField(null=True , blank=True)
     export_in_mts = models.DecimalField(max_digits=8, decimal_places = 3)
     
     class Meta:
