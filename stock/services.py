@@ -108,10 +108,13 @@ def dispatch(source, quantity, status, created_by, action=None):
 
 def move(source, new_quantity, action, new_status, created_by):
     difference = source.quantity - new_quantity
+    print(source)
 
     if difference != 0:
         if action == 'RETAIN':
             parent = resolve_parent(source)
+            print(parent)
+
             if not parent or parent.deleted or parent.id == source.id:
                 raise ValueError("Cannot RETAIN — no valid storage parent exists.")
             parent.quantity += difference

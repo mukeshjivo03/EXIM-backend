@@ -36,7 +36,7 @@ class StockStatus(models.Model):
     )
 
     STORAGE_STATUSES = frozenset([
-        'IN_CONTRACT'
+        'IN_CONTRACT',
         'AT_REFINERY',
         'KANDLA_STORAGE',
         'MUNDRA_PORT',
