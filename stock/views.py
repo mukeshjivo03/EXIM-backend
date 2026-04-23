@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Sum, Case, When, DecimalField, Value , Count , F , ExpressionWrapper , FloatField , Count
+from django.db.models import Sum, Case, When, DecimalField, Value , Count , F , ExpressionWrapper , FloatField , Count , Max
 from decimal import Decimal
 from collections import defaultdict, OrderedDict
 from django.db.models.functions import Round
@@ -434,31 +434,56 @@ class MoveView(APIView):
 
 class VehicleReport(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('stock.view_vehicle_report')]
+        return [IsAuthenticated(), HasAppPermission('stock.view_vehicle_report')]
 
     def get(self, request):
         status = request.query_params.get('status')
-        
-        response = StockStatus.objects.filter(
-            status=status,
-            deleted=False
-        ).values(
-            'vehicle_number',
-            'quantity_in_litre',
-            'eta',
-            'status',
-            'job_work',
-            item_name=F('item_code__tank_item_name'),
-        ).annotate(
-            quantity_in_mts=Round(
-                ExpressionWrapper(
-                    F('quantity_in_litre') / Decimal('1.0989') / 1000,
-                    output_field=FloatField()
-                ), 3
+
+        response = (
+            StockStatus.objects.filter(
+                status=status,
+                deleted=False
             )
+            .values(
+                'vehicle_number',
+                'item_code',
+                item_name=F('item_code__tank_item_name'),
+            )
+            .annotate(
+                total_quantity_in_litre=Sum('quantity_in_litre'),
+                total_quantity_in_mts=Round(
+                    ExpressionWrapper(
+                        Sum('quantity_in_litre') / Decimal('1.0989') / 1000,
+                        output_field=FloatField()
+                    ), 3
+                ),
+                eta=Max('eta'),
+                status=Max('status'),
+                job_work=Max('job_work'),
+            )
+            .order_by('vehicle_number', 'item_code')
         )
-    
-        return Response(list(response))
+
+        # Group the flat queryset into nested structure
+        grouped = {}
+        for row in response:
+            v_num = row['vehicle_number']
+            if v_num not in grouped:
+                grouped[v_num] = {
+                    'vehicle_number': v_num,
+                    'items': []
+                }
+            grouped[v_num]['items'].append({
+                'item_code': row['item_code'],
+                'item_name': row['item_name'],
+                'total_quantity_in_litre': row['total_quantity_in_litre'],
+                'total_quantity_in_mts': row['total_quantity_in_mts'],
+                'eta': row['eta'],
+                'status': row['status'],
+                'job_work': row['job_work'],
+            })
+
+        return Response(list(grouped.values()))
 
 # views.py
 class StockChangeSessionListView(generics.ListAPIView):

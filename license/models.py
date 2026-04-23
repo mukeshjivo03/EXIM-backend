@@ -24,19 +24,31 @@ class AdvanceLicenseHeaders(models.Model):
     fob_exhange_rate = models.DecimalField(max_digits=8, decimal_places = 3)
     
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
-    
+
+    total_import_quantity = models.DecimalField(max_digits=8, decimal_places = 3 , default = 0.00)
+
     
     total_import = models.DecimalField(max_digits=8, decimal_places = 3 , default = 0.00)
     total_export = models.DecimalField(max_digits=8, decimal_places = 3 , default = 0.00)
     to_be_exported = models.DecimalField(max_digits=8, decimal_places = 3, default = 0.00)
     balance = models.DecimalField(max_digits=8, decimal_places = 3 , null = True , blank = True)
     
-    def save(self, *args , **kwargs):
+    def save(self, *args, **kwargs):
         if self.cif_value_inr and self.cif_exchange_rate:
             self.cif_value_usd = self.cif_value_inr / self.cif_exchange_rate
-        
+
         if self.fob_value_inr and self.fob_exhange_rate:
             self.fob_value_usd = self.fob_value_inr / self.fob_exhange_rate
+
+        if self.total_import_quantity:
+            self.to_be_exported = (
+                Decimal(self.total_import_quantity) - 
+                (Decimal('0.031') * Decimal(self.total_import_quantity))
+            )
+
+            is_new = not AdvanceLicenseHeaders.objects.filter(pk=self.pk).exists()
+            if is_new:
+                self.balance = self.to_be_exported
 
         super().save(*args, **kwargs)
              
@@ -60,11 +72,11 @@ class AdvanceLicenseImportLines(models.Model):
         
         if license:
             total_import = license.import_lines.aggregate(total_import=Sum('import_in_mts'))['total_import'] or 0
-            to_be_exported = Decimal(total_import) - (Decimal(0.031) * Decimal(total_import))
-            
-            
+
             license.total_import = total_import
-            license.to_be_exported = to_be_exported 
+            
+
+
             license.save()
         
 
@@ -142,6 +154,8 @@ class DFIALicenseHeader(models.Model):
             
         if self.cif_value_inr and self.cif_exchange_rate:
             self.cif_value_usd = self.cif_value_inr / self.cif_exchange_rate
+
+            
             
        
         super().save(*args , **kwargs)

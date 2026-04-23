@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import AdvanceLicenseHeaders, AdvanceLicenseImportLines , AdvanceLicenseExportLines , DFIALicenseHeader , DFIALicenseExportLines , DFIALicenseImportLines
 
-
+    
 class AdvanceLicenseImportLine(serializers.ModelSerializer):
     class Meta:
         model = AdvanceLicenseImportLines
@@ -20,7 +20,7 @@ class AdvanceLicenseHeaderCreateSerialzer(serializers.ModelSerializer):
     class Meta:
         model = AdvanceLicenseHeaders
         fields = '__all__'
-        read_only_fields = ['cif_value_usd' , 'fob_value_usd' , 'total_import' , 'to_be_exported' , 'total_export' , 'balance']
+        read_only_fields = ['cif_value_usd' , 'fob_value_usd' , 'total_import' , 'to_be_exported' , 'total_export' , 'balance' , 'total_to_be_exported_quantity']
 
 
 
