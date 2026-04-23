@@ -490,6 +490,8 @@ class OpeningStock(APIView):
     def post(self , request):
         post_rate_liter = request.data.get('rate')
         item_code = request.data.get('item_code')
+        quantity_liter = request.data.get('quantity')
+
         if not all([post_rate_liter, item_code, quantity_liter]):
             return Response(
                 {'error': 'rate, item_code and quantity are required'},
@@ -498,7 +500,6 @@ class OpeningStock(APIView):
         
         tank_item = TankItem.objects.get(tank_item_code  = item_code)
         vendor = Party.objects.get(card_code = 'VENDA000004')
-        quantity_liter = request.data.get('quantity')
         quantity_in_kg = Decimal(str(quantity_liter)) / Decimal('1.0989')
         rate_kg = Decimal(str(post_rate_liter)) * Decimal('1.0989')
 
