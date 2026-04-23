@@ -6,6 +6,7 @@ from django.conf import settings
 from decimal import Decimal
 
 
+
 from sap_sync.models import RMProducts , Party 
 from tank.models import TankData , TankItem , TankLog
 
@@ -62,7 +63,7 @@ class StockStatus(models.Model):
 
     parent = models.ForeignKey('self',null=True, blank=True,on_delete=models.SET_NULL,related_name='children',)
     is_accumulator = models.BooleanField(default=False)
-    arrival_date = models.DateTimeField(null=True, blank=True)
+    arrival_date = models.DateField(null=True, blank=True)
     remainder_action = models.CharField(max_length=20,choices=REMAINDER_ACTION_CHOICES,null=True, blank=True)
 
 
@@ -91,8 +92,8 @@ class StockStatus(models.Model):
             deduction_qty = Decimal('0.03') * self.quantity
             self.quantity = self.quantity - deduction_qty
 
-        if self.status == 'OUT_SIDE_FACTORY':
-            self.arrival_date =  timezone.now()
+
+
             
         # ── density conversions ──────────────────────────────────────────────
         if self.quantity and self.rate and self.item_code:
@@ -111,6 +112,23 @@ class StockStatus(models.Model):
         old_quantity = None
 
         if not is_new:
+            try:
+                prev = StockStatus.objects.only('status', 'quantity', 'eta').get(pk=self.pk)
+                old_status = prev.status
+                old_quantity = prev.quantity
+                old_eta = prev.eta  # capture previous eta
+            except StockStatus.DoesNotExist:
+                pass
+
+        # Set arrival_date to the previously stored eta when it reaches the factory
+       
+        if not is_new:
+            
+            if not is_new and old_status != 'OUT_SIDE_FACTORY' and self.status == 'OUT_SIDE_FACTORY':
+                self.arrival_date = old_eta
+            
+            
+            
             try:
                 prev = StockStatus.objects.only('status', 'quantity').get(pk=self.pk)
                 old_status = prev.status
