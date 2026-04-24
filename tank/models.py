@@ -97,9 +97,12 @@ class TankLog(models.Model):
     log_type = models.CharField(max_length=10 , choices=LOG_TYPE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     stock_status = models.ForeignKey('stock.StockStatus' , on_delete = models.CASCADE , null = True)
+    # item_code = models.ForeignKey(TankItem , null = True , blank = True  , on_delete = models.SET_NULL)
     vehicle_number = models.CharField(max_length=50 , null = True, blank=True)
     rate = models.DecimalField(max_digits=10, decimal_places=2 , null = True)
     party = models.CharField(max_length=50 , null = True, blank=True)
+    item = models.CharField(max_length=50 , null = True, blank=True)
+    arrival = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
     

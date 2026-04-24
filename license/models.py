@@ -40,8 +40,6 @@ class AdvanceLicenseHeaders(models.Model):
         if self.fob_value_inr and self.fob_exhange_rate:
             self.fob_value_usd = self.fob_value_inr / self.fob_exhange_rate
 
-
-
         super().save(*args, **kwargs)
              
     class Meta:

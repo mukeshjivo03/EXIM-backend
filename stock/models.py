@@ -164,6 +164,7 @@ class StockStatus(models.Model):
                     vehicle_number=self.vehicle_number,
                     responsible_transporter=self.transporter,
                     reason=reason,
+                    
                     created_by=self.created_by,
                 )
 
@@ -172,7 +173,9 @@ class StockStatus(models.Model):
                     quantity=self.quantity,
                     stock_status=self,
                     vehicle_number=self.vehicle_number,
+                    item = self.item_code.tank_item_code,
                     rate=self.rate,
+                    arrival = self.eta,
                     party=self.vendor_code.card_name if self.vendor_code else None,
                     created_by = self.created_by
                 )
