@@ -73,7 +73,7 @@ class ContractDropdownView(generics.ListAPIView):
     def get_permissions(self):
         return [IsAuthenticated(), HasAppPermission('contracts.view_domesticreports')]
     
-    queryset = DomesticReports.objects.all().order_by('-created_at')
+    queryset = DomesticReports.objects.all().order_by('created_at')
     serializer_class = ContractDropdownSerializer
     
 
