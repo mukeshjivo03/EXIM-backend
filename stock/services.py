@@ -32,7 +32,7 @@ def get_or_create_accumulator(parent, new_status, arrived_qty, rate, created_by)
             quantity=arrived_qty,
             created_by=created_by,
             is_accumulator=True,
-            parent=parent
+            parent=parent,
         )
 
 
@@ -63,7 +63,7 @@ def arrive_batch(otw_record, weighed_qty, created_by, action, destination_status
     return accumulator
 
 
-def dispatch(source, quantity, status, created_by, action=None):
+def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_number , location  , action=None  ):
     if quantity > source.quantity:
         raise ValueError(f"Dispatch quantity {quantity} exceeds available quantity {source.quantity}")
 
@@ -78,7 +78,12 @@ def dispatch(source, quantity, status, created_by, action=None):
         rate=source.rate,
         quantity=quantity,
         created_by=created_by,
-        parent=parent
+        parent=parent,
+        
+        transporter = transporter,
+        vehicle_number = vehicle_number,
+        eta = eta,
+        location  = location
     )
 
     if action in ('TOLERATE', 'DEBIT'):
