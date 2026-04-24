@@ -40,15 +40,7 @@ class AdvanceLicenseHeaders(models.Model):
         if self.fob_value_inr and self.fob_exhange_rate:
             self.fob_value_usd = self.fob_value_inr / self.fob_exhange_rate
 
-        if self.total_import_quantity:
-            self.to_be_exported = (
-                Decimal(self.total_import_quantity) - 
-                (Decimal('0.031') * Decimal(self.total_import_quantity))
-            )
 
-            is_new = not AdvanceLicenseHeaders.objects.filter(pk=self.pk).exists()
-            if is_new:
-                self.balance = self.to_be_exported
 
         super().save(*args, **kwargs)
              
@@ -73,6 +65,7 @@ class AdvanceLicenseImportLines(models.Model):
         if license:
             total_import = license.import_lines.aggregate(total_import=Sum('import_in_mts'))['total_import'] or 0
             license.total_import = total_import
+            license.to_be_exported = Decimal(total_import) - (Decimal("0.031") * Decimal(total_import))
             license.save()
         
 
@@ -101,10 +94,6 @@ class AdvanceLicenseExportLines(models.Model):
                 total_export += Decimal(str(self.export_in_mts))
 
             balance = license.to_be_exported - total_export
-
-            if balance < 0:
-                raise ValueError("Total export cannot exceed the to_be_exported quantity.")
-
             # Validation passed — save line first, then update header
             super().save(*args, **kwargs)
 
