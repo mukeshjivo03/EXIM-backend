@@ -142,15 +142,8 @@ class DFIALicenseHeader(models.Model):
         if self.cif_value_inr and self.cif_exchange_rate:
             self.cif_value_usd = self.cif_value_inr / self.cif_exchange_rate
 
-        if self.total_export_quantity:
-            self.to_be_imported = (
-                Decimal(self.total_export_quantity) - 
-                (Decimal('0.031') * Decimal(self.total_export_quantity))
-            )
-
-            is_new = not DFIALicenseHeader.objects.filter(pk=self.pk).exists()
-            if is_new:
-                self.balance = self.to_be_imported 
+       
+    
             
        
         super().save(*args , **kwargs)
@@ -182,8 +175,6 @@ class DFIALicenseImportLines(models.Model):
 
             balance = license.to_be_imported - total_import
 
-            if balance < 0:
-                raise ValueError("Total import cannot exceed the to_be_imported quantity.")
 
             super().save(*args, **kwargs)
 
@@ -210,6 +201,7 @@ class DFIALicenseExportLines(models.Model):
         if license:
             total_export = license.dfia_export_lines.aggregate(total_export=Sum('export_in_mts'))['total_export'] or Decimal('0')
             license.total_export = total_export
+            license.to_be_imported = Decimal(total_export) - (Decimal('0.031') * Decimal(total_export))
             license.save()
         
     
