@@ -24,7 +24,7 @@ class DomesticReportListView(APIView):
         print(start_date , end_date)
         
         # data = DomesticReports.objects.filter(grpo_date__range=[start_date , end_date])
-        data = DomesticReports.objects.filter( po_date__range=[start_date, end_date]).order_by('po_date')
+        data = DomesticReports.objects.filter( po_date__range=[start_date, end_date]).order_by('-po_date')
 
         serializer = DomesticReportSerializer(data , many=True)
         return Response(serializer.data)
@@ -73,7 +73,7 @@ class ContractDropdownView(generics.ListAPIView):
     def get_permissions(self):
         return [IsAuthenticated(), HasAppPermission('contracts.view_domesticreports')]
     
-    queryset = DomesticReports.objects.all().order_by('created_at')
+    queryset = DomesticReports.objects.all().order_by('-created_at')
     serializer_class = ContractDropdownSerializer
     
 
