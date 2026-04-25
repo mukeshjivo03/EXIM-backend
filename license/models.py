@@ -82,6 +82,7 @@ class AdvanceLicenseExportLines(models.Model):
 
     def save(self, *args, **kwargs):
         license = self.license_no
+        print("linked_import_line_id =", self.linked_import_line_id)
 
         if license:
             total_export = license.export_lines.aggregate(

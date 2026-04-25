@@ -9,6 +9,13 @@ class AdvanceLicenseImportLine(serializers.ModelSerializer):
     
 class AdvanceLicenseExportLine(serializers.ModelSerializer):
     linked_import_line = AdvanceLicenseImportLine(read_only=True)
+    linked_import_line_id = serializers.PrimaryKeyRelatedField(
+        queryset=AdvanceLicenseImportLines.objects.all(),
+        source='linked_import_line',
+        required=False,
+        allow_null=True,
+    )
+
     class Meta:
         model = AdvanceLicenseExportLines
         fields = '__all__'  
