@@ -263,13 +263,15 @@ class StockDashboard(APIView):
         # ────────────────────────────────────────────────────────────
         stock_qs = apply_common_filters(
             StockStatus.objects.filter(deleted=False).exclude(status='OUT_SIDE_FACTORY')
-        ).values('item_code_id', 'status', vendor_name=F('vendor_code__card_name')).annotate(qty=Sum('quantity'))
+        ).values('item_code_id' ,'status', vendor_name=F('vendor_code__card_name') , item_name=F('item_code__tank_item_name')).annotate(qty=Sum('quantity'))
 
         # status_vendors : {status: {vendor_name, ...}}
         status_vendors = defaultdict(set)
         # item_data : {item_code: {(status, vendor): qty}}
         item_data = defaultdict(lambda: defaultdict(float))
         all_items = set()
+        item_names = {}
+
 
         for row in stock_qs:
             item        = row['item_code_id']
@@ -279,6 +281,8 @@ class StockDashboard(APIView):
 
             status_vendors[row_status].add(row_vendor)
             item_data[item][(row_status, row_vendor)] = qty
+            item_names[item] = row['item_name']  # ← store name
+
             all_items.add(item)
 
         # Merge item codes from all three sources
@@ -330,6 +334,7 @@ class StockDashboard(APIView):
 
             items.append({
                 'item_code': item_code,
+                'item_name': item_names.get(item_code, ''),  # ← add this
                 'in_factory': in_fac,
                 'outside_factory': out_fac,
                 'status_data': status_data,
