@@ -163,7 +163,7 @@ class StockStatus(models.Model):
                 item_code = self.item_code.tank_item_code if self.item_code else None,
                 item_name=self.item_code.tank_item_name if self.item_code else None,
                 rate=rate_per_mt,
-                supplier=self.vendor_code.cared_name if self.vendor_code else None,
+                supplier=self.vendor_code.card_name if self.vendor_code else None,
                 supplier_code=self.vendor_code.card_code if self.vendor_code else None,
                 vehicle_number=self.vehicle_number,
                 transporter=self.transporter,
@@ -227,7 +227,7 @@ class DebitEntry(models.Model):
     
     
     supplier_code = models.CharField(max_length=50, null=True, blank=True)  # denormalized for easy reference
-    supplier = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, to_field='card_code')
+    supplier = models.CharField(max_length=255, null=True, blank=True)  # denormalized for easy reference
     vehicle_number = models.CharField(max_length=50, null=True, blank=True)
     transporter = models.CharField(max_length=255, null=True, blank=True)  # denormalized fallback
     
