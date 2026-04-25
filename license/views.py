@@ -208,3 +208,20 @@ class DFIALicenseExportLinesRetrieveUpdateDeleteView(generics.RetrieveUpdateDest
 #         )
 
 #         return Response(insights)
+
+
+class AdvanceLicenseImportDropdownView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('license.view_advancelicenseimportlines')]
+    
+    def get(self, request):
+        
+        license_no = request.query_params.get('license_no')
+        if not license_no:
+            return Response({'error': 'license_no query parameter is required.'}, status=400)
+        
+        
+        import_lines = AdvanceLicenseImportLines.objects.filter(license_no=license_no)
+        serializer = AdvanceLicenseImportLine(import_lines, many=True)
+        return Response(serializer.data)
+    

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AdvanceLicenseHeadersListCreateView , AdvanceLicenseImportListCreateView ,AdvanceLicenseImportLinesRetrieveUpdateDeleteView,AdvanceLicenseExportListCreateView,AdvanceLicenseExportLinesRetrieveUpdateDeleteView,AdvanceLicenseHeaderRetrieveUpdateDeleteView ,DFIALicenseHeaderCreateView , DFIALicenseImportLinesListView , DFIALicenseImportLinesCreateView,DFIALicenseImportLinesRetrieveUpdateDeleteView , DFIALicenseExportLinesListView , DFIALicenseExportLinesCreateView,DFIALicenseExportLinesRetrieveUpdateDeleteView  ,DFIALicenseHeaderListView, DFIALicenseHeaderRetrieveUpdateDeleteView 
+from .views import AdvanceLicenseHeadersListCreateView , AdvanceLicenseImportListCreateView ,AdvanceLicenseImportLinesRetrieveUpdateDeleteView,AdvanceLicenseExportListCreateView,AdvanceLicenseExportLinesRetrieveUpdateDeleteView,AdvanceLicenseHeaderRetrieveUpdateDeleteView ,DFIALicenseHeaderCreateView , DFIALicenseImportLinesListView , DFIALicenseImportLinesCreateView,DFIALicenseImportLinesRetrieveUpdateDeleteView , DFIALicenseExportLinesListView , DFIALicenseExportLinesCreateView,DFIALicenseExportLinesRetrieveUpdateDeleteView  ,DFIALicenseHeaderListView, DFIALicenseHeaderRetrieveUpdateDeleteView  , AdvanceLicenseImportDropdownView
 
 
 
@@ -14,7 +14,7 @@ urlpatterns = [
     path('advance-license-export-lines/', AdvanceLicenseExportListCreateView.as_view(), name='advance-license-lines-list-create'),
     path('advance-license-export-lines/<int:id>/', AdvanceLicenseExportLinesRetrieveUpdateDeleteView.as_view(), name='advance-license-lines-retrieve-update-delete'),
     
-    
+    path('advance-license-import-lines/dropdown/', AdvanceLicenseImportDropdownView.as_view(), name='advance-license-import-dropdown'),
     
     # path('advance-license-lines/insight/<str:pk>/', AdvanceLicenseLinesInsights.as_view(), name='advance-license-lines-insight'),
     
