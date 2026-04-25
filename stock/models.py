@@ -146,40 +146,42 @@ class StockStatus(models.Model):
             and old_quantity is not None
             and old_quantity != self.quantity       # only if there's an actual loss
         ):
-            diff = old_quantity - self.quantity
-            if diff != Decimal('0.00'):
-                if diff > 0:
-                    type = 'LOSS'
-                    reason = f"Quantity loss on IN_TANK transition (was {old_quantity}, now {self.quantity})"
-                else:
-                    type = 'GAIN'
-                    reason = f"Quantity gain on IN_TANK transition (was {old_quantity}, now {self.quantity})"
-
-                DebitEntry.objects.create(
-                    stock=self,
-                    quantity=diff,
-                    rate=self.rate,
-                    type=type,
-                    responsible_party=self.vendor_code,
-                    vehicle_number=self.vehicle_number,
-                    responsible_transporter=self.transporter,
-                    reason=reason,
-                    
-                    created_by=self.created_by,
-                )
-
-                TankLog.objects.create(
-                    log_type='INWARD',
-                    quantity=self.quantity,
-                    stock_status=self,
-                    vehicle_number=self.vehicle_number,
-                    item_code = self.item_code.tank_item_code,
-                    item_name = self.item_code.tank_item_name,
-                    rate=self.rate,
-                    arrival = self.eta,
-                    party=self.vendor_code.card_name if self.vendor_code else None,
-                    created_by = self.created_by
-                )
+            
+            # load_qty_mts = round(old_quantity / 1000, 3)
+            # unload_qty_mts = round(self.quantity / 1000, 3)
+           
+            load_qty_mts  = (old_quantity / Decimal('1000'))
+            unload_qty_mts = (self.quantity / Decimal('1000'))
+            rate_per_mt = self.rate * Decimal('1000')  
+           
+           
+            # rate/kg → rate/MT
+            # diff = old_quantity - self.quantity
+            
+            DebitEntry.objects.create(
+                stock=self,
+                rate=rate_per_mt,
+                supplier=self.vendor_code,
+                vehicle_number=self.vehicle_number,
+                transporter=self.transporter,
+                load_qty=load_qty_mts,
+                unload_qty=unload_qty_mts,
+                created_by=self.created_by,
+            )
+            
+            
+            TankLog.objects.create(
+                log_type='INWARD',
+                quantity=self.quantity,
+                stock_status=self,
+                vehicle_number=self.vehicle_number,
+                item_code = self.item_code.tank_item_code,
+                item_name = self.item_code.tank_item_name,
+                rate=self.rate,
+                arrival = self.eta,
+                party=self.vendor_code.card_name if self.vendor_code else None,
+                created_by = self.created_by
+            )
 
     
     def __str__(self):
@@ -208,20 +210,22 @@ class StockStatusUpdateLog(models.Model):
 
 
 class DebitEntry(models.Model):
-    TYPE_CHOICES = (
-        ('LOSS', 'Loss'),
-        ('GAIN', 'Gain'),
-    )
     
     stock = models.ForeignKey(StockStatus, on_delete=models.SET_NULL, null=True, related_name='debits')
-    type = models.CharField(max_length=10, choices=TYPE_CHOICES, editable=False)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    rate = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=20, decimal_places=2, editable=False)
-    responsible_party = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, to_field='card_code')
+    rate = models.DecimalField(max_digits=10, decimal_places=3 , default=Decimal('0.000'))
+    load_qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    unload_qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    shortage_qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    allowed_shortage_qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    deducted_shortage_qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
+    deduction_amount = models.DecimalField(max_digits=20, decimal_places=3, null=True, blank=True)
+    
+    
+    supplier = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, to_field='card_code')
     vehicle_number = models.CharField(max_length=50, null=True, blank=True)
-    responsible_transporter = models.CharField(max_length=255, null=True, blank=True)  # denormalized fallback
-    reason = models.CharField(max_length=255, null=True, blank=True)
+    transporter = models.CharField(max_length=255, null=True, blank=True)  # denormalized fallback
+    
+    
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
     
@@ -230,9 +234,19 @@ class DebitEntry(models.Model):
         db_table = 'stock_debit_entries'
 
     def save(self, *args, **kwargs):
-        self.total = self.quantity * self.rate
-        super().save(*args, **kwargs)
+        if self.unload_qty and self.load_qty:
+            self.allowed_shortage_qty = (Decimal(self.load_qty) * Decimal('0.0025'))  # ← fix field name
+            self.shortage_qty = self.load_qty - self.unload_qty                        # ← fix field name
 
+            if self.shortage_qty > self.allowed_shortage_qty:
+                self.deducted_shortage_qty = self.shortage_qty - self.allowed_shortage_qty
+                self.deduction_amount = self.deducted_shortage_qty * self.rate
+            else:
+                self.deducted_shortage_qty = Decimal('0.00')
+                self.deduction_amount = Decimal('0.00')
+
+        super().save(*args, **kwargs)
+        
     def __str__(self):
         return f"Debit {self.quantity} MTS @ {self.rate} — {self.stock}"
     

@@ -69,4 +69,4 @@ class DebitEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = DebitEntry
         fields = '__all__'
-        read_only_fields = ['total', 'created_at']
+        read_only_fields = ['total', 'created_at' , 'allowed_shortage_qty' , 'deducted_shortage_qty' , 'deduction_amount' , 'shortage_qty']
