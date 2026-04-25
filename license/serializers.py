@@ -40,6 +40,7 @@ class DFIAImportLines(serializers.ModelSerializer):
         fields = '__all__'
 
 class DFIAExportLines(serializers.ModelSerializer):
+    linked_import_line = AdvanceLicenseImportLine(read_only=True)
     class Meta:
         model = DFIALicenseExportLines
         fields = '__all__'

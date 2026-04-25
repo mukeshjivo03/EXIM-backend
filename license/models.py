@@ -75,6 +75,7 @@ class AdvanceLicenseExportLines(models.Model):
     sb_value_usd = models.DecimalField(max_digits=12, decimal_places = 3)
     sb_date = models.DateField(null=True , blank=True)
     export_in_mts = models.DecimalField(max_digits=8, decimal_places = 3)
+    linked_import_line = models.ForeignKey(AdvanceLicenseImportLines, on_delete=models.CASCADE, null=True, blank=True , related_name = 'linked_import_lines')
     
     class Meta:
         db_table = 'advance_license_export_lines'
