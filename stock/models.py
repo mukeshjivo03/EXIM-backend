@@ -160,6 +160,7 @@ class StockStatus(models.Model):
             
             DebitEntry.objects.create(
                 stock=self,
+                item_name=self.item_code.tank_item_name if self.item_code else None,
                 rate=rate_per_mt,
                 supplier=self.vendor_code,
                 vehicle_number=self.vehicle_number,
@@ -212,6 +213,7 @@ class StockStatusUpdateLog(models.Model):
 class DebitEntry(models.Model):
     
     stock = models.ForeignKey(StockStatus, on_delete=models.SET_NULL, null=True, related_name='debits')
+    item_name = models.CharField(max_length=255, null=True, blank=True)  # denormalized for easy reference
     rate = models.DecimalField(max_digits=10, decimal_places=3 , default=Decimal('0.000'))
     load_qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
     unload_qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
