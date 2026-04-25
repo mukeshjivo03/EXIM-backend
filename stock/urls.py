@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import StockStatusListCreateView , StockChangeSessionListView , StockStatusUpdateRetrieveDeleteView , StockUpdateLogListView , StockStatusInsights , StockStatusSummary, StockDashboard, OutsideFactoryStock , GetUniqueRM , GetStockEntrybyRM , ArriveBatch , Dispatch , MoveView , VehicleReport , OpeningStock , DebitEntryListView , DebitEntryInsights
-
+from .views import StockStatusListCreateView , StockChangeSessionListView , StockStatusUpdateRetrieveDeleteView , StockUpdateLogListView , StockStatusInsights , StockStatusSummary, StockDashboard, OutsideFactoryStock , GetUniqueRM , GetStockEntrybyRM , ArriveBatch , Dispatch , MoveView , VehicleReport , OpeningStock , DebitEntryListView 
 
 
 
