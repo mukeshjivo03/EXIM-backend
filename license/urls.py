@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AdvanceLicenseHeadersListCreateView , AdvanceLicenseImportListCreateView ,AdvanceLicenseImportLinesRetrieveUpdateDeleteView,AdvanceLicenseExportListCreateView,AdvanceLicenseExportLinesRetrieveUpdateDeleteView,AdvanceLicenseHeaderRetrieveUpdateDeleteView ,DFIALicenseHeaderCreateView , DFIALicenseImportLinesListView , DFIALicenseImportLinesCreateView,DFIALicenseImportLinesRetrieveUpdateDeleteView , DFIALicenseExportLinesListView , DFIALicenseExportLinesCreateView,DFIALicenseExportLinesRetrieveUpdateDeleteView  ,DFIALicenseHeaderListView, DFIALicenseHeaderRetrieveUpdateDeleteView  , AdvanceLicenseImportDropdownView
+from .views import AdvanceLicenseHeadersListCreateView , AdvanceLicenseImportListCreateView ,AdvanceLicenseImportLinesRetrieveUpdateDeleteView,AdvanceLicenseExportListCreateView,AdvanceLicenseExportLinesRetrieveUpdateDeleteView,AdvanceLicenseHeaderRetrieveUpdateDeleteView ,DFIALicenseHeaderCreateView , DFIALicenseImportLinesListView , DFIALicenseImportLinesCreateView,DFIALicenseImportLinesRetrieveUpdateDeleteView , DFIALicenseExportLinesListView , DFIALicenseExportLinesCreateView,DFIALicenseExportLinesRetrieveUpdateDeleteView  ,DFIALicenseHeaderListView, DFIALicenseHeaderRetrieveUpdateDeleteView  , AdvanceLicenseImportDropdownView , DFIALicenseExportDropdownView
 
 
 
@@ -26,6 +26,7 @@ urlpatterns = [
     path('dfia-license-import-lines/list/' , DFIALicenseImportLinesListView.as_view() , name = 'dfia-license-lines-list-create'),
     path('dfia-license-import-lines/<int:id>/' , DFIALicenseImportLinesRetrieveUpdateDeleteView.as_view() , name = 'dfia-license-lines-list-create'),
     
+    path('dfia-license-export-lines/dropdown/', DFIALicenseExportDropdownView.as_view(), name='dfia-license-export-dropdown'),
     
     
     path('dfia-license-export-lines/create/' , DFIALicenseExportLinesCreateView.as_view() , name = 'dfia-license-lines-list-create'),

@@ -225,3 +225,18 @@ class AdvanceLicenseImportDropdownView(APIView):
         serializer = AdvanceLicenseImportLine(import_lines, many=True)
         return Response(serializer.data)
     
+    
+class DFIALicenseExportDropdownView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('license.view_dfialicenseexportlines')]
+    
+    def get(self, request):
+        
+        file_no = request.query_params.get('file_no')
+        if not file_no:
+            return Response({'error': 'file_no query parameter is required.'}, status=400)
+        
+        
+        export_lines = DFIALicenseExportLines.objects.filter(license_no=file_no)
+        serializer = DFIAExportLines(export_lines, many=True)
+        return Response(serializer.data)

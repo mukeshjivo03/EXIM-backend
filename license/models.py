@@ -98,7 +98,7 @@ class AdvanceLicenseExportLines(models.Model):
 
             license.total_export = total_export
             license.balance = balance
-            license.save()
+            license.save()  
 
         else:
             super().save(*args, **kwargs)  # always save even if no license linked
@@ -151,6 +151,29 @@ class DFIALicenseHeader(models.Model):
     class Meta:
         db_table = 'dfia_license_header'
         
+
+class DFIALicenseExportLines(models.Model):
+    license_no = models.ForeignKey(DFIALicenseHeader , on_delete = models.SET_NULL , null = True , to_field = 'file_no' , related_name = 'dfia_export_lines')
+    shipping_bill_no = models.CharField(max_length = 50)
+    sb_value_usd = models.DecimalField(max_digits=12, decimal_places = 3)
+    sb_date = models.DateField(null=True , blank=True)
+    export_in_mts = models.DecimalField(max_digits=8, decimal_places = 3)   
+    
+    class Meta:
+        db_table = 'dfia_license_export_lines'
+        
+    def save(self, *args, **kwargs):
+        license = self.license_no
+        super().save(*args, **kwargs)
+        if license:
+            total_export = license.dfia_export_lines.aggregate(total_export=Sum('export_in_mts'))['total_export'] or Decimal('0')
+            license.total_export = total_export
+            license.to_be_imported = Decimal(total_export) - (Decimal('0.031') * Decimal(total_export))
+            license.save()
+        
+    
+    
+    
         
 class DFIALicenseImportLines(models.Model):
     license_no = models.ForeignKey(DFIALicenseHeader , on_delete = models.SET_NULL , null = True , to_field = 'file_no' , related_name = 'dfia_import_lines')
@@ -158,11 +181,14 @@ class DFIALicenseImportLines(models.Model):
     boe_value_usd = models.DecimalField(max_digits=12, decimal_places = 3)
     boe_date = models.DateField()
     import_in_mts = models.DecimalField(max_digits=8, decimal_places = 3)
+    linked_export_line = models.ForeignKey(DFIALicenseExportLines, on_delete=models.SET_NULL, null=True, blank=True, related_name='linked_export_lines')
     
     class Meta:
         db_table = 'dfia_license_import_lines'
     
     def save(self, *args, **kwargs):
+        print("linked_export_line_id =", self.linked_export_line_id)
+
         license = self.license_no
         if license:
             total_import = license.dfia_import_lines.aggregate(
@@ -183,31 +209,3 @@ class DFIALicenseImportLines(models.Model):
 
         else:
             super().save(*args, **kwargs)
-
-class DFIALicenseExportLines(models.Model):
-    license_no = models.ForeignKey(DFIALicenseHeader , on_delete = models.SET_NULL , null = True , to_field = 'file_no' , related_name = 'dfia_export_lines')
-    shipping_bill_no = models.CharField(max_length = 50)
-    sb_value_usd = models.DecimalField(max_digits=12, decimal_places = 3)
-    sb_date = models.DateField(null=True , blank=True)
-    export_in_mts = models.DecimalField(max_digits=8, decimal_places = 3)
-    
-    class Meta:
-        db_table = 'dfia_license_export_lines'
-        
-    def save(self, *args, **kwargs):
-        license = self.license_no
-        super().save(*args, **kwargs)
-        if license:
-            total_export = license.dfia_export_lines.aggregate(total_export=Sum('export_in_mts'))['total_export'] or Decimal('0')
-            license.total_export = total_export
-            license.to_be_imported = Decimal(total_export) - (Decimal('0.031') * Decimal(total_export))
-            license.save()
-        
-    
-    
-    
-
-        
-        
-
-    

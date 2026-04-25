@@ -8,6 +8,7 @@ class AdvanceLicenseImportLine(serializers.ModelSerializer):
         fields = '__all__'
     
 class AdvanceLicenseExportLine(serializers.ModelSerializer):
+    linked_import_line = AdvanceLicenseImportLine(read_only=True)
     class Meta:
         model = AdvanceLicenseExportLines
         fields = '__all__'  
@@ -34,17 +35,25 @@ class AdvanceLicenseHeaderSerialzer(serializers.ModelSerializer):
 
 
 
-class DFIAImportLines(serializers.ModelSerializer):
-    class Meta:
-        model = DFIALicenseImportLines
-        fields = '__all__'
+
 
 class DFIAExportLines(serializers.ModelSerializer):
-    linked_import_line = AdvanceLicenseImportLine(read_only=True)
     class Meta:
         model = DFIALicenseExportLines
         fields = '__all__'
         
+class DFIAImportLines(serializers.ModelSerializer):
+    linked_export_line = DFIAExportLines(read_only=True)
+    linked_export_line_id = serializers.PrimaryKeyRelatedField(
+        queryset=DFIALicenseExportLines.objects.all(),
+        source='linked_export_line',
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = DFIALicenseImportLines
+        fields = '__all__'
 
 
 class DFIALicenseListSerializer(serializers.ModelSerializer):
