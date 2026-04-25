@@ -16,7 +16,7 @@ urlpatterns = [
     
     
     path('debit-entries/', DebitEntryListView.as_view()),
-    path('debit-insights/', DebitEntryInsights.as_view()),
+    # path('debit-insights/', DebitEntryInsights.as_view()),
     path('opening-stock/' , OpeningStock.as_view(   )),
     path('stock-insights/' , StockStatusInsights.as_view()),
     path('stock-summary/' , StockStatusSummary.as_view()),
