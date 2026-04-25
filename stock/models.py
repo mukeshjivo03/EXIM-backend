@@ -160,9 +160,11 @@ class StockStatus(models.Model):
             
             DebitEntry.objects.create(
                 stock=self,
+                item_code = self.item_code.tank_item_code if self.item_code else None,
                 item_name=self.item_code.tank_item_name if self.item_code else None,
                 rate=rate_per_mt,
-                supplier=self.vendor_code,
+                supplier=self.vendor_code.cared_name if self.vendor_code else None,
+                supplier_code=self.vendor_code.card_code if self.vendor_code else None,
                 vehicle_number=self.vehicle_number,
                 transporter=self.transporter,
                 load_qty=load_qty_mts,
@@ -213,6 +215,7 @@ class StockStatusUpdateLog(models.Model):
 class DebitEntry(models.Model):
     
     stock = models.ForeignKey(StockStatus, on_delete=models.SET_NULL, null=True, related_name='debits')
+    item_code = models.CharField(max_length=50, null=True, blank=True)  # denormalized for easy reference
     item_name = models.CharField(max_length=255, null=True, blank=True)  # denormalized for easy reference
     rate = models.DecimalField(max_digits=10, decimal_places=3 , default=Decimal('0.000'))
     load_qty = models.DecimalField(max_digits=10, decimal_places=3, null=True, blank=True)
@@ -223,6 +226,7 @@ class DebitEntry(models.Model):
     deduction_amount = models.DecimalField(max_digits=20, decimal_places=3, null=True, blank=True)
     
     
+    supplier_code = models.CharField(max_length=50, null=True, blank=True)  # denormalized for easy reference
     supplier = models.ForeignKey(Party, on_delete=models.SET_NULL, null=True, to_field='card_code')
     vehicle_number = models.CharField(max_length=50, null=True, blank=True)
     transporter = models.CharField(max_length=255, null=True, blank=True)  # denormalized fallback
