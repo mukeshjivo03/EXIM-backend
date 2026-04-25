@@ -209,25 +209,56 @@ ITEM_CODE_DISPLAY_ORDER = [
     'RM00C01',
     'RM00CPC',
     'RM00C02',
+
     'RM00SBR',
+    'RM00SBD'
+    'RM0SB02',
+    
     'RMMKG01',
+    'RM0GNCP',
+    
+    'RM000SF',
+    'RM00SF2',
+    'RM00MDO',
+    'RM000MR',
+    
+    'RMMKG01',
+    'RMMKG02',
+    
     'RM0GNCP',
     'RM00GNR',
     'RM00GNR02',
+    'RM00GD',
+    
     'RM00RBR',
     'RM00RBD',
+    'RM0RB02',
+
     'RM00CSR',
+    'RMCSR02',
+    
+    'RM00VNP',
+    'RM0CCNT',
+    
     'RM0SESM',
+    'RMSESMT',
     
     #t2
     'RM00P02',
+    'RM00P03',
+    'RM0EV02',
     'RM0EL02',
+    'RMSOLIVE',
+
     
     #t3
     'RM00P01',
     'RM0EL01',
-    'RM0EV01'
+    'RM0EV01',
+    'RM0HOSF',
     
+
+        
     
 ]
 
