@@ -218,9 +218,17 @@ ITEM_CODE_DISPLAY_ORDER = [
     'RM00RBD',
     'RM00CSR',
     'RM0SESM',
+    
+    #t2
+    'RM00P02',
+    'RM0EL02',
+    
+    #t3
     'RM00P01',
     'RM0EL01',
     'RM0EV01'
+    
+    
 ]
 
 class StockDashboard(APIView):
