@@ -211,7 +211,7 @@ ITEM_CODE_DISPLAY_ORDER = [
     'RM00C02',
 
     'RM00SBR',
-    'RM00SBD'
+    'RM00SBD',
     'RM0SB02',
     
     'RMMKG01',
@@ -222,10 +222,8 @@ ITEM_CODE_DISPLAY_ORDER = [
     'RM00MDO',
     'RM000MR',
     
-    'RMMKG01',
     'RMMKG02',
     
-    'RM0GNCP',
     'RM00GNR',
     'RM00GNR02',
     'RM00GD',
@@ -280,14 +278,6 @@ class StockDashboard(APIView):
                 qs = qs.filter(status=status_filter)
             return qs
 
-        tank_qs = apply_common_filters(
-            StockStatus.objects.filter(deleted=False, status='IN_TANK')
-        ).values('item_code_id').annotate(qty=Sum('quantity'))
-
-        in_factory_map = {
-            row['item_code_id']: float(row['qty'] or 0) for row in tank_qs
-        }
-
         # ────────────────────────────────────────────────────────────
         outside_qs = apply_common_filters(
             StockStatus.objects.filter(deleted=False, status='OUT_SIDE_FACTORY')
@@ -301,7 +291,7 @@ class StockDashboard(APIView):
         # 3.  ALL OTHER STATUSES  (with vendor sub-columns)
         # ────────────────────────────────────────────────────────────
         stock_qs = apply_common_filters(
-            StockStatus.objects.filter(deleted=False).exclude(status='OUT_SIDE_FACTORY')
+            StockStatus.objects.filter(deleted=False).exclude(status__in=['OUT_SIDE_FACTORY', 'IN_TANK'])
         ).values('item_code_id' ,'status', vendor_name=F('vendor_code__card_name') , item_name=F('item_code__tank_item_name')).annotate(qty=Sum('quantity'))
 
         # status_vendors : {status: {vendor_name, ...}}
@@ -324,8 +314,7 @@ class StockDashboard(APIView):
 
             all_items.add(item)
 
-        # Merge item codes from all three sources
-        all_items.update(in_factory_map.keys())
+        # Merge item codes from both sources
         all_items.update(outside_factory_map.keys())
 
         # ────────────────────────────────────────────────────────────
@@ -344,21 +333,19 @@ class StockDashboard(APIView):
         # 5.  ASSEMBLE ITEM ROWS + COLUMN TOTALS
         # ────────────────────────────────────────────────────────────
         items = []
-        total_in_factory = 0
         total_outside_factory = 0
         status_vendor_totals = defaultdict(float)
         status_totals = defaultdict(float)
 
 
-        ordered_items = [ic for ic in ITEM_CODE_DISPLAY_ORDER if ic in all_items]
+        ordered_items = [ic for ic in dict.fromkeys(ITEM_CODE_DISPLAY_ORDER) if ic in all_items]
         ordered_items += sorted(all_items - set(ITEM_CODE_DISPLAY_ORDER))
 
 
 
         for item_code in ordered_items:
-            in_fac  = in_factory_map.get(item_code, 0)
             out_fac = outside_factory_map.get(item_code, 0)
-            row_total = in_fac + out_fac
+            row_total = out_fac
 
             # Build status__vendor cells
             status_data = {}
@@ -374,13 +361,11 @@ class StockDashboard(APIView):
             items.append({
                 'item_code': item_code,
                 'item_name': item_names.get(item_code, ''),  # ← add this
-                'in_factory': in_fac,
                 'outside_factory': out_fac,
                 'status_data': status_data,
                 'total': row_total,
             })
 
-            total_in_factory += in_fac
             total_outside_factory += out_fac
 
         grand_total = sum(item['total'] for item in items)
@@ -391,7 +376,6 @@ class StockDashboard(APIView):
         # ────────────────────────────────────────────────────────────
         return Response({
             'summary': {
-                'in_factory_total': total_in_factory,
                 'outside_factory_total': total_outside_factory,
                 'active_items': active_items,
             },
@@ -399,7 +383,6 @@ class StockDashboard(APIView):
             'items': items,
             
             'totals': {
-                'in_factory': total_in_factory,
                 'outside_factory': total_outside_factory,
                 'status_vendor_totals': dict(status_vendor_totals),
                 'status_totals' : dict(status_totals),
