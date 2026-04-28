@@ -29,9 +29,8 @@ SECRET_KEY = 'django-insecure-cu9=z4l6eo8o)+!-&3zhfp#0pn#omj&6bic_6^=543insspg+9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['https://exim.jivo.in', 'https://eximbe.jivo.in']
 # Add your local IP and 'localhost'
-ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -176,5 +175,5 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = '/static/'
+STATIC_ROOT = '/home/superadmin/exim/EXIM-backend/config/staticfiles'
