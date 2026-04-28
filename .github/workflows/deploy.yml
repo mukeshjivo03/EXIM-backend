@@ -2,7 +2,7 @@ name: Deploy django app using sh file
 
 on:
   push:
-    branches: [main]
+    branches: [production]
 
 jobs:
   deploy:
@@ -21,4 +21,3 @@ jobs:
           script: |
             cd /home/superadmin/exim/
             bash exim_deploy.sh
-            
