@@ -15,6 +15,7 @@ import os
 from datetime import timedelta  
 from dotenv import load_dotenv
 load_dotenv()
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,16 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-cu9=z4l6eo8o)+!-&3zhfp#0pn#omj&6bic_6^=543insspg+9'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
-# Add your local IP and 'localhost'
-ALLOWED_HOSTS = ['*']
-
+# Core Settings
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 
 # Application definition
 
@@ -118,6 +113,26 @@ SAP_DB_NAME = os.getenv('SAP_DB_NAME')
 SAP_DB_USER = os.getenv('SAP_DB_USER')
 SAP_DB_PASSWORD = os.getenv('SAP_DB_PASSWORD')
 
+# CORS settings
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv())
+CORS_ALLOW_CREDENTIALS = True
+
+# # SAP HANA and Service Layer settings
+# HANA_HOST = config('HANA_HOST')
+# HANA_PORT = config('HANA_PORT', cast=int)
+# HANA_USER = config('HANA_USER')
+# HANA_PASSWORD = config('HANA_PASSWORD')
+
+# SL_URL = config('SL_URL')
+# SL_USER = config('SL_USER')
+# SL_PASSWORD = config('SL_PASSWORD')
+
+# COMPANY_DB = {
+#     "JIVO_OIL": config('COMPANY_DB_JIVO_OIL'),
+#     "JIVO_MART": config('COMPANY_DB_JIVO_MART'),
+#     "JIVO_BEVERAGES": config('COMPANY_DB_JIVO_BEVERAGES'),
+# }
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -176,5 +191,5 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = '/static/'
+STATIC_ROOT = '/home/superadmin/exim/EXIM-backend/config/staticfiles'
