@@ -72,8 +72,9 @@ class DailyPriceTrend(APIView):
     def get_permissions(self):
         return [IsAuthenticated(), HasAppPermission('daily_price.view_daily_price_graph')]
     def get(self,request):
-        end_date = date.today()
-        start_date = end_date - timedelta(days=7)
+        
+        end_date = request.query_params.get('end_date')
+        start_date = request.query_params.get('start_date')
 
         prices = DailyPrice.objects.filter(
             date__range = [start_date , end_date]

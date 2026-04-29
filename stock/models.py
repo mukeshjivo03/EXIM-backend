@@ -66,7 +66,11 @@ class StockStatus(models.Model):
     arrival_date = models.DateField(null=True, blank=True)
     remainder_action = models.CharField(max_length=20,choices=REMAINDER_ACTION_CHOICES,null=True, blank=True)
 
-
+    
+    
+    bility_number = models.CharField(max_length=100 , null = True, blank=True)
+    grpo_number = models.CharField(max_length=100 , null = True, blank=True)
+    # Only in CDRO and Canola 
     # BOE Fields 
     # boe_number = models.CharField(max_length=100 , null = True, blank=True)
     # boe_date = models.DateField(null=True, blank=True)
@@ -74,6 +78,14 @@ class StockStatus(models.Model):
     # gross_weight = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
     # invoice_number = models.CharField(max_length=100, null=True, blank=True)
     # usd_price = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True)
+    # invoice date 
+    
+    # contract start
+    # contract end date
+    
+    # period
+    #no of days of left 
+    
     
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -169,6 +181,8 @@ class StockStatus(models.Model):
                 transporter=self.transporter,
                 load_qty=load_qty_mts,
                 unload_qty=unload_qty_mts,
+                bility_number=self.bility_number,
+                grpo_number=self.grpo_number,
                 created_by=self.created_by,
             )
             
@@ -231,7 +245,9 @@ class DebitEntry(models.Model):
     vehicle_number = models.CharField(max_length=50, null=True, blank=True)
     transporter = models.CharField(max_length=255, null=True, blank=True)  # denormalized fallback
     
-    
+    bility_number = models.CharField(max_length=100 , null = True, blank=True)
+    grpo_number = models.CharField(max_length=100 , null = True, blank=True)
+                                      
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
     
@@ -241,8 +257,8 @@ class DebitEntry(models.Model):
 
     def save(self, *args, **kwargs):
         if self.unload_qty and self.load_qty:
-            self.allowed_shortage_qty = (Decimal(self.load_qty) * Decimal('0.0025'))  # ← fix field name
-            self.shortage_qty = self.load_qty - self.unload_qty                        # ← fix field name
+            self.allowed_shortage_qty = (Decimal(self.load_qty) * Decimal('0.0025'))  
+            self.shortage_qty = self.load_qty - self.unload_qty                        
 
             if self.shortage_qty > self.allowed_shortage_qty:
                 self.deducted_shortage_qty = self.shortage_qty - self.allowed_shortage_qty

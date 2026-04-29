@@ -112,7 +112,7 @@ def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_n
 
 
 def move(source, new_quantity, action, new_status, created_by):
-    difference = source.quantity - new_quantity
+    difference = Decimal(source.quantity) - Decimal(new_quantity)
     print(source)
 
     if difference != 0:
@@ -128,6 +128,11 @@ def move(source, new_quantity, action, new_status, created_by):
         if action == 'TOLERATE':
             source.status = new_status
             source.quantity = new_quantity
+            
+            print(source)
+            
+            if new_status == 'IN_TANK' and not source.bility_number:
+                raise ValueError("Bility number is required when status is IN_TANK.")
 
         elif action == 'DEBIT':
             DebitEntry.objects.create(

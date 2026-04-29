@@ -481,6 +481,8 @@ class VehicleReport(APIView):
             .values(
                 'vehicle_number',
                 'item_code',
+                'vendor_code',
+                vendor_name=F('vendor_code__card_name'),
                 item_name=F('item_code__tank_item_name'),
             )
             .annotate(
@@ -510,6 +512,8 @@ class VehicleReport(APIView):
             grouped[v_num]['items'].append({
                 'item_code': row['item_code'],
                 'item_name': row['item_name'],
+                'vendor_code': row['vendor_code'],
+                'vendor_name': row['vendor_name'],
                 'total_quantity_in_litre': row['total_quantity_in_litre'],
                 'total_quantity_in_mts': row['total_quantity_in_mts'],
                 'eta': row['eta'],
