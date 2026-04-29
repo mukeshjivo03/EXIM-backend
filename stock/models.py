@@ -181,6 +181,8 @@ class StockStatus(models.Model):
                 transporter=self.transporter,
                 load_qty=load_qty_mts,
                 unload_qty=unload_qty_mts,
+                bility_number=self.bility_number,
+                grpo_number=self.grpo_number,
                 created_by=self.created_by,
             )
             
@@ -243,7 +245,9 @@ class DebitEntry(models.Model):
     vehicle_number = models.CharField(max_length=50, null=True, blank=True)
     transporter = models.CharField(max_length=255, null=True, blank=True)  # denormalized fallback
     
-    
+    bility_number = models.CharField(max_length=100 , null = True, blank=True)
+    grpo_number = models.CharField(max_length=100 , null = True, blank=True)
+                                      
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
     
