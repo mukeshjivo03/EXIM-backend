@@ -23,6 +23,11 @@ class StockStatusSerializer(serializers.ModelSerializer):
         slug_field='card_code',
         queryset=Party.objects.all()
     )
+    
+    vendor_name = serializers.CharField(
+        source='vendor_code.card_name',
+        read_only=True
+    )
 
     eta = serializers.DateField(required=False, allow_null=True)
 
