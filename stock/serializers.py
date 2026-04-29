@@ -12,6 +12,12 @@ class StockStatusSerializer(serializers.ModelSerializer):
         queryset=TankItem.objects.all()
         
     )
+    
+    item_name = serializers.CharField(
+        source='item_code.tank_item_name', 
+        read_only=True
+    )
+        
 
     vendor_code = serializers.SlugRelatedField(
         slug_field='card_code',
