@@ -24,11 +24,28 @@ class StockStatusSerializer(serializers.ModelSerializer):
         model = StockStatus
         fields = '__all__'
         read_only_fields = ['create_at' , 'total']
+    
+    def validate(self, data):
+        status = data.get('status') or (self.instance.status if self.instance else None)
+        bility_number = data.get('bility_number') or (self.instance.bility_number if self.instance else None)
+
+        if status == 'IN_TANK' and not bility_number:
+            raise serializers.ValidationError("Bility number is required when status is IN_TANK.")
+        else:
+            return data
+
+
+
+
+
 
 class StockStatusUpdateLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockStatusUpdateLog
         fields = '__all__'
+
+
+
 
 class StockStatusPatchSerializer(serializers.ModelSerializer):
     item_code = serializers.SlugRelatedField(
@@ -51,12 +68,22 @@ class StockStatusPatchSerializer(serializers.ModelSerializer):
         model = StockStatus
         fields = '__all__'
         read_only_fields = ['created_at', 'total']
+        
+    def validate(self, data):
+        status = data.get('status') or (self.instance.status if self.instance else None)
+        bility_number = data.get('bility_number') or (self.instance.bility_number if self.instance else None)
 
+        if status == 'IN_TANK' and not bility_number:
+            raise serializers.ValidationError("Bility number is required when status is IN_TANK.")
+        else:
+            return data
+            
 
 class StockStatusFieldLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = StockStatusFieldLog
         fields = ['field_name', 'old_value', 'new_value']
+
 
 class StockStatusChangeSessionSerializer(serializers.ModelSerializer):
     field_logs = StockStatusFieldLogSerializer(many=True, read_only=True)
