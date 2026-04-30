@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import StockStatusListCreateView , StockChangeSessionListView , StockStatusUpdateRetrieveDeleteView , StockUpdateLogListView , StockStatusInsights , StockStatusSummary, StockDashboard, OutsideFactoryStock , GetUniqueRM , GetStockEntrybyRM , ArriveBatch , Dispatch , MoveView , VehicleReport , OpeningStock , DebitEntryListView 
+from .views import StockStatusListCreateView, DebitEntryInsights , StockChangeSessionListView , StockStatusUpdateRetrieveDeleteView , StockUpdateLogListView , StockStatusInsights , StockStatusSummary, StockDashboard, OutsideFactoryStock , GetUniqueRM , GetStockEntrybyRM , ArriveBatch , Dispatch , MoveView , VehicleReport , OpeningStock , DebitEntryListView 
 
 
 
@@ -15,7 +15,7 @@ urlpatterns = [
     
     
     path('debit-entries/', DebitEntryListView.as_view()),
-    # path('debit-insights/', DebitEntryInsights.as_view()),
+    path('debit-insights/', DebitEntryInsights.as_view()),
     path('opening-stock/' , OpeningStock.as_view(   )),
     path('stock-insights/' , StockStatusInsights.as_view()),
     path('stock-summary/' , StockStatusSummary.as_view()),

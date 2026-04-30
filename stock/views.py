@@ -585,15 +585,15 @@ class DebitEntryListView(generics.ListAPIView):
     serializer_class = DebitEntrySerializer
 
 
-# class DebitEntryInsights(APIView):
-#     def get_permissions(self):
-#         return [IsAuthenticated() , HasAppPermission('stock.view_debitentry')]
+class DebitEntryInsights(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_debitentry')]
     
-#     def get(self, request):
-#         insights = DebitEntry.objects.values('type').annotate(
-#             total_qty=Sum('quantity'),
-#             total_records = Count('id'),
-#             total_value=Sum(ExpressionWrapper(F('quantity') * F('rate'), output_field=DecimalField(max_digits=20, decimal_places=2)))
-#         )
+    def get(self, request):
+        insights = DebitEntry.objects.aggregate(
+            total_deduction_shortager=Sum('deducted_shortage_qty'),
+            total_records = Count('id'),
+            total_deduction_amount=Sum('deduction_amount')
+        )
 
-#         return Response(insights)
+        return Response(insights)
