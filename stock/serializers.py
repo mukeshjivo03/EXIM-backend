@@ -39,11 +39,18 @@ class StockStatusSerializer(serializers.ModelSerializer):
     def validate(self, data):
         status = data.get('status') or (self.instance.status if self.instance else None)
         bility_number = data.get('bility_number') or (self.instance.bility_number if self.instance else None)
+        
+        contract_start = data.get('contract_start') or (self.instance.contract_start if self.instance else None)
+        contract_end = data.get('contract_end') or (self.instance.contract_end if self.instance else None)
 
         if status == 'IN_TANK' and not bility_number:
             raise serializers.ValidationError("Bility number is required when status is IN_TANK.")
+        if status == 'IN_CONTRACT' and not contract_start and not contract_end:
+            raise serializers.ValidationError("Contract Start Date and Contract end date requires when status IN CONTRACT ")
         else:
             return data
+        
+
 
 
 
@@ -83,12 +90,16 @@ class StockStatusPatchSerializer(serializers.ModelSerializer):
     def validate(self, data):
         status = data.get('status') or (self.instance.status if self.instance else None)
         bility_number = data.get('bility_number') or (self.instance.bility_number if self.instance else None)
+        
+        contract_start = data.get('contract_start') or (self.instance.contract_start if self.instance else None)
+        contract_end = data.get('contract_end') or (self.instance.contract_end if self.instance else None)
 
         if status == 'IN_TANK' and not bility_number:
             raise serializers.ValidationError("Bility number is required when status is IN_TANK.")
+        if status == 'IN_CONTRACT' and not contract_start and not contract_end:
+            raise serializers.ValidationError("Contract Start Date and Contract end date requires when status IN CONTRACT ")
         else:
             return data
-            
 
 class StockStatusFieldLogSerializer(serializers.ModelSerializer):
     class Meta:

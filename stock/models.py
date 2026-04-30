@@ -70,6 +70,9 @@ class StockStatus(models.Model):
     
     bility_number = models.CharField(max_length=100 , null = True, blank=True)
     grpo_number = models.CharField(max_length=100 , null = True, blank=True)
+
+
+
     # Only in CDRO and Canola 
     # BOE Fields 
     # boe_number = models.CharField(max_length=100 , null = True, blank=True)
@@ -80,11 +83,13 @@ class StockStatus(models.Model):
     # usd_price = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True)
     # invoice date 
     
+
+    contract_start = models.DateField( blank=True , null=True)
+    contract_end =   models.DateField( blank=True , null=True)
     # contract start
     # contract end date
-    
     # period
-    #no of days of left 
+    # no of days of left 
     
     
     
