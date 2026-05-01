@@ -685,3 +685,76 @@ FROM OPENQUERY(HANADB112, '
             "UNION ALL "
             f"SELECT TOP (5) * FROM (SELECT * FROM OPENQUERY(HANADB112, '{inner_query_asc}')) AS Result"
         )
+    
+    
+    @staticmethod    
+    def open_aps():
+        return """ 
+          SELECT * FROM OPENQUERY (
+            HANADB112,
+            'SELECT
+                "DocEntry"       AS "DB Primary Key",
+                "DocNum"         AS "Invoice Number",
+                "DocStatus"      AS "Status (O=Open C=Closed)",
+                "DocDate"        AS "Invoice Date",
+                "DocDueDate"     AS "Payment Due Date",
+                "TaxDate"        AS "Tax Posting Date",
+                "CardCode"       AS "Vendor Code",
+                "CardName"       AS "Vendor Name",
+                "LicTradNum"     AS "Vendor GST Number",
+                "NumAtCard"      AS "Vendor Invoice Reference No",
+                "DocTotal"       AS "Total Invoice Amount (INR)",
+                "DocTotalFC"     AS "Total Invoice Amount (Foreign Currency)",
+                "VatSum"         AS "GST / VAT Amount",
+                "DiscSum"        AS "Discount Amount",
+                "PaidToDate"     AS "Amount Paid So Far",
+                "Ref1"           AS "Reference 1",
+                "Comments"       AS "Remarks / Notes",
+                "JrnlMemo"       AS "Journal Entry Memo",
+                "TransId"        AS "Journal Entry Number",
+                "U_BilltyNumber" AS "Bilty / LR Number",
+                "U_BiltyDate"    AS "Bilty / LR Date",
+                "U_TransporterName" AS "Transporter Name",
+                "U_VehicleNoM"   AS "Vehicle Number",
+                "U_Recv_Date"    AS "Goods Received Date",
+                "U_GRNdocentry"  AS "Linked GRN Doc Entry",
+                "U_GRNCardCode"  AS "GRN Vendor Code",
+                "U_GRNWhsCode"   AS "GRN Warehouse Code"
+            FROM "JIVO_OIL_HANADB"."OPCH"
+            WHERE "DocStatus" = ''O''
+            AND "CardCode" IN (
+                ''CUSTA000908'', ''CUSTA000887'', ''CUSTA000907'', ''VENDA000005'', ''VENDA000038'',
+                ''VENDA000102'', ''VENDA000149'', ''VENDA000316'', ''VENDA000509'', ''VENDA000724'',
+                ''VENDA001035'', ''VENDA001048'', ''VENDA001203'', ''CUSTA000341'', ''VENDA000103'',
+                ''VENDA000178'', ''VENDA000205'', ''VENDA000224'', ''VENDA000083'', ''VENDA000245'',
+                ''VENDA000255'', ''VENDA000265'', ''VENDA000342'', ''VENDA000496'', ''VENDA000693'',
+                ''VENDA000698'', ''VENDA000714'', ''VENDA001442'', ''VENDA001450'', ''VENDA000784'',
+                ''VENDA000804'', ''VENDA000916'', ''VENDA000950'', ''VENDA000966'', ''VENDA000967'',
+                ''VENDA001028'', ''VENDA001030'', ''VENDA001175'', ''VENDA001424'', ''VENDA001240'',
+                ''VENDA001276'', ''VENDA001287'', ''VENDA001288'', ''VENDA001403'', ''VENDA001390'',
+                ''VENDA001423'', ''VENDA001559'', ''VENDA000671'', ''VENDA000616'', ''VENDA001304'',
+                ''VENDA001315'', ''VENDA001339'', ''VENDA001347'', ''VENDA001358'', ''VENDA001375'',
+                ''VENDA000498'', ''VENDA001494'', ''VENDA001386'', ''VENDA001272'', ''VENDA000596'',
+                ''VENDA001028'', ''VENDA001303'', ''VENDA000614'', ''VENDA000279'', ''VENDA000599'',
+                ''VENDA000953'', ''VENDA001132'', ''VENDA001565'', ''VENDA000212'', ''VENDA000043'',
+                ''VENDA000580'', ''VENDA000493'', ''VENDA001421'', ''VENDA001353'', ''VENDA000220'',
+                ''VENDA001543'', ''VENDA001331'', ''VENDA000966'', ''VENDA001022'', ''VENDA000994'',
+                ''VENDA001472'', ''VENDA001329'', ''VENDA001291'', ''VENDA001138'', ''VENDA001295'',
+                ''VENDA000593'', ''VENDA000731'', ''VENDA000947'', ''VENDA001287'', ''VENDA001278'',
+                ''VENDA001490'', ''VENDA000256'', ''VENDA000556'', ''VENDA001107'', ''VENDA001239'',
+                ''VENDA000482'', ''VENDA000967'', ''VENDA001373'', ''VENDA001174'', ''VENDA000104'',
+                ''VENDA001555'', ''VENDA001293'', ''VENDA000750'', ''VENDA000325'', ''VENDA000931'',
+                ''VENDA000399'', ''VENDA001521'', ''VENDA000503'', ''VENDA000327'', ''VENDA000775'',
+                ''VENDA000020'', ''VENDA001334'', ''VENDA001335'', ''VENDA000208'', ''VENDA000676'',
+                ''VENDA001170'', ''VENDA000150'', ''VENDA001556'', ''VENDA000703'', ''VENDA001030'',
+                ''VENDA000387'', ''VENDA000629'', ''VENDA000940'', ''VENDA001541'', ''VENDA001052'',
+                ''VENDA001207'', ''VENDA001242'', ''VENDA000382'', ''VENDA001531'', ''CUSTA001092'',
+                ''VENDA000930'', ''VENDA000252'', ''VENDA000633'', ''VENDA000052'', ''VENDA001326'',
+                ''VENDA000597'', ''VENDA000388'', ''VENDA001240'', ''VENDA000558'', ''VENDA000161'',
+                ''VENDA001199'', ''VENDA000006'', ''VENDA001233'', ''VENDA001296'', ''VENDA000934'',
+                ''VENDA000202'', ''VENDA001263'', ''VENDA000527'', ''VENDA000134''
+            )
+            ORDER BY "DocDate" DESC
+            '
+            )
+        """
