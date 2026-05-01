@@ -511,4 +511,14 @@ class InventoryService:
         return result   
 
     
-    
+class APService:
+    def __init__(self):
+        self.connection = SAPConnection()
+        
+    def getAllOpenAP(self):
+        with self.connection as conn:
+            query = Queries().open_aps()
+            result = conn.execute_query(query)
+            
+            
+        return result  

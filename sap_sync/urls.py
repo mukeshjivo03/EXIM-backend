@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights
+from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP
 
 
 
@@ -36,6 +36,8 @@ urlpatterns = [
     path('sap-sync/balance-sheet-insights/' , syncBalanceSheetInsights.as_view()),
     path('sap-sync/inventory/' , syncInventory.as_view()),
     path('sap-sync/finished-inventory/' , syncFinishedInventory.as_view()),
-    path('sap-sync/warehouses/' , syncUniqueWarehouse.as_view())
+    path('sap-sync/warehouses/' , syncUniqueWarehouse.as_view()),
+    
+    path('sap-sync/open-ap/' , getOpenAP.as_view())
 
 ]

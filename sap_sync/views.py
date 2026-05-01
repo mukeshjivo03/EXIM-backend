@@ -6,7 +6,7 @@ from django.db.models import Sum, Count, Avg , Q
 from django.db.models.functions import Round, Coalesce
 from decimal import Decimal
 
-from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService
+from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService , APService
 from .services.connections import Queries
 
 from .serializers import RMProductSerializer, FGProductSerializer , PartySerializer , SyncLogSerializer, DomesticContractSerializer
@@ -389,3 +389,9 @@ class DirectorDashboard(APIView):
             "on_the_sea": {"liter": totals["on_the_sea_liter"], "mts": totals["on_the_sea_mts"]},
             "in_contract": {"liter": totals["in_contract_liter"], "mts": totals["in_contract_mts"]}
         })
+        
+        
+class getOpenAP(APIView):
+    def get(self , request):
+        result = APService().getAllOpenAP()
+        return Response({"Open APs" : result})
