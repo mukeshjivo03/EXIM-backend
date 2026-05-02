@@ -758,3 +758,49 @@ FROM OPENQUERY(HANADB112, '
             '
             )
         """
+        
+    @staticmethod
+    def get_internal_reconcilation(vendorCode):
+        return f"""
+        
+    SELECT * FROM OPENQUERY(
+        HANADB112,
+        'SELECT
+            -- OCRD."CardCode"                                                     AS "Vendor Code",
+            -- OCRD."CardName"                                                     AS "Vendor Name",
+            -- CAST(OCRD."Balance" AS DECIMAL(18,2))                               AS "Vendor Outstanding Balance",
+            JDT."BaseRef"                                                       AS "Doc No",
+            OJDT."RefDate"                                                      AS "Posting Date",
+            OJDT."DueDate"                                                      AS "Due Date",
+            CASE OJDT."TransType"
+                WHEN 18  THEN ''AP Invoice''
+                WHEN 19  THEN ''AP Credit Memo''
+                WHEN 46  THEN ''Outgoing Payment''
+                WHEN 30  THEN ''Journal Entry''
+                ELSE CAST(OJDT."TransType" AS NVARCHAR)
+            END                                                                 AS "Doc Type",
+            CAST(JDT."Debit"  AS DECIMAL(18,2))                                AS "Debit",
+            CAST(JDT."Credit" AS DECIMAL(18,2))                                AS "Credit",
+            CAST(JDT."Debit" - JDT."Credit" AS DECIMAL(18,2))                 AS "OutstandingAmount",
+            DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE)                         AS "Days Overdue",
+            CASE
+                WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 0   THEN ''Not Due''
+                WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 30  THEN ''0-30 Days''
+                WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 60  THEN ''31-60 Days''
+                WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 90  THEN ''61-90 Days''
+                ELSE ''90+ Days''
+            END                                                                 AS "Aging Bucket"
+        FROM "JIVO_OIL_HANADB"."OCRD" OCRD
+        INNER JOIN "JIVO_OIL_HANADB"."JDT1" JDT
+            ON OCRD."CardCode" = JDT."ShortName"
+        INNER JOIN "JIVO_OIL_HANADB"."OJDT" OJDT
+            ON JDT."TransId" = OJDT."TransId"
+        WHERE
+            OCRD."CardCode"     = ''{vendorCode}''
+            AND JDT."IntrnMatch" = 0
+            AND (JDT."Debit" - JDT."Credit") != 0
+            AND OJDT."TransType" IN (18,46, 30)
+        ORDER BY OJDT."DueDate" ASC
+        '
+        )
+        """
