@@ -397,15 +397,15 @@ class getOpenAP(APIView):
         return Response({"Open APs" : result})
     
     
-class getInternalReconciliation(APIView):
-    def get(self , request):
+# class getInternalReconciliation(APIView):
+#     def get(self , request):
         
-        vendorCode = request.query_params.get('vendorCode')
-        if not vendorCode:
-            return Response({"error": "vendorCode query parameter is required."}, status=400)
+#         vendorCode = request.query_params.get('vendorCode')
+#         if not vendorCode:
+#             return Response({"error": "vendorCode query parameter is required."}, status=400)
         
-        result = BalanceSheetService().syncInternalReconciliation(vendorCode)
-        return Response({"Internal Reconciliation" : result})
+#         result = BalanceSheetService().syncInternalReconciliation(vendorCode)
+#         return Response({"Internal Reconciliation" : result})
     
     
 class getCustomerBalnceSheet(APIView):
@@ -414,6 +414,35 @@ class getCustomerBalnceSheet(APIView):
     
     def get(self , request):
         result = BalanceSheetService().syncCustaBalanceSheet()
-        
+        py 
         return Response({"data" : result})
+    
+    
+class getCustomerLedger(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_balance_sheet')]
+    
+    def get(self , request):
+        cardCode = request.query_params.get('cardCode')
+        endDate = request.query_params.get('endDate')
+        
+        if not cardCode:
+            return Response({"error": "cardCode query parameter is required."}, status=400)
+        
+        result = BalanceSheetService().syncCustomerLedger(cardCode, endDate)
+        return Response({"customer_ledger" : result})
+    
+class getVendorLedger(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
+    
+    def get(self , request):
+        cardCode = request.query_params.get('cardCode')
+        endDate = request.query_params.get('endDate')
+        
+        if not cardCode:
+            return Response({"error": "cardCode query parameter is required."}, status=400)
+        
+        result = BalanceSheetService().syncVendorLedger(cardCode, endDate)
+        return Response({"vendor_ledger" : result})
         

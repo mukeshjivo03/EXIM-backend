@@ -457,16 +457,31 @@ class BalanceSheetService:
             
         return result
     
-    def syncInternalReconciliation(self , vendorCode):
+    # def syncInternalReconciliation(self , vendorCode):
+    #     with self.connection as conn:
+    #         query = Queries().get_internal_reconcilation(vendorCode)
+    #         result = conn.execute_query(query)
+            
+    #     return result
+    
+    def syncCustaBalanceSheet(self):
         with self.connection as conn:
-            query = Queries().get_internal_reconcilation(vendorCode)
+            query = Queries().get_customer_balance_sheet()
             result = conn.execute_query(query)
             
         return result
     
-    def syncCustaBalanceSheet(self):
+    
+    def syncCustomerLedger(self , cardCode , endDate=None):
         with self.connection as conn:
-            query = Queries().get_custa_balance_sheet()
+            query = Queries().get_customer_ledger(cardCode , endDate)
+            result = conn.execute_query(query)
+            
+        return result
+    
+    def syncVendorLedger(self , cardCode , endDate=None):
+        with self.connection as conn:
+            query = Queries().get_vendor_ledger(cardCode , endDate)
             result = conn.execute_query(query)
             
         return result

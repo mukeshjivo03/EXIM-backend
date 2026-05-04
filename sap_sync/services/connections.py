@@ -1,3 +1,5 @@
+from datetime import date
+
 import pymssql
 from django.conf import settings
 import logging
@@ -759,55 +761,55 @@ FROM OPENQUERY(HANADB112, '
             )
         """
         
-    @staticmethod
-    def get_internal_reconcilation(vendorCode):
-        return f"""
+    # @staticmethod
+    # def get_internal_reconcilation(vendorCode):
+    #     return f"""
         
-    SELECT * FROM OPENQUERY(
-        HANADB112,
-        'SELECT
-            -- OCRD."CardCode"                                                     AS "Vendor Code",
-            -- OCRD."CardName"                                                     AS "Vendor Name",
-            -- CAST(OCRD."Balance" AS DECIMAL(18,2))                               AS "Vendor Outstanding Balance",
-            JDT."BaseRef"                                                       AS "Doc No",
-            OJDT."RefDate"                                                      AS "Posting Date",
-            OJDT."DueDate"                                                      AS "Due Date",
-            CASE OJDT."TransType"
-                WHEN 18  THEN ''AP Invoice''
-                WHEN 19  THEN ''AP Credit Memo''
-                WHEN 46  THEN ''Outgoing Payment''
-                WHEN 30  THEN ''Journal Entry''
-                ELSE CAST(OJDT."TransType" AS NVARCHAR)
-            END                                                                 AS "Doc Type",
-            CAST(JDT."Debit"  AS DECIMAL(18,2))                                AS "Debit",
-            CAST(JDT."Credit" AS DECIMAL(18,2))                                AS "Credit",
-            CAST(JDT."Debit" - JDT."Credit" AS DECIMAL(18,2))                 AS "OutstandingAmount",
-            DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE)                         AS "Days Overdue",
-            CASE
-                WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 0   THEN ''Not Due''
-                WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 30  THEN ''0-30 Days''
-                WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 60  THEN ''31-60 Days''
-                WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 90  THEN ''61-90 Days''
-                ELSE ''90+ Days''
-            END                                                                 AS "Aging Bucket"
-        FROM "JIVO_OIL_HANADB"."OCRD" OCRD
-        INNER JOIN "JIVO_OIL_HANADB"."JDT1" JDT
-            ON OCRD."CardCode" = JDT."ShortName"
-        INNER JOIN "JIVO_OIL_HANADB"."OJDT" OJDT
-            ON JDT."TransId" = OJDT."TransId"
-        WHERE
-            OCRD."CardCode"     = ''{vendorCode}''
-            AND JDT."IntrnMatch" = 0
-            AND (JDT."Debit" - JDT."Credit") != 0
-            AND OJDT."TransType" IN (18,46, 30)
-        ORDER BY OJDT."DueDate" ASC
-        '
-        )
-        """
+    # SELECT * FROM OPENQUERY(
+    #     HANADB112,
+    #     'SELECT
+    #         -- OCRD."CardCode"                                                     AS "Vendor Code",
+    #         -- OCRD."CardName"                                                     AS "Vendor Name",
+    #         -- CAST(OCRD."Balance" AS DECIMAL(18,2))                               AS "Vendor Outstanding Balance",
+    #         JDT."BaseRef"                                                       AS "Doc No",
+    #         OJDT."RefDate"                                                      AS "Posting Date",
+    #         OJDT."DueDate"                                                      AS "Due Date",
+    #         CASE OJDT."TransType"
+    #             WHEN 18  THEN ''AP Invoice''
+    #             WHEN 19  THEN ''AP Credit Memo''
+    #             WHEN 46  THEN ''Outgoing Payment''
+    #             WHEN 30  THEN ''Journal Entry''
+    #             ELSE CAST(OJDT."TransType" AS NVARCHAR)
+    #         END                                                                 AS "Doc Type",
+    #         CAST(JDT."Debit"  AS DECIMAL(18,2))                                AS "Debit",
+    #         CAST(JDT."Credit" AS DECIMAL(18,2))                                AS "Credit",
+    #         CAST(JDT."Debit" - JDT."Credit" AS DECIMAL(18,2))                 AS "OutstandingAmount",
+    #         DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE)                         AS "Days Overdue",
+    #         CASE
+    #             WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 0   THEN ''Not Due''
+    #             WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 30  THEN ''0-30 Days''
+    #             WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 60  THEN ''31-60 Days''
+    #             WHEN DAYS_BETWEEN(OJDT."DueDate", CURRENT_DATE) <= 90  THEN ''61-90 Days''
+    #             ELSE ''90+ Days''
+    #         END                                                                 AS "Aging Bucket"
+    #     FROM "JIVO_OIL_HANADB"."OCRD" OCRD
+    #     INNER JOIN "JIVO_OIL_HANADB"."JDT1" JDT
+    #         ON OCRD."CardCode" = JDT."ShortName"
+    #     INNER JOIN "JIVO_OIL_HANADB"."OJDT" OJDT
+    #         ON JDT."TransId" = OJDT."TransId"
+    #     WHERE
+    #         OCRD."CardCode"     = ''{vendorCode}''
+    #         AND JDT."IntrnMatch" = 0
+    #         AND (JDT."Debit" - JDT."Credit") != 0
+    #         AND OJDT."TransType" IN (18,46, 30)
+    #     ORDER BY OJDT."DueDate" ASC
+    #     '
+    #     )
+    #     """
     
     
     @staticmethod
-    def get_custa_balance_sheet():
+    def get_customer_balance_sheet():
        return """
         SELECT * FROM 
             (SELECT * FROM OPENQUERY(HANADB112, '
@@ -845,4 +847,69 @@ FROM OPENQUERY(HANADB112, '
                 ORDER BY "Outstanding Amount" 
             ')) AS Result WHERE "Outstanding Amount" <> 0
         """
-   
+        
+        
+    @staticmethod
+    def get_customer_ledger(cardCode , endDate=None):
+        if endDate is None:
+            endDate = date.today().strftime('%Y-%m-%d')
+
+        return f"""
+        SELECT * FROM 
+        (SELECT * FROM OPENQUERY(HANADB112, '
+            SELECT
+                T0."RefDate"                                       AS "PostingDate",
+                T0."TaxDate"                                       AS "DocumentDate",
+                T0."Number"                                        AS "VoucherNo",
+                T0."TransType"                                     AS "DocType",
+                T0."BaseRef"                                       AS "SourceDocNo",
+                T1."LineMemo"                                      AS "Narration",
+                CAST(T1."Debit"   AS DECIMAL(18,2))                AS "Debit",
+                CAST(T1."Credit"  AS DECIMAL(18,2))                AS "Credit",
+                CAST((T1."Debit" - T1."Credit") AS DECIMAL(18,2))  AS "NetAmount",
+                CAST(T1."FCDebit"  AS DECIMAL(18,2))               AS "FCDebit",
+                CAST(T1."FCCredit" AS DECIMAL(18,2))               AS "FCCredit"
+
+            FROM "JIVO_BEVERAGES_HANADB"."OJDT" T0
+            INNER JOIN "JIVO_BEVERAGES_HANADB"."JDT1"  T1 ON T0."TransId"    = T1."TransId"
+            INNER JOIN "JIVO_BEVERAGES_HANADB"."OCRD"  T2 ON T1."ShortName"  = T2."CardCode"
+            INNER JOIN "JIVO_BEVERAGES_HANADB"."OACT"  T3 ON T1."Account"    = T3."AcctCode"
+            WHERE T2."CardCode" = ''{cardCode}''
+            AND T0."RefDate" >= ''2024-04-01''
+            AND T0."RefDate" <= ''{endDate}''
+            ORDER BY T2."CardCode", T0."RefDate", T0."TransId", T1."Line_ID"
+        ')) AS Result
+    """
+    
+    @staticmethod
+    def get_vendor_ledger(cardCode, endDate=None):
+        if endDate is None:
+            endDate = date.today().strftime('%Y-%m-%d')
+
+        return f"""
+            SELECT * FROM 
+            (SELECT * FROM OPENQUERY(HANADB112, '
+                SELECT
+                    T0."RefDate"                                       AS "PostingDate",
+                    T0."TaxDate"                                       AS "DocumentDate",
+                    T0."Number"                                        AS "VoucherNo",
+                    T0."TransType"                                     AS "DocType",
+                    T0."BaseRef"                                       AS "SourceDocNo",
+                    T1."LineMemo"                                      AS "Narration",
+                    CAST(T1."Debit"   AS DECIMAL(18,2))                AS "Debit",
+                    CAST(T1."Credit"  AS DECIMAL(18,2))                AS "Credit",
+                    CAST((T1."Debit" - T1."Credit") AS DECIMAL(18,2))  AS "NetAmount",
+                    CAST(T1."FCDebit"  AS DECIMAL(18,2))               AS "FCDebit",
+                    CAST(T1."FCCredit" AS DECIMAL(18,2))               AS "FCCredit",
+                    DAYS_BETWEEN(T0."RefDate", CURRENT_DATE)           AS "DaysSinceLastTrans"
+                FROM "JIVO_OIL_HANADB"."OJDT" T0
+                INNER JOIN "JIVO_OIL_HANADB"."JDT1"  T1 ON T0."TransId"    = T1."TransId"
+                INNER JOIN "JIVO_OIL_HANADB"."OCRD"  T2 ON T1."ShortName"  = T2."CardCode"
+                INNER JOIN "JIVO_OIL_HANADB"."OACT"  T3 ON T1."Account"    = T3."AcctCode"
+                WHERE T2."CardCode" = ''{cardCode}''
+                AND T0."RefDate" >= ''2024-04-01''
+                AND T0."RefDate" <= ''{endDate}''
+                ORDER BY T2."CardCode", T0."RefDate", T0."TransId", T1."Line_ID"
+            ')) AS Result
+
+        """
