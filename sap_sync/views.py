@@ -406,3 +406,11 @@ class getInternalReconciliation(APIView):
         
         result = BalanceSheetService().syncInternalReconciliation(vendorCode)
         return Response({"Internal Reconciliation" : result})
+    
+    
+class getCustomerBalnceSheet(APIView):
+    def get(self , request):
+        result = BalanceSheetService().syncCustaBalanceSheet()
+        
+        return Response({"data" : result})
+        

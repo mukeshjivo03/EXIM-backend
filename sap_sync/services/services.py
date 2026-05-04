@@ -464,6 +464,13 @@ class BalanceSheetService:
             
         return result
     
+    def syncCustaBalanceSheet(self):
+        with self.connection as conn:
+            query = Queries().get_custa_balance_sheet()
+            result = conn.execute_query(query)
+            
+        return result
+    
 class GRPOServices:
     def __init__(self):
         self.connection = SAPConnection()
@@ -529,3 +536,4 @@ class APService:
             
             
         return result  
+    
