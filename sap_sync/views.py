@@ -414,7 +414,6 @@ class getCustomerBalnceSheet(APIView):
     
     def get(self , request):
         result = BalanceSheetService().syncCustaBalanceSheet()
-        py 
         return Response({"data" : result})
     
     
