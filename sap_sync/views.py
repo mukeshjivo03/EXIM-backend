@@ -397,15 +397,15 @@ class getOpenAP(APIView):
         return Response({"Open APs" : result})
     
     
-class getInternalReconciliation(APIView):
-    def get(self , request):
+# class getInternalReconciliation(APIView):
+#     def get(self , request):
         
-        vendorCode = request.query_params.get('vendorCode')
-        if not vendorCode:
-            return Response({"error": "vendorCode query parameter is required."}, status=400)
+#         vendorCode = request.query_params.get('vendorCode')
+#         if not vendorCode:
+#             return Response({"error": "vendorCode query parameter is required."}, status=400)
         
-        result = BalanceSheetService().syncInternalReconciliation(vendorCode)
-        return Response({"Internal Reconciliation" : result})
+#         result = BalanceSheetService().syncInternalReconciliation(vendorCode)
+#         return Response({"Internal Reconciliation" : result})
     
     
 class getCustomerBalnceSheet(APIView):

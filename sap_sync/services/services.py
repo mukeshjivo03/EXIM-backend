@@ -457,16 +457,16 @@ class BalanceSheetService:
             
         return result
     
-    def syncInternalReconciliation(self , vendorCode):
-        with self.connection as conn:
-            query = Queries().get_internal_reconcilation(vendorCode)
-            result = conn.execute_query(query)
+    # def syncInternalReconciliation(self , vendorCode):
+    #     with self.connection as conn:
+    #         query = Queries().get_internal_reconcilation(vendorCode)
+    #         result = conn.execute_query(query)
             
-        return result
+    #     return result
     
     def syncCustaBalanceSheet(self):
         with self.connection as conn:
-            query = Queries().get_custa_balance_sheet()
+            query = Queries().get_customer_balance_sheet()
             result = conn.execute_query(query)
             
         return result
