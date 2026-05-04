@@ -392,6 +392,8 @@ class DirectorDashboard(APIView):
         
         
 class getOpenAP(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
     def get(self , request):
         result = APService().getAllOpenAP()
         return Response({"Open APs" : result})
@@ -414,7 +416,6 @@ class getCustomerBalnceSheet(APIView):
     
     def get(self , request):
         result = BalanceSheetService().syncCustaBalanceSheet()
-        py 
         return Response({"data" : result})
     
     
