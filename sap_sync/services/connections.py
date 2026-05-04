@@ -868,8 +868,8 @@ FROM OPENQUERY(HANADB112, '
                 CAST(T1."Credit"  AS DECIMAL(18,2))                AS "Credit",
                 CAST((T1."Debit" - T1."Credit") AS DECIMAL(18,2))  AS "NetAmount",
                 CAST(T1."FCDebit"  AS DECIMAL(18,2))               AS "FCDebit",
-                CAST(T1."FCCredit" AS DECIMAL(18,2))               AS "FCCredit"
-
+                CAST(T1."FCCredit" AS DECIMAL(18,2))               AS "FCCredit",
+                DAYS_BETWEEN(T0."RefDate", CURRENT_DATE)           AS "DaysSinceLastTrans"
             FROM "JIVO_BEVERAGES_HANADB"."OJDT" T0
             INNER JOIN "JIVO_BEVERAGES_HANADB"."JDT1"  T1 ON T0."TransId"    = T1."TransId"
             INNER JOIN "JIVO_BEVERAGES_HANADB"."OCRD"  T2 ON T1."ShortName"  = T2."CardCode"
