@@ -319,7 +319,7 @@ class syncFinishedInventory(APIView):
 
 class DirectorDashboard(APIView):
     def get_permissions(self):
-        return [IsAuthenticated()]
+        return [IsAuthenticated(), HasAppPermission('accounts.view_director_report')]
     
     def get(self, request):
         
@@ -406,3 +406,14 @@ class getInternalReconciliation(APIView):
         
         result = BalanceSheetService().syncInternalReconciliation(vendorCode)
         return Response({"Internal Reconciliation" : result})
+    
+    
+class getCustomerBalnceSheet(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_balance_sheet')]
+    
+    def get(self , request):
+        result = BalanceSheetService().syncCustaBalanceSheet()
+        
+        return Response({"data" : result})
+        
