@@ -471,6 +471,21 @@ class BalanceSheetService:
             
         return result
     
+    
+    def syncCustomerLedger(self , cardCode , endDate=None):
+        with self.connection as conn:
+            query = Queries().get_customer_ledger(cardCode , endDate)
+            result = conn.execute_query(query)
+            
+        return result
+    
+    def syncVendorLedger(self , cardCode , endDate=None):
+        with self.connection as conn:
+            query = Queries().get_vendor_ledger(cardCode , endDate)
+            result = conn.execute_query(query)
+            
+        return result
+    
 class GRPOServices:
     def __init__(self):
         self.connection = SAPConnection()

@@ -1,3 +1,5 @@
+from datetime import date
+
 import pymssql
 from django.conf import settings
 import logging
@@ -845,4 +847,69 @@ FROM OPENQUERY(HANADB112, '
                 ORDER BY "Outstanding Amount" 
             ')) AS Result WHERE "Outstanding Amount" <> 0
         """
-   
+        
+        
+    @staticmethod
+    def get_customer_ledger(cardCode , endDate=None):
+        if endDate is None:
+            endDate = date.today().strftime('%Y-%m-%d')
+
+        return f"""
+        SELECT * FROM 
+        (SELECT * FROM OPENQUERY(HANADB112, '
+            SELECT
+                T0."RefDate"                                       AS "PostingDate",
+                T0."TaxDate"                                       AS "DocumentDate",
+                T0."Number"                                        AS "VoucherNo",
+                T0."TransType"                                     AS "DocType",
+                T0."BaseRef"                                       AS "SourceDocNo",
+                T1."LineMemo"                                      AS "Narration",
+                CAST(T1."Debit"   AS DECIMAL(18,2))                AS "Debit",
+                CAST(T1."Credit"  AS DECIMAL(18,2))                AS "Credit",
+                CAST((T1."Debit" - T1."Credit") AS DECIMAL(18,2))  AS "NetAmount",
+                CAST(T1."FCDebit"  AS DECIMAL(18,2))               AS "FCDebit",
+                CAST(T1."FCCredit" AS DECIMAL(18,2))               AS "FCCredit"
+
+            FROM "JIVO_BEVERAGES_HANADB"."OJDT" T0
+            INNER JOIN "JIVO_BEVERAGES_HANADB"."JDT1"  T1 ON T0."TransId"    = T1."TransId"
+            INNER JOIN "JIVO_BEVERAGES_HANADB"."OCRD"  T2 ON T1."ShortName"  = T2."CardCode"
+            INNER JOIN "JIVO_BEVERAGES_HANADB"."OACT"  T3 ON T1."Account"    = T3."AcctCode"
+            WHERE T2."CardCode" = ''{cardCode}''
+            AND T0."RefDate" >= ''2024-04-01''
+            AND T0."RefDate" <= ''{endDate}''
+            ORDER BY T2."CardCode", T0."RefDate", T0."TransId", T1."Line_ID"
+        ')) AS Result
+    """
+    
+    @staticmethod
+    def get_vendor_ledger(cardCode, endDate=None):
+        if endDate is None:
+            endDate = date.today().strftime('%Y-%m-%d')
+
+        return f"""
+            SELECT * FROM 
+            (SELECT * FROM OPENQUERY(HANADB112, '
+                SELECT
+                    T0."RefDate"                                       AS "PostingDate",
+                    T0."TaxDate"                                       AS "DocumentDate",
+                    T0."Number"                                        AS "VoucherNo",
+                    T0."TransType"                                     AS "DocType",
+                    T0."BaseRef"                                       AS "SourceDocNo",
+                    T1."LineMemo"                                      AS "Narration",
+                    CAST(T1."Debit"   AS DECIMAL(18,2))                AS "Debit",
+                    CAST(T1."Credit"  AS DECIMAL(18,2))                AS "Credit",
+                    CAST((T1."Debit" - T1."Credit") AS DECIMAL(18,2))  AS "NetAmount",
+                    CAST(T1."FCDebit"  AS DECIMAL(18,2))               AS "FCDebit",
+                    CAST(T1."FCCredit" AS DECIMAL(18,2))               AS "FCCredit",
+                    DAYS_BETWEEN(T0."RefDate", CURRENT_DATE)           AS "DaysSinceLastTrans"
+                FROM "JIVO_OIL_HANADB"."OJDT" T0
+                INNER JOIN "JIVO_OIL_HANADB"."JDT1"  T1 ON T0."TransId"    = T1."TransId"
+                INNER JOIN "JIVO_OIL_HANADB"."OCRD"  T2 ON T1."ShortName"  = T2."CardCode"
+                INNER JOIN "JIVO_OIL_HANADB"."OACT"  T3 ON T1."Account"    = T3."AcctCode"
+                WHERE T2."CardCode" = ''{cardCode}''
+                AND T0."RefDate" >= ''2024-04-01''
+                AND T0."RefDate" <= ''{endDate}''
+                ORDER BY T2."CardCode", T0."RefDate", T0."TransId", T1."Line_ID"
+            ')) AS Result
+
+        """
