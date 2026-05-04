@@ -48,6 +48,7 @@ class SystemAccess(models.Model):
         permissions = [
             ('view_exim_rates' , 'Can see Exim Rates'),
             ('view_director_report' , 'Can See Director Report'),
-            ('add_opening_rate' , 'Can Add Opening Rate')
+            ('add_opening_rate' , 'Can Add Opening Rate'),
+            ('view_customer_balance_sheet' , 'Can View Customer Balance Sheet')
         ]
 
