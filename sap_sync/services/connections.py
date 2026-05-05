@@ -1040,6 +1040,7 @@ FROM OPENQUERY(HANADB112, '
                 T0."CardCode" AS "Vendor Code",
                 T0."CardName" AS "Vendor Name",
                 T0."DocTotal" AS "Invoice Total" ,
+                T0."DocTotal" - T0."PaidToDate" AS "Balance",
                 DAYS_BETWEEN(T0."DocDate"  , CURRENT_DATE ) AS "Days Open",
                 T0."Comments",
                 T0."Address",
