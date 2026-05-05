@@ -559,3 +559,10 @@ class APService:
             
         return result  
     
+    def getAllOpenAR(self):
+        with self.connection as conn:
+            query = Queries().get_open_ars()
+            result = conn.execute_query(query)
+            
+            
+        return result

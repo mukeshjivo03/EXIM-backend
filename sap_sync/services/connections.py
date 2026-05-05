@@ -1027,3 +1027,32 @@ FROM OPENQUERY(HANADB112, '
                   ORDER BY "OutstandingAmount"
         ')) AS Result WHERE "OutstandingAmount" <> 0 
         """
+    
+    @staticmethod
+    def get_open_ars():
+        return """
+        SELECT * FROM OPENQUERY(
+            HANADB112,
+            'SELECT
+                T0."DocNum" AS "Invoice Num",
+                T0."DocDate" AS "Invoice Date",
+                T0."DocDueDate" AS "Invoice Due Date",
+                T0."CardCode" AS "Vendor Code",
+                T0."CardName" AS "Vendor Name",
+                T0."DocTotal" AS "Invoice Total" ,
+                DAYS_BETWEEN(T0."DocDate"  , CURRENT_DATE ) AS "Days Open",
+                T0."Comments",
+                T0."Address",
+                T0."Address2",
+                T0."ShipToCode",
+                T0."U_Dipatch_Date" AS "Dispatch Date",
+                T0."U_BiltyNumber" AS "Bilty Num",
+                T0."U_BiltyDate" AS "Bilty Date",
+                T0."U_TransporterName" As "Transporter" ,
+                T0."U_VechileNom" AS "Vehicle Number"
+            FROM "JIVO_BEVERAGES_HANADB"."OINV" T0
+            WHERE T0."DocStatus" = ''O''
+            ORDER BY T0."DocDate" DESC'
+        )
+    """
+    
