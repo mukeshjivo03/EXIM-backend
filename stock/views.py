@@ -465,7 +465,6 @@ class MoveView(APIView):
         serializer = StockStatusSerializer(new_record)
         return Response(serializer.data)
     
-
 class VehicleReport(APIView):
     def get_permissions(self):
         return [IsAuthenticated(), HasAppPermission('stock.view_vehicle_report')]
@@ -480,6 +479,7 @@ class VehicleReport(APIView):
             )
             .values(
                 'vehicle_number',
+                'transporter',       # ✅ added
                 'item_code',
                 'vendor_code',
                 vendor_name=F('vendor_code__card_name'),
@@ -496,20 +496,24 @@ class VehicleReport(APIView):
                 eta=Max('eta'),
                 status=Max('status'),
                 job_work=Max('job_work'),
+                rate=Max('rate'),    # ✅ added
             )
-            .order_by('vehicle_number', 'item_code')
+            .order_by('vehicle_number', 'transporter', 'item_code')
         )
 
-        # Group the flat queryset into nested structure
         grouped = {}
         for row in response:
-            v_num = row['vehicle_number']
-            if v_num not in grouped:
-                grouped[v_num] = {
-                    'vehicle_number': v_num,
+            # ✅ use a proper tuple as the composite key
+            group_key = (row['vehicle_number'], row['transporter'])
+
+            if group_key not in grouped:
+                grouped[group_key] = {
+                    'vehicle_number': row['vehicle_number'],   # ✅ correct field
+                    'transporter': row['transporter'],         # ✅ correct field
                     'items': []
                 }
-            grouped[v_num]['items'].append({
+
+            grouped[group_key]['items'].append({
                 'item_code': row['item_code'],
                 'item_name': row['item_name'],
                 'vendor_code': row['vendor_code'],
@@ -519,10 +523,11 @@ class VehicleReport(APIView):
                 'eta': row['eta'],
                 'status': row['status'],
                 'job_work': row['job_work'],
+                'rate': row['rate'],    # ✅ added
             })
 
         return Response(list(grouped.values()))
-
+    
 # views.py
 class StockChangeSessionListView(generics.ListAPIView):
     def get_permissions(self):
