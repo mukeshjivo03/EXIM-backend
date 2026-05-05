@@ -970,3 +970,60 @@ FROM OPENQUERY(HANADB112, '
             ')) AS Result
 
         """
+        
+    @staticmethod
+    def get_balance_in_range(startDate  , endDate):
+        return f"""
+        SELECT SUM(Balance) AS "Balance" FROM    
+            (SELECT * FROM OPENQUERY(HANADB112, '
+                 SELECT
+                 T0."CardCode",
+                 T0."CardName",
+                 T5."SlpName",
+                 CAST(T0."Balance" AS DECIMAL(18,2)) AS "OutstandingAmount",
+                 CAST(
+                      COALESCE((
+                        SELECT SUM(I."DocTotal")
+                        FROM "JIVO_BEVERAGES_HANADB"."OINV" I
+                        WHERE I."CardCode" = T0."CardCode"
+                        AND I."DocDate" >= ''2026-04-01''
+                        AND I."CANCELED" = ''N''
+                        ), 0)
+                         -
+                      COALESCE((
+                        SELECT SUM(R."DocTotal")
+                        FROM "JIVO_BEVERAGES_HANADB"."ORCT" R
+                        WHERE R."CardCode" = T0."CardCode"
+                        AND R."TaxDate" BETWEEN ''{startDate}'' AND ''{endDate}''
+                        AND R."Canceled" = ''N''
+                        ), 0)
+                  AS DECIMAL(18,2)) AS "Balance",
+                  T1."DocNum",
+                  T1."DocDate" AS "InvoiceDate",
+                  DAYS_BETWEEN(T1."DocDate", CURRENT_DATE) AS "Since_Last_Invoice",
+                  CAST(T1."DocTotal" AS DECIMAL(18,2)) AS "InvoiceAmount",
+                  T2."TaxDate" AS "Transaction_Date",
+                  CAST(T2."DocTotal" AS DECIMAL(18,2)) AS "Transaction_Amount",
+                  DAYS_BETWEEN(T2."TaxDate", CURRENT_DATE) AS "Since_Last_Transaction"
+                  FROM "JIVO_BEVERAGES_HANADB"."OCRD" T0
+                  INNER JOIN "JIVO_BEVERAGES_HANADB"."OSLP" T5 ON T0."SlpCode" = T5."SlpCode"
+                  LEFT JOIN "JIVO_BEVERAGES_HANADB"."OINV" T1
+                  ON T0."CardCode" = T1."CardCode"
+                  AND T1."DocEntry" = (
+                         SELECT MAX(I2."DocEntry")
+                         FROM "JIVO_BEVERAGES_HANADB"."OINV" I2
+                         WHERE I2."CardCode" = T0."CardCode"
+                         AND I2."CANCELED" = ''N''
+                  )
+                  LEFT JOIN "JIVO_BEVERAGES_HANADB"."ORCT" T2
+                  ON T0."CardCode" = T2."CardCode"
+                  AND T2."DocEntry" = (
+                    SELECT MAX(R2."DocEntry")
+                    FROM "JIVO_BEVERAGES_HANADB"."ORCT" R2
+                    WHERE R2."CardCode" = T0."CardCode"
+                    AND R2."Canceled" = ''N''
+                  )
+                  WHERE T0."CardType" = ''C'' 
+                  ORDER BY "OutstandingAmount"
+        ')) AS Result WHERE "OutstandingAmount" <> 0 
+        """
