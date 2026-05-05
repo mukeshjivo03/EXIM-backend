@@ -447,3 +447,16 @@ class getVendorLedger(APIView):
         result = BalanceSheetService().syncVendorLedger(cardCode, endDate)
         return Response({"vendor_ledger" : result})
         
+class getBalanceInRange(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_balance_sheet')]
+    
+    def get(self , request):
+        startDate = request.query_params.get('startDate')
+        endDate = request.query_params.get('endDate')
+        
+        if not startDate or not endDate:
+            return Response({"error": "startDate and endDate query parameters are required."}, status=400)
+        
+        result = BalanceSheetService().syncBalanceinRange(startDate, endDate)
+        return Response({"data" : result})

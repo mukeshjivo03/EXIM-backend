@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP  , getCustomerBalnceSheet , getCustomerLedger , getVendorLedger
+from .views import  syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP  , getCustomerBalnceSheet , getCustomerLedger , getVendorLedger , getBalanceInRange
 
 
 
@@ -39,6 +39,8 @@ urlpatterns = [
     path('sap-sync/custa/balance-sheet/' , getCustomerBalnceSheet.as_view()),
     path('sap-sync/customer/ledger/' , getCustomerLedger.as_view()),
     path('sap-sync/vendor/ledger/' , getVendorLedger.as_view()),
+    
+    path('sap-sync/customer/balance/' , getBalanceInRange.as_view()),
     
     path('sap-sync/inventory/' , syncInventory.as_view()),
     path('sap-sync/finished-inventory/' , syncFinishedInventory.as_view()),

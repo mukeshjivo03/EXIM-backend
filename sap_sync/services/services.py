@@ -486,6 +486,13 @@ class BalanceSheetService:
             
         return result
     
+    def syncBalanceinRange(self , startDate , endDate):
+        with self.connection as conn:
+            query = Queries().get_balance_in_range(startDate , endDate)
+            result = conn.execute_query(query)
+            
+        return result
+    
 class GRPOServices:
     def __init__(self):
         self.connection = SAPConnection()
