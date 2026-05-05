@@ -460,3 +460,11 @@ class getBalanceInRange(APIView):
         
         result = BalanceSheetService().syncBalanceinRange(startDate, endDate)
         return Response({"data" : result})
+    
+class getAllOpenAR(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_balance_sheet')]
+    
+    def get(self , request):
+        result = APService().getAllOpenAR()
+        return Response({"Open ARs" : result})
