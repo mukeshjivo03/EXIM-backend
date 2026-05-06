@@ -450,6 +450,13 @@ class BalanceSheetService:
             
         return result   
     
+    def syncVendorBalanceSheet(self):
+        with self.connection as conn:
+            query = Queries().get_vendor_balance_sheet()
+            result = conn.execute_query(query)
+            
+        return result
+    
     def syncInsights(self):
         with self.connection as conn:
             query = Queries().balance_sheet_insights()
@@ -566,3 +573,5 @@ class APService:
             
             
         return result
+    
+    

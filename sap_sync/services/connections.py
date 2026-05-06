@@ -935,7 +935,7 @@ FROM OPENQUERY(HANADB112, '
             AND T0."RefDate" >= ''2024-04-01''
             AND T0."RefDate" <= ''{endDate}''
             ORDER BY T2."CardCode", T0."RefDate", T0."TransId", T1."Line_ID"
-        ')) AS Result
+        ')) AS Result ORDER BY PostingDate DESC
     """
     
     @staticmethod
@@ -967,7 +967,7 @@ FROM OPENQUERY(HANADB112, '
                 AND T0."RefDate" >= ''2024-04-01''
                 AND T0."RefDate" <= ''{endDate}''
                 ORDER BY T2."CardCode", T0."RefDate", T0."TransId", T1."Line_ID"
-            ')) AS Result
+            ')) AS Result ORDER BY PostingDate DESC
 
         """
         
@@ -1056,4 +1056,29 @@ FROM OPENQUERY(HANADB112, '
             ORDER BY T0."DocDate" DESC'
         )
     """
+    
+    
+    @staticmethod
+    def get_vendor_balance_sheet():
+        return """
+         SELECT * FROM OPENQUERY(HANADB112, '
+                        WITH "VendorLatestTransaction" AS (
+                            SELECT
+                                a."CardCode",
+                                a."CardName",
+                                CAST(a."Balance" AS DECIMAL(18,2)) AS "Balance",
+                                b."RefDate" AS "Last Transaction Date",
+                                CAST(b."Debit" AS DECIMAL(18,2)) AS "Last Transanction Amount",
+                                ROW_NUMBER() OVER (PARTITION BY a."CardCode" ORDER BY b."RefDate" DESC) AS "RowNum"
+                            FROM "JIVO_OIL_HANADB"."OCRD" a
+                            INNER JOIN "JIVO_OIL_HANADB"."JDT1" b ON a."CardCode" = b."ShortName"
+                            WHERE b."RefDate" >= ''2024-10-01'' AND b."Debit" > 0 AND
+                            a."CardType" = ''S'' 
+                    )
+                    SELECT "CardCode", "CardName", "Balance", "Last Transaction Date", "Last Transanction Amount"
+                    FROM "VendorLatestTransaction"
+                    WHERE "RowNum" = 1 AND "Balance" <> 0
+                    ORDER BY "Balance"
+                ')
+        """
     

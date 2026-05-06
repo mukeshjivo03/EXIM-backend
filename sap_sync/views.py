@@ -468,3 +468,12 @@ class getAllOpenAR(APIView):
     def get(self , request):
         result = APService().getAllOpenAR()
         return Response({"Open ARs" : result})
+    
+    
+class getVendorBalanceSheet(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_vendor_balance_sheet')]
+    
+    def get(self , request):
+        result = BalanceSheetService().syncVendorBalanceSheet()
+        return Response({"data" : result})
