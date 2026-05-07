@@ -9,8 +9,8 @@ from collections import defaultdict, OrderedDict
 from django.db.models.functions import Round
 
 
-from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession , DebitEntry
-from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer , DebitEntrySerializer
+from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession , DebitEntry , ContractualHistory
+from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer , DebitEntrySerializer , ContractualHistorySerializer
 from .services import arrive_batch , dispatch , move , create_audit, TRACKED_FIELDS
 from .filters import StockStatusFilters
 from tank.models import TankData ,TankItem
@@ -602,3 +602,11 @@ class DebitEntryInsights(APIView):
         )
 
         return Response(insights)
+
+
+class ContractualHistoryListView(generics.ListAPIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_contractualhistory')]
+    
+    queryset = ContractualHistory.objects.all()
+    serializer_class = ContractualHistorySerializer
