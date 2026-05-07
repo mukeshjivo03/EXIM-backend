@@ -121,6 +121,24 @@ class StockStatus(models.Model):
         if self.quantity <= Decimal('0.00'):
             self.deleted = True
             
+        if self.status == 'IN_CONTRACT':
+            
+            if self.contract_start:
+                contract_start = self.contract_start
+            else:
+                contract_start = self.created_at.date()
+                
+            ContractualHistory.objects.create(
+                item_code=self.item_code.tank_item_code if self.item_code else None,
+                item_name=self.item_code.tank_item_name if self.item_code else None,   # ← add this
+                vendor_code=self.vendor_code.card_code if self.vendor_code else None,
+                vendor_name=self.vendor_code.card_name if self.vendor_code else None,
+                rate = self.rate,
+                contract_start = contract_start,
+                contract_end = self.contract_end,
+                created_by = self.created_by,
+            )
+            
 
 
         # ── capture pre-save state ───────────────────────────────────────────
@@ -300,3 +318,25 @@ class StockStatusFieldLog(models.Model):
 
     class Meta:
         db_table = 'stock_field_logs'
+        
+class ContractualHistory(models.Model):
+
+    # item_code = models.ForeignKey(TankItem, on_delete=models.SET_NULL, null=True ,to_field = 'tank_item_code')
+    # vendor_code = models.ForeignKey(Party, on_delete=models.SET_NULL , null = True , to_field = 'card_code')
+    
+    item_code = models.CharField(max_length=50 , null=True, blank=True)
+    item_name = models.CharField(max_length=255, null=True, blank=True)   # ← add
+
+    vendor_code = models.CharField(max_length=50 , null=True, blank=True)
+    vendor_name = models.CharField(max_length=255, null=True, blank=True) # ← add
+
+    rate = models.DecimalField(max_digits=10, decimal_places=3)
+    contract_start = models.DateField( blank=True , null=True)
+    contract_end =   models.DateField( blank=True , null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=50)
+                                    
+                                    
+    class Meta:
+        db_table = 'contract_history'
+        ordering = ['-created_at']

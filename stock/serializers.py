@@ -1,9 +1,15 @@
 from rest_framework import serializers
-from .models import StockStatus , StockStatusUpdateLog , StockStatusFieldLog , StockStatusChangeSession , DebitEntry
+from .models import StockStatus , StockStatusUpdateLog , StockStatusFieldLog , StockStatusChangeSession , DebitEntry , ContractualHistory
 from sap_sync.models import RMProducts , Party
 from tank.models import TankData , TankItem
 
 
+class ContractualHistorySerializer(serializers.ModelSerializer):
+
+
+    class Meta:
+        model = ContractualHistory
+        fields = '__all__'
 
 class StockStatusSerializer(serializers.ModelSerializer):
     
