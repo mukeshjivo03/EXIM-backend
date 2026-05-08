@@ -276,7 +276,8 @@ class DebitEntry(models.Model):
     
 
     class Meta:
-        db_table = 'stock_debit_entries'
+        # db_table = 'stock_debit_entries'
+        db_table = 'shortage_entries'
 
     def save(self, *args, **kwargs):
         if self.unload_qty and self.load_qty:
