@@ -472,7 +472,7 @@ class getAllOpenAR(APIView):
     
 class getVendorBalanceSheet(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('accounts.view_vendor_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
     
     def get(self , request):
         result = BalanceSheetService().syncVendorBalanceSheet()
