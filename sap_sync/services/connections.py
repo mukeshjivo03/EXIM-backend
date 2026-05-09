@@ -1092,7 +1092,7 @@ FROM OPENQUERY(HANADB112, '
                 T0."DocNum",
                 T0."DocDate",
                 DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) AS "Days_Difference",
-        
+
                 CASE
                     WHEN DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) <= 30  THEN ''0-30 Days''
                     WHEN DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) <= 60  THEN ''31-60 Days''
@@ -1104,7 +1104,6 @@ FROM OPENQUERY(HANADB112, '
                 T0."CardName",
                 T4."SlpName",
                 T0."ShipToCode",
-                T0."Address2",
                 T0."DocTotal",
                 T0."PaidToDate",
                 T0."DocTotal" - T0."PaidToDate" AS "Balance",
