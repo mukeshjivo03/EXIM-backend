@@ -1082,3 +1082,41 @@ FROM OPENQUERY(HANADB112, '
                 ')
         """
     
+    
+    @staticmethod
+    def get_aging_customer():
+        return """
+        SELECT * FROM OPENQUERY(
+        HANADB112,
+        'SELECT
+            T0."DocNum",
+            T0."DocDate",
+            DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) AS "Days_Difference",
+    
+            CASE
+                WHEN DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) <= 30  THEN ''0-30 Days''
+                WHEN DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) <= 60  THEN ''31-60 Days''
+                WHEN DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) <= 90  THEN ''61-90 Days''
+                WHEN DAYS_BETWEEN(T0."DocDate", CURRENT_DATE) <= 120 THEN ''91-120 Days''
+                ELSE ''120+ Days''
+            END AS "Aging",
+            T0."CardCode",
+            T0."CardName",
+            T4."SlpName",
+            T0."ShipToCode",
+            T0."Address2",
+            T0."DocTotal",
+            T0."PaidToDate",
+            T0."DocTotal" - T0."PaidToDate" AS "Balance",
+            T3."Balance" AS "Outstanding Amount"
+        FROM "JIVO_OIL_HANADB"."OINV" T0
+        INNER JOIN "JIVO_OIL_HANADB"."OCRD" T3 ON T0."CardCode" = T3."CardCode"
+        INNER JOIN "JIVO_OIL_HANADB"."OSLP" T4 ON T3."SlpCode" = T4."SlpCode"
+        WHERE
+            T0."DocType" = ''I''
+            AND T0."CANCELED" = ''N''
+            AND T0."DocDate" BETWEEN ''2024-01-01'' AND ''2024-12-31''
+        ORDER BY "Days_Difference" DESC'
+        )
+        """
+        

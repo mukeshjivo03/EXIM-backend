@@ -477,3 +477,8 @@ class getVendorBalanceSheet(APIView):
     def get(self , request):
         result = BalanceSheetService().syncVendorBalanceSheet()
         return Response({"data" : result})
+    
+class getCustomerAgingBalanceSheet(APIView):
+    def get(self , request):
+        result = BalanceSheetService().syncCustomerAgingBalance()
+        return Response({"data" : result})
