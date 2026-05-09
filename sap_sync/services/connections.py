@@ -1115,8 +1115,8 @@ FROM OPENQUERY(HANADB112, '
         WHERE
             T0."DocType" = ''I''
             AND T0."CANCELED" = ''N''
-            AND T0."DocDate" BETWEEN ''2024-01-01'' AND ''2024-12-31''
-        ORDER BY "Days_Difference" DESC'
+            AND T0."DocDate" BETWEEN ''2024-01-01'' AND CURRENT_DATE
+        ORDER BY "Days_Difference" '
         )
         """
         
