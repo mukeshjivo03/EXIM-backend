@@ -500,6 +500,13 @@ class BalanceSheetService:
             
         return result
     
+    def syncCustomerAgingBalance(self):
+        with self.connection as conn:
+            query = Queries().get_aging_customer()
+            result = conn.execute_query(query)
+            
+        return result
+    
 class GRPOServices:
     def __init__(self):
         self.connection = SAPConnection()
