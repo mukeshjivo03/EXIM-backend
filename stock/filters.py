@@ -3,10 +3,10 @@ from django_filters import rest_framework as filters
 
 
 class StockStatusFilters(filters.FilterSet):
-    status = filters.ChoiceFilter(choices=StockStatus.STATUS_CHOICES)
+    status = filters.MultipleChoiceFilter(choices=StockStatus.STATUS_CHOICES)  # ← changed
     vendor = filters.CharFilter(field_name='vendor_code__card_code')
     item = filters.CharFilter(field_name='item_code__tank_item_code')
-
+    
     class Meta:
         model = StockStatus
         fields = ['status']

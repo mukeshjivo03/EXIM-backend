@@ -407,20 +407,20 @@ from django.db.models import Sum
     #         'total_cost': total_cost,
     #         'weighted_avg_rate': weighted_avg_rate,
     #     }
-        
 def ItemAvergaCost(itemCode):
     
     total_tank_capacity = TankData.objects.filter(item_code=itemCode).aggregate(
         total_capacity=Sum('current_capacity')
     )['total_capacity']
-    
+    total_tank_capacity_kg = total_tank_capacity * Decimal('1.0989') if total_tank_capacity else Decimal('0.00')
+
     stockRecords = StockStatus.objects.filter(
-    item_code=itemCode, deleted=False, status='IN_TANK'
-    ).order_by('created_at').only('quantity_in_litre', 'rate_in_litres', 'created_at')
-    
+        item_code=itemCode, deleted=False, status='IN_TANK'
+    ).order_by('created_at').only('quantity_in_litre', 'rate_in_litres', 'quantity', 'rate', 'created_at')
 
     remaining = total_tank_capacity
-    weighted_sum = Decimal('0.00')
+    weighted_sum    = Decimal('0.00')
+    weighted_sum_kg = Decimal('0.00')          # ← was missing
     stock_status_quantity = Decimal('0.00')
     breakdown = []
 
@@ -428,24 +428,40 @@ def ItemAvergaCost(itemCode):
         if remaining <= 0:
             break
         
-        quantity = record.quantity_in_litre or Decimal('0.00')
-        rate     = record.rate_in_litres    or Decimal('0.00')
-        consumed = min(quantity, remaining)
-    
-        weighted_sum          += rate * consumed   # ← consumed, not full quantity
+        quantity     = record.quantity_in_litre or Decimal('0.00')
+        rate         = record.rate_in_litres    or Decimal('0.00')
+        rate_kg      = record.rate              or Decimal('0.00')
+        party        = record.vendor_code.card_name or 'N/A'
+        vehicle      = record.vehicle_number    or 'N/A'
+        transporter  = record.transporter       or 'N/A'
+        
+        consumed     = min(quantity, remaining)
+        consumed_kg  = consumed / Decimal('1.0989')
+        
+        weighted_sum          += rate    * consumed
+        weighted_sum_kg       += rate_kg * consumed_kg
         stock_status_quantity += quantity
         remaining             -= consumed
-    
+         
         breakdown.append({
-            'stock_id':          record.pk,
-            'created_at':        record.created_at,
-            'rate_in_litres':    rate,
-            'batch_quantity':    quantity,
-            'quantity_consumed': consumed,
-            'batch_total':       consumed * rate,
+            'stock_id':             record.pk,
+            'created_at':           record.created_at,
+            'party':                str(party),
+            'vehicle':              str(vehicle),
+            'transporter':          str(transporter),
+            'rate_in_litres':       rate,
+            'rate_in_kg':           rate_kg,
+            'batch_quantity':       quantity,
+            'batch_quantity_kg':    (quantity / Decimal('1.0989')).quantize(Decimal('0.01')),
+            'quantity_consumed':    consumed,
+            'quantity_consumed_kg': consumed_kg.quantize(Decimal('0.01')),
+            'batch_total':          (consumed * rate).quantize(Decimal('0.01')),
+            'batch_total_kg':       (consumed_kg * rate_kg).quantize(Decimal('0.01')),
         })
-    quantity_matched = total_tank_capacity - remaining
-    quantity_unmatched = remaining
+
+    quantity_matched    = total_tank_capacity - remaining
+    quantity_matched_kg = quantity_matched / Decimal('1.0989')   # ← for correct KG average
+    quantity_unmatched  = remaining
     
     if quantity_matched == Decimal('0.00'):
         return {
@@ -460,9 +476,12 @@ def ItemAvergaCost(itemCode):
             ),
         }
 
-    average_rate = (weighted_sum / total_tank_capacity).quantize(Decimal('0.01'))
-    adjusted_average = (weighted_sum / quantity_matched).quantize(Decimal('0.01'))
+    average_rate         = (weighted_sum    / total_tank_capacity).quantize(Decimal('0.01'))
+    adjusted_average     = (weighted_sum    / quantity_matched).quantize(Decimal('0.01'))
     
+    average_rate_kg      = (weighted_sum_kg / total_tank_capacity_kg).quantize(Decimal('0.01'))
+    adjusted_average_kg  = (weighted_sum_kg / quantity_matched_kg).quantize(Decimal('0.01'))  # ← fixed divisor
+
     warning = None
     if quantity_unmatched > Decimal('0.00'):
         warning = (
@@ -471,12 +490,16 @@ def ItemAvergaCost(itemCode):
         )
 
     return {
-        'item_code':               itemCode,
-        'tank_total_capacity':     total_tank_capacity,
-        'quantity_matched':        quantity_matched,
-        'quantity_unmatched':      quantity_unmatched,
-        'average_rate(IN_TANK)':   average_rate,
-        'adjusted_average(STO)':   adjusted_average,
-        'breakdown':               breakdown,
-        'warning':                 warning,
+        'item_code':                   itemCode,
+        'tank_total_capacity':         total_tank_capacity,
+        'tank_total_capacity_kg':      total_tank_capacity_kg,
+        'quantity_matched':            quantity_matched,
+        'quantity_matched_kg':         quantity_matched_kg.quantize(Decimal('0.01')),
+        'quantity_unmatched':          quantity_unmatched,
+        'average_rate(IN_TANK)':       average_rate,
+        'adjusted_average(STO)':       adjusted_average,
+        'average_rate_kg(IN_TANK)':    average_rate_kg,
+        'adjusted_average_kg(STO)':    adjusted_average_kg,
+        'breakdown':                   breakdown,
+        'warning':                     warning,
     }
