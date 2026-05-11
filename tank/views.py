@@ -556,3 +556,9 @@ class InTankStock(APIView):
     def get_permissions(self):
         return [IsAuthenticated(), HasAppPermission('tank.view_tankdata')]
     
+
+
+class InTankItems(APIView):
+    def get(self , request):
+        items = TankData.objects.filter(is_active=True, item_code__isnull=False).values('item_code')
+        return Response(items)
