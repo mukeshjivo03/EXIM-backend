@@ -29,7 +29,7 @@ class StockStatusListCreateView(generics.ListCreateAPIView):
         stock = serializer.save(created_by=changed_by)
         create_audit(stock, changed_by_label=changed_by, action='CREATE')
 
-    queryset = StockStatus.objects.filter(deleted=False).exclude(status='IN_TANK')
+    queryset = StockStatus.objects.filter(deleted=False).exclude(status='COMPLETED')
     serializer_class = StockStatusSerializer
     filter_backends = (filters.DjangoFilterBackend,) 
     filterset_class = StockStatusFilters

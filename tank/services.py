@@ -414,15 +414,19 @@ def ItemAvergaCost(itemCode):
     )['total_capacity']
     total_tank_capacity_kg = total_tank_capacity * Decimal('1.0989') if total_tank_capacity else Decimal('0.00')
 
-    stockRecords = StockStatus.objects.filter(
+    in_tank_records = StockStatus.objects.filter(
         item_code=itemCode, deleted=False, status='IN_TANK'
-    ).order_by('created_at').only('quantity_in_litre', 'rate_in_litres', 'quantity', 'rate', 'created_at')
+    )
+    stockRecords = in_tank_records.order_by('created_at').only(
+        'quantity_in_litre', 'rate_in_litres', 'quantity', 'rate', 'created_at'
+    )
 
     remaining = total_tank_capacity
     weighted_sum    = Decimal('0.00')
     weighted_sum_kg = Decimal('0.00')          # ← was missing
     stock_status_quantity = Decimal('0.00')
     breakdown = []
+    used_stock_ids = []
 
     for record in stockRecords:
         if remaining <= 0:
@@ -442,6 +446,7 @@ def ItemAvergaCost(itemCode):
         weighted_sum_kg       += rate_kg * consumed_kg
         stock_status_quantity += quantity
         remaining             -= consumed
+        used_stock_ids.append(record.pk)
          
         breakdown.append({
             'stock_id':             record.pk,
@@ -462,6 +467,9 @@ def ItemAvergaCost(itemCode):
     quantity_matched    = total_tank_capacity - remaining
     quantity_matched_kg = quantity_matched / Decimal('1.0989')   # ← for correct KG average
     quantity_unmatched  = remaining
+
+    # Mark IN_TANK rows not used in breakdown as COMPLETED.
+    in_tank_records.exclude(pk__in=used_stock_ids).update(status='COMPLETED')
     
     if quantity_matched == Decimal('0.00'):
         return {
