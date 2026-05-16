@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  getCustomerAgingBalanceSheet, syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP  , getCustomerBalnceSheet , getCustomerLedger , getVendorLedger , getBalanceInRange , getAllOpenAR , getVendorBalanceSheet 
+from .views import  getCustomerAgingBalanceSheet, syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP  , getCustomerBalnceSheet , getCustomerLedger , getVendorLedger , getBalanceInRange , getAllOpenAR , getVendorBalanceSheet , getOpenPoView
 
 
 
@@ -12,7 +12,9 @@ urlpatterns = [
     path('sap_sync/rm/items/' , syncRMProductsView.as_view()),
     path('sap_sync/fg/items/' , syncFGProductsView.as_view()),
     path('sap_sync/open-grpos/' , syncOpenGRPOS.as_view()),
+    path('sap-sync/open-pos/' , getOpenPoView.as_view()),
     path('director-inventorty/' , DirectorDashboard.as_view()),
+    
     
     path('item/rm/<str:item_code>/' , RMProductGetandDeleteView.as_view()),
     path('items/rm/' , RMProductListView.as_view()),

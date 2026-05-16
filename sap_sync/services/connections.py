@@ -1117,3 +1117,39 @@ FROM OPENQUERY(HANADB112, '
                 AND T0."DocDate" BETWEEN ''2024-01-01'' AND CURRENT_DATE
             ORDER BY "Days_Difference"'
         )"""
+        
+        
+    @staticmethod
+    def get_open_pos():
+        return """
+        SELECT * FROM OPENQUERY(
+        	HANADB112 , 
+        	'SELECT
+            T0."DocNum"           AS PO_Number,
+            T0."DocDate"          AS PO_Date,
+            T0."DocDueDate"       AS Due_Date,
+            T0."CardCode"         AS Vendor_Code,
+            T0."CardName"         AS Vendor_Name,
+            T1."ItemCode",
+            T0."UserSign",
+            T1."Dscription"       AS Item_Name,
+            T1."Quantity"         AS Ordered_Qty,
+            T1."OpenQty"          AS Pending_Qty,
+            T1."Quantity" - T1."OpenQty" AS Received_Qty,
+            T1."Price"            AS Unit_Price,
+            T1."OpenQty" * T1."Price" AS Open_Value,
+            T1."WhsCode"          AS Warehouse,
+            T1."unitMsr"          AS UoM
+        
+        FROM "JIVO_OIL_HANADB"."OPOR" T0
+        INNER JOIN "JIVO_OIL_HANADB"."POR1" T1 ON T0."DocEntry" = T1."DocEntry"
+        
+        WHERE
+            T0."DocStatus" = ''O''
+            AND T1."LineStatus" = ''O'' 
+            AND T0."UserSign" = ''15''
+        
+        ORDER BY T0."DocDate" ASC, T0."DocNum", T1."LineNum" ' 
+        )
+        """
+    
