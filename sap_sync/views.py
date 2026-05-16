@@ -482,3 +482,11 @@ class getCustomerAgingBalanceSheet(APIView):
     def get(self , request):
         result = BalanceSheetService().syncCustomerAgingBalance()
         return Response({"data" : result})
+
+class getOpenPoView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
+    
+    def get(self , request):
+        result = POService().syncOpenPOs()
+        return Response({"open_pos" : result})

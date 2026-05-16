@@ -438,6 +438,12 @@ class POService:
 
         return result
         
+    def syncOpenPOs(self):
+        with self.connection as conn:
+            query = Queries.get_open_pos()
+            result = conn.execute_query(query)
+                
+        return result
     
 class BalanceSheetService:
     def __init__(self):
