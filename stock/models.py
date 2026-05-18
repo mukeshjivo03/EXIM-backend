@@ -341,3 +341,22 @@ class ContractualHistory(models.Model):
     class Meta:
         db_table = 'contract_history'
         ordering = ['-created_at']
+        
+class DashboardSnapshot(models.Model):
+
+    snapshot_date  = models.DateField()
+    
+    item_code = models.CharField(max_length=50 , null=True, blank=True)
+    item_name = models.CharField(max_length=255, null=True, blank=True)   
+    
+    vendor_code = models.CharField(max_length=50 , null=True, blank=True)
+    vendor_name = models.CharField(max_length=255, null=True, blank=True)
+ 
+    status = models.CharField(max_length=50 , null=True, blank=True)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    
+    class Meta:
+        db_table = 'dashboard_snapshot'
+        unique_together = ('snapshot_date', 'item_code', 'vendor_code')

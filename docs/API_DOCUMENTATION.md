@@ -186,13 +186,35 @@ Permission: **Admin only** (unless stated otherwise)
 
 ### Sync Balance Sheet
 
-```
-GET /sap-sync/balance-sheet/
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/sap-sync/balance-sheet/` | Sync balance sheet data |
+| GET | `/sap-sync/balance-sheet-insights/` | Sync balance sheet insight data |
+| GET | `/sap-sync/custa/balance-sheet/` | Customer balance sheet |
+| GET | `/sap-sync/vendor/balance-sheet/` | Vendor balance sheet |
+| GET | `/sap-sync/customer-aging-balance/` | Customer aging balance |
+| GET | `/sap-sync/customer/balance/?startDate=<date>&endDate=<date>` | Customer balance in a date range |
+| GET | `/sap-sync/customer/ledger/?cardCode=<code>&endDate=<date>` | Customer ledger |
+| GET | `/sap-sync/vendor/ledger/?cardCode=<code>&endDate=<date>` | Vendor ledger |
+| GET | `/sap-sync/open-ap/` | Open AP records |
+| GET | `/sap-sync/open-ar/` | Open AR records |
 
-Permission: Admin, Manager
+Permission varies by endpoint. Most financial sync endpoints require authenticated users with the matching `sap_sync` or `accounts` app permission.
 
 ---
+
+### Inventory and SAP Operational Sync
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/sap_sync/open-grpos/` | Sync open GRPO records |
+| GET | `/sap-sync/open-pos/` | Sync open purchase orders |
+| GET | `/sap-sync/inventory/` | Sync warehouse-wise inventory |
+| GET | `/sap-sync/finished-inventory/` | Sync finished goods inventory |
+| GET | `/sap-sync/warehouses/` | Sync/list unique warehouses |
+| GET | `/director-inventorty/` | Director inventory dashboard |
+
+> **Note:** `director-inventorty` is the current route spelling in code.
 
 ### Local Data Endpoints
 
@@ -277,9 +299,10 @@ Permission: Authenticated (write actions require Admin or Factory role)
 | `GET /tank/capacity-insights/` | Capacity utilization insights |
 | `GET /tank/item-wise-summary/` | Breakdown by commodity |
 | `GET /tank/tank-rates/` | FIFO-based rate breakdown per tank |
-| `GET /tank/layers/<tank_code>/` | Rate breakdown layers for a specific tank |
+| `GET /tank/item-wise-average/?item_code=<tank_item_code>` | Average cost and FIFO stock breakdown for an item currently in tanks |
+| `GET /tank/in-tank-items/` | Active tank item codes currently assigned to tanks |
 
-> **Note:** `tank-rates` uses a FIFO algorithm to compute cost-weighted rates per tank based on stock completion dates.
+> **Note:** `tank-rates` uses a FIFO-style allocation to compute cost-weighted rates per tank based on stock completion dates.
 
 ---
 
@@ -287,9 +310,10 @@ Permission: Authenticated (write actions require Admin or Factory role)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/tank/inward/` | Add stock to a tank |
-| POST | `/tank/outward/` | Remove stock from a tank |
-| GET | `/tank/log/` | Tank operation history with consumptions |
+| PATCH | `/tank/empty-tank/?tank_code=<tank_code>` | Empty a tank and clear its assigned item |
+| GET | `/tank/log/` | Tank operation history |
+
+The older inward, outward, transfer, and layer-detail routes are currently commented out in code and are not active API routes.
 
 ---
 
@@ -303,7 +327,7 @@ Permission: Admin or Manager
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET, POST | `/stock-status/` | List or create stock entries |
-| GET, PUT | `/stock-status/<id>/` | Get or update a stock entry |
+| GET, PUT, PATCH, DELETE | `/stock-status/<id>/` | Get, update, partially update, or delete a stock entry |
 | PATCH | `/stock-status/<id>/` | Soft-delete (send `{ "deleted": true }`) |
 
 **Query filters on `GET /stock-status/`:**
@@ -366,6 +390,7 @@ Permission: Admin or Manager
 | POST | `/stock-status/opening-stock/` | Create an opening stock entry |
 | GET | `/stock-status/out/` | List stocks currently outside factory |
 | GET | `/stock-status/vehicle-report/` | Vehicle report filtered by `?status=` |
+| GET | `/stock-status/contractual-history/` | List contractual stock history records |
 
 ---
 
@@ -403,6 +428,7 @@ Returns a full history of all field changes on stock entries.
 | `GET /stock-status/stock-dashboard/` | Combined dashboard view |
 | `GET /stock-status/get-unique-rm/` | List of unique RM item codes in stock |
 | `GET /stock-status/get-stock-entry-by-rm/` | All stock entries for an item (`?item_code=`) |
+| `GET /stock-status/debit-insights/` | Aggregate debit/gain-loss insight totals |
 
 ---
 

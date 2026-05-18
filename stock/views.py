@@ -9,8 +9,8 @@ from collections import defaultdict, OrderedDict
 from django.db.models.functions import Round
 
 
-from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession , DebitEntry , ContractualHistory
-from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer , DebitEntrySerializer , ContractualHistorySerializer
+from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession , DebitEntry , ContractualHistory , DashboardSnapshot
+from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer , DebitEntrySerializer , ContractualHistorySerializer , DashboardSnapshotSerialixer
 from .services import arrive_batch , dispatch , move , create_audit, TRACKED_FIELDS
 from .filters import StockStatusFilters
 from tank.models import TankData ,TankItem
@@ -610,3 +610,16 @@ class ContractualHistoryListView(generics.ListAPIView):
     
     queryset = ContractualHistory.objects.all()
     serializer_class = ContractualHistorySerializer
+    
+class SnapshotListView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('stock.view_dashboardsnapshot')]
+    
+    def get(self, request):
+        date  = request.query_params.get('date')
+        if not date:
+            return Response({"error": "date query parameter is required"}, status=400)
+
+        snapshots = DashboardSnapshot.objects.filter(snapshot_date=date)
+        serializer = DashboardSnapshotSerialixer(snapshots, many=True)
+        return Response(serializer.data)        
