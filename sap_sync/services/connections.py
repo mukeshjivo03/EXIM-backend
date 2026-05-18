@@ -60,58 +60,58 @@ class Queries:
     @staticmethod
     def get_all_rm_product():
         return """
-SELECT *
-FROM OPENQUERY(HANADB112, '
-    SELECT 
-        T1."ItemCode",
-        T1."ItemName",
-        ''OIL'' AS "Category",
-        T1."SalFactor2",
-        T1."U_Tax_Rate",
-        T1."Deleted",
-        T1."U_Variety",
-        T1."SalPackUn",
-        T1."U_Brand",
-        T1."U_Unit",
-        T1."U_Sub_Group",
+        SELECT *
+        FROM OPENQUERY(HANADB112, '
+            SELECT 
+                T1."ItemCode",
+                T1."ItemName",
+                ''OIL'' AS "Category",
+                T1."SalFactor2",
+                T1."U_Tax_Rate",
+                T1."Deleted",
+                T1."U_Variety",
+                T1."SalPackUn",
+                T1."U_Brand",
+                T1."U_Unit",
+                T1."U_Sub_Group",
 
-        SUM(T0."TransValue") AS "TotalTransValue",
-        SUM(T0."InQty")      AS "TotalInQty",
-        SUM(T0."OutQty")     AS "TotalOutQty",
+                SUM(T0."TransValue") AS "TotalTransValue",
+                SUM(T0."InQty")      AS "TotalInQty",
+                SUM(T0."OutQty")     AS "TotalOutQty",
 
-        (SUM(T0."InQty") - SUM(T0."OutQty")) AS "TotalQty",
+                (SUM(T0."InQty") - SUM(T0."OutQty")) AS "TotalQty",
 
-        CASE 
-            WHEN (SUM(T0."InQty") - SUM(T0."OutQty")) <> 0 
-            THEN SUM(T0."TransValue") / (SUM(T0."InQty") - SUM(T0."OutQty"))
-            ELSE 0
-        END AS "Rate"
+                CASE 
+                    WHEN (SUM(T0."InQty") - SUM(T0."OutQty")) <> 0 
+                    THEN SUM(T0."TransValue") / (SUM(T0."InQty") - SUM(T0."OutQty"))
+                    ELSE 0
+                END AS "Rate"
 
-    FROM "JIVO_OIL_HANADB"."OITM" T1
+            FROM "JIVO_OIL_HANADB"."OITM" T1
 
-    LEFT JOIN "JIVO_OIL_HANADB"."OINM" T0
-        ON T1."ItemCode" = T0."ItemCode"
-        AND T0."Warehouse" = ''BH-LO''
+            LEFT JOIN "JIVO_OIL_HANADB"."OINM" T0
+                ON T1."ItemCode" = T0."ItemCode"
+                AND T0."Warehouse" = ''BH-LO''
 
-    WHERE T1."ItemCode" LIKE ''RM%''
-    AND T1."U_Unit" = ''OIL''
+            WHERE T1."ItemCode" LIKE ''RM%''
+            AND T1."U_Unit" = ''OIL''
 
-    GROUP BY
-        T1."ItemCode",
-        T1."ItemName",
-        T1."SalFactor2",
-        T1."U_Tax_Rate",
-        T1."Deleted",
-        T1."U_Variety",
-        T1."SalPackUn",
-        T1."U_Brand",
-        T1."U_Unit",
-        T1."U_Sub_Group"
+            GROUP BY
+                T1."ItemCode",
+                T1."ItemName",
+                T1."SalFactor2",
+                T1."U_Tax_Rate",
+                T1."Deleted",
+                T1."U_Variety",
+                T1."SalPackUn",
+                T1."U_Brand",
+                T1."U_Unit",
+                T1."U_Sub_Group"
 
-    ORDER BY T1."ItemCode"
-')
-"""
-        
+            ORDER BY T1."ItemCode"
+        ')
+        """
+
     @staticmethod
     def get_all_fg_product():
         return """

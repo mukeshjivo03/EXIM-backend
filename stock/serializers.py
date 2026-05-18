@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StockStatus , StockStatusUpdateLog , StockStatusFieldLog , StockStatusChangeSession , DebitEntry , ContractualHistory
+from .models import StockStatus , StockStatusUpdateLog , StockStatusFieldLog , StockStatusChangeSession , DebitEntry , ContractualHistory , DashboardSnapshot
 from sap_sync.models import RMProducts , Party
 from tank.models import TankData , TankItem
 
@@ -125,3 +125,9 @@ class DebitEntrySerializer(serializers.ModelSerializer):
         model = DebitEntry
         fields = '__all__'
         read_only_fields = ['total', 'created_at' , 'allowed_shortage_qty' , 'deducted_shortage_qty' , 'deduction_amount' , 'shortage_qty']
+        
+class DashboardSnapshotSerialixer(serializers.ModelSerializer):
+    class Meta:
+        model = DashboardSnapshot
+        fields = '__all__'
+    
