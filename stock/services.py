@@ -111,7 +111,7 @@ def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_n
     return new_record
 
 
-def move(source, new_quantity, action, new_status, created_by):
+def move(source, new_quantity, action, new_status, arrival_date, created_by):
     difference = Decimal(source.quantity) - Decimal(new_quantity)
     print(source)
 
@@ -128,6 +128,7 @@ def move(source, new_quantity, action, new_status, created_by):
         if action == 'TOLERATE':
             source.status = new_status
             source.quantity = new_quantity
+            arrival_date = arrival_date  
             
             print(source)
             
@@ -141,11 +142,13 @@ def move(source, new_quantity, action, new_status, created_by):
                 rate=source.rate,
                 responsible_party=source.vendor_code,
                 created_by=created_by,
+                arrival_date = arrival_date,
             )
             source.status = new_status
 
     source.quantity = new_quantity
     source.status = new_status
+    source.arrival_date = arrival_date
     source.save()
 
     return source
