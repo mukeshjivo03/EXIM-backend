@@ -121,23 +121,23 @@ class StockStatus(models.Model):
         if self.quantity <= Decimal('0.00'):
             self.deleted = True
             
-        if self.status == 'IN_CONTRACT':
+        # if self.status == 'IN_CONTRACT':
             
-            if self.contract_start:
-                contract_start = self.contract_start
-            else:
-                contract_start = self.created_at.date()
+        #     if self.contract_start:
+        #         contract_start = self.contract_start
+        #     else:
+        #         contract_start = self.created_at.date()
                 
-            ContractualHistory.objects.create(
-                item_code=self.item_code.tank_item_code if self.item_code else None,
-                item_name=self.item_code.tank_item_name if self.item_code else None,   # ← add this
-                vendor_code=self.vendor_code.card_code if self.vendor_code else None,
-                vendor_name=self.vendor_code.card_name if self.vendor_code else None,
-                rate = self.rate,
-                contract_start = contract_start,
-                contract_end = self.contract_end,
-                created_by = self.created_by,
-            )
+        #     ContractualHistory.objects.create(
+        #         item_code=self.item_code.tank_item_code if self.item_code else None,
+        #         item_name=self.item_code.tank_item_name if self.item_code else None,   # ← add this
+        #         vendor_code=self.vendor_code.card_code if self.vendor_code else None,
+        #         vendor_name=self.vendor_code.card_name if self.vendor_code else None,
+        #         rate = self.rate,
+        #         contract_start = contract_start,
+        #         contract_end = self.contract_end,
+        #         created_by = self.created_by,
+        #     )
             
 
 
@@ -159,8 +159,8 @@ class StockStatus(models.Model):
        
         if not is_new:
             
-            # if not is_new and old_status != 'OUT_SIDE_FACTORY' and self.status == 'OUT_SIDE_FACTORY':
-            #     self.arrival_date = old_eta
+            if not is_new and old_status != 'OUT_SIDE_FACTORY' and self.status == 'OUT_SIDE_FACTORY':
+                self.arrival_date = old_eta
             
             
             
