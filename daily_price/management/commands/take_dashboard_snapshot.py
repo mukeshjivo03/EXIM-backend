@@ -28,7 +28,6 @@ class Command(BaseCommand):
                 'item_code__tank_item_code',
                 'item_code__tank_item_name',      # adjust to your TankItem field
                 'status',
-                'vendor_code__card_code',    # adjust to your Party field
                 'vendor_code__card_name',    # adjust to your Party field
             )
             .annotate(total_qty=Sum('quantity'))
@@ -45,7 +44,6 @@ class Command(BaseCommand):
                 item_code=row['item_code__tank_item_code'],
                 item_name=row['item_code__tank_item_name'] or '',
                 status=row['status'],
-                vendor_code =row['vendor_code__card_code'] or 'UNKNOWN',
                 vendor_name=row['vendor_code__card_name'] or 'UNKNOWN',
                 quantity=row['total_qty'],
             ))
