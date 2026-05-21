@@ -89,7 +89,7 @@ class DailyPriceTrend(APIView):
             if date_str not in unique_dates:
                 unique_dates.append(date_str)
 
-            chart_data[p.commodity_name].append(float(p.with_gst_kg))
+            chart_data[p.commodity_name].append(float(p.factory_price))
 
         datasets = []
         for commodity, values in chart_data.items():
