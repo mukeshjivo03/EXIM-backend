@@ -175,4 +175,18 @@ class JivoRatesWithRange(APIView):
         serialized = JivoRatesSerializer(result , many = True)
         return Response(serialized.data)
     
+class GetHighestLowestByMonth(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('daily_price.view_dailyprice')]
     
+    def get(self, request):
+        month = request.query_params.get('month')
+        if not month:
+            return Response({'error': 'Month parameter is required.'}, status=400)
+        highest_prices = DailyPrice.objects.filter(date__month=month).order_by('-factory_price').first()
+        lowest_prices = DailyPrice.objects.filter(date__month=month).order_by('factory_price').first()
+        
+        return Response({
+            'highest': DailyPriceSerializer(highest_prices).data,
+            'lowest': DailyPriceSerializer(lowest_prices).data
+        })
