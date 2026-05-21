@@ -183,6 +183,11 @@ class GetHighestLowestByMonth(APIView):
         month = request.query_params.get('month')
         if not month:
             return Response({'error': 'Month parameter is required.'}, status=400)
+        
+        daily_prices = DailyPrice.objects.filter(date__month=month)
+        if not daily_prices.exists():
+            return Response({'error': 'No data found for the specified month.'}, status=404)
+        
         highest_prices = DailyPrice.objects.filter(date__month=month).order_by('-factory_price').first()
         lowest_prices = DailyPrice.objects.filter(date__month=month).order_by('factory_price').first()
         
