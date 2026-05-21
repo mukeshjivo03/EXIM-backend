@@ -27,7 +27,8 @@ class StockStatus(models.Model):
         ('IN_TRANSIT' , 'IN_TRANSIT'),
         ('PENDING' ,  'PENDING'),
         ('PROCESSING' , 'PROCESSING'),
-        ('IN_TANK' , 'IN_TANK')
+        ('IN_TANK' , 'IN_TANK'),
+        ('IN_WAREHOUSE' , 'IN_WAREHOUSE'),
     )
     
     REMAINDER_ACTION_CHOICES = (
