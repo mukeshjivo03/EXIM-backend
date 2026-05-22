@@ -180,16 +180,18 @@ class GetHighestLowestByMonth(APIView):
         return [IsAuthenticated(), HasAppPermission('daily_price.view_dailyprice')]
     
     def get(self, request):
-        month = request.query_params.get('month')
-        if not month:
-            return Response({'error': 'Month parameter is required.'}, status=400)
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
         
-        daily_prices = DailyPrice.objects.filter(date__month=month)
+        if not start_date or not end_date:
+            return Response({'error': 'Both start_date and end_date are required.'}, status=400)
+        
+        daily_prices = DailyPrice.objects.filter(date__range=[start_date, end_date])
         if not daily_prices.exists():
-            return Response({'error': 'No data found for the specified month.'}, status=404)
+            return Response({'error': 'No data found for the specified date range.'}, status=404)
         
-        highest_prices = DailyPrice.objects.filter(date__month=month).order_by('-factory_price').first()
-        lowest_prices = DailyPrice.objects.filter(date__month=month).order_by('factory_price').first()
+        highest_prices = DailyPrice.objects.filter(date__range=[start_date, end_date]).order_by('-factory_price').first()
+        lowest_prices =  DailyPrice.objects.filter(date__range=[start_date, end_date]).order_by('factory_price').first()
         
         return Response({
             'highest': DailyPriceSerializer(highest_prices).data,
