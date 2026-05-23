@@ -1,9 +1,11 @@
 from django.db import models
 from django.db import models, transaction
+import uuid
 
 # Create your models here.
 class TankItem(models.Model):
-    tank_item_code = models.CharField(unique=True ,max_length=50 , primary_key = True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tank_item_code = models.CharField(unique=True ,max_length=50)
     tank_item_name = models.CharField(max_length = 255)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -24,7 +26,8 @@ class TankData(models.Model):
         ("TOTES"  , "TOTES")
     )
     tank_code = models.CharField(primary_key=True, max_length=20, editable=False)
-    item_code = models.ForeignKey('TankItem', on_delete=models.SET_NULL, null=True)      
+    # item_code = models.ForeignKey('TankItem', on_delete=models.SET_NULL, null=True)      
+    item_code = models.ForeignKey('TankItem', on_delete=models.SET_NULL, null=True, to_field='tank_item_code')
     tank_capacity = models.DecimalField(max_digits=10, decimal_places=2)
     current_capacity = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
     tank_type = models.CharField(max_length=10 , choices=TANK_TYPE , default = 'TANK' , null = True , blank = True)

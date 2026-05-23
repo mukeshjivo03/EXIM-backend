@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from collections import defaultdict
 from django.db.models import Sum, F, Subquery, OuterRef, DateTimeField, Count , Q
-
+from django.db import transaction, connection
 
 from decimal import Decimal
 from rest_framework import status, serializers
@@ -60,7 +60,7 @@ class TankItemViews(generics.RetrieveDestroyAPIView):
 
     queryset = TankItem.objects.all()
     serializer_class = TankItemSerializer
-    lookup_field = 'tank_item_code'
+    lookup_field = 'id'
     
 
 class TankItemListCreateView(generics.ListCreateAPIView):
@@ -72,12 +72,36 @@ class TankItemListCreateView(generics.ListCreateAPIView):
     queryset = TankItem.objects.all()
     serializer_class = TankItemSerializer
     
+
 class TankItemColorUpdateView(generics.UpdateAPIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('tank.change_tankitem')]
+        return [IsAuthenticated(), HasAppPermission('tank.change_tankitem')]
     queryset = TankItem.objects.all()
     serializer_class = TankItemColorSerialier
-    lookup_field = 'tank_item_code'
+    lookup_field = 'id'
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        new_tank_item_code = serializer.validated_data.get('tank_item_code')
+        
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute('SET CONSTRAINTS ALL DEFERRED')
+                
+                if new_tank_item_code and new_tank_item_code != instance.tank_item_code:
+                    cursor.execute(
+                        "UPDATE tank_item SET tank_item_code = %s WHERE id = %s",
+                        [new_tank_item_code, str(instance.id)]
+                    )
+    
+            # Update remaining fields directly without touching tank_item_code
+            update_fields = {k: v for k, v in serializer.validated_data.items() 
+                            if k != 'tank_item_code'}
+            
+            if update_fields:
+                for field, value in update_fields.items():
+                    setattr(instance, field, value)
+                instance.save(update_fields=list(update_fields.keys()))
 
 
 class TankDataSummary(APIView):
@@ -117,7 +141,7 @@ class TankItemWiseSummary(APIView):
         return [IsAuthenticated(), HasAppPermission('tank.view_tankdata')]
     def get(self, request):
         queryset = TankData.objects.filter(is_active=True, item_code__isnull=False)
-
+        
         item_data = queryset.values(
             'item_code__tank_item_code',
             'item_code__tank_item_name',
@@ -132,8 +156,12 @@ class TankItemWiseSummary(APIView):
         grand_total_quantity = Decimal('0.00')
         for item in item_data:
             tank_codes = list(
-                queryset.filter(item_code=item['item_code__tank_item_code'])
+                # queryset.filter(item_code=item['item_code__tank_item_code'])
+                # .values_list('tank_code', flat=True)
+                queryset.filter(item_code__tank_item_code=item['item_code__tank_item_code'])
                 .values_list('tank_code', flat=True)
+                
+                
             )
             qty = item['quantity_in_liters'] or Decimal('0.00')
             grand_total_quantity += qty

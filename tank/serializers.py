@@ -12,7 +12,7 @@ class TankItemSerializer(serializers.ModelSerializer):
 class TankItemColorSerialier(serializers.ModelSerializer):
     class Meta:
         model = TankItem
-        fields = ['color' , 'tank_item_name']
+        fields = ['color' , 'tank_item_name' , 'tank_item_code']
 
 
 class TankDataSerializer(serializers.ModelSerializer):
