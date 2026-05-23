@@ -18,7 +18,7 @@ urlpatterns = [
     path('item-wise-summary/' , TankItemWiseSummary.as_view()),
     path('tank-rates/', TankRateBreakdownView.as_view()),
     path('update-capacity/<str:tank_code>/' , TankCapacityUpdateView.as_view()),
-    path('item/update-color/<str:tank_item_code>/' , TankItemColorUpdateView.as_view()),
+    path('item/update-color/<str:id>/' , TankItemColorUpdateView.as_view()),
     path('item/<str:tank_item_code>/' , TankItemViews.as_view()),
     path('item-wise-average/', ItemWiseAverage.as_view()),
     path('empty-tank/', EmptyTank.as_view()),
