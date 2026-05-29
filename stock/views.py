@@ -517,6 +517,7 @@ class VehicleReport(APIView):
                     ), 3
                 ),
                 eta=Max('eta'),
+                arrival_date=Max('arrival_date'),
                 status=Max('status'),
                 job_work=Max('job_work'),
                 rate=Max('rate'),    # ✅ added
@@ -544,6 +545,7 @@ class VehicleReport(APIView):
                 'total_quantity_in_litre': row['total_quantity_in_litre'],
                 'total_quantity_in_mts': row['total_quantity_in_mts'],
                 'eta': row['eta'],
+                'arrival_date': row['arrival_date'],
                 'status': row['status'],
                 'job_work': row['job_work'],
                 'rate': row['rate'],    # ✅ added
