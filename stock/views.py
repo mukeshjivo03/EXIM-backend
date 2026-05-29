@@ -477,11 +477,11 @@ class MoveView(APIView):
         action = request.data.get('action')
         created_by = request.data.get('created_by')
         new_status = request.data.get('new_status')
-
+        arrival_date = request.data.get('arrival_date')
         stock = StockStatus.objects.get(id=stock_id)
         old_snapshot = {f: str(getattr(stock, f)) for f in TRACKED_FIELDS}
 
-        new_record = move(stock, new_quantity, action, new_status, created_by)
+        new_record = move(stock, new_quantity, action, new_status, arrival_date, created_by)
 
         create_audit(new_record, changed_by_label=created_by, action='UPDATE', old_snapshot=old_snapshot, note=f"move → {new_status}")
 
@@ -517,6 +517,7 @@ class VehicleReport(APIView):
                     ), 3
                 ),
                 eta=Max('eta'),
+                arrival_date=Max('arrival_date'),
                 status=Max('status'),
                 job_work=Max('job_work'),
                 rate=Max('rate'),    # ✅ added
@@ -544,6 +545,7 @@ class VehicleReport(APIView):
                 'total_quantity_in_litre': row['total_quantity_in_litre'],
                 'total_quantity_in_mts': row['total_quantity_in_mts'],
                 'eta': row['eta'],
+                'arrival_date': row['arrival_date'],
                 'status': row['status'],
                 'job_work': row['job_work'],
                 'rate': row['rate'],    # ✅ added

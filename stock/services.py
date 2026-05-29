@@ -111,9 +111,8 @@ def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_n
     return new_record
 
 
-def move(source, new_quantity, action, new_status, created_by):
+def move(source, new_quantity, action, new_status, arrival_date ,created_by):
     difference = Decimal(source.quantity) - Decimal(new_quantity)
-    print(source)
 
     if difference != 0:
         if action == 'RETAIN':
@@ -128,8 +127,8 @@ def move(source, new_quantity, action, new_status, created_by):
         if action == 'TOLERATE':
             source.status = new_status
             source.quantity = new_quantity
-            
-            print(source)
+            source.arrival_date = arrival_date
+            print(f'Tolerating with {arrival_date} for {source.item_code} and status {new_status}')
             
             if new_status == 'IN_TANK' and not source.bility_number:
                 raise ValueError("Bility number is required when status is IN_TANK.")
@@ -146,6 +145,7 @@ def move(source, new_quantity, action, new_status, created_by):
 
     source.quantity = new_quantity
     source.status = new_status
+    source.arrival_date = arrival_date
     source.save()
 
     return source

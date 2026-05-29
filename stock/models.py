@@ -160,7 +160,7 @@ class StockStatus(models.Model):
        
         if not is_new:
             
-            if not is_new and old_status != 'OUT_SIDE_FACTORY' and self.status == 'OUT_SIDE_FACTORY':
+            if not is_new and old_status != 'OUT_SIDE_FACTORY' and self.status == 'OUT_SIDE_FACTORY' and not self.arrival_date:
                 self.arrival_date = old_eta
             
             
