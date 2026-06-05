@@ -126,7 +126,7 @@ class DebitEntrySerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['total', 'created_at' , 'allowed_shortage_qty' , 'deducted_shortage_qty' , 'deduction_amount' , 'shortage_qty']
         
-class DashboardSnapshotSerialixer(serializers.ModelSerializer):
+class DashboardSnapshotSerializer(serializers.ModelSerializer):
     class Meta:
         model = DashboardSnapshot
         fields = '__all__'

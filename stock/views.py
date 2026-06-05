@@ -10,7 +10,7 @@ from django.db.models.functions import Round
 
 
 from .models import StockStatus ,StockStatusUpdateLog , StockStatusFieldLog ,StockStatusChangeSession , DebitEntry , ContractualHistory , DashboardSnapshot
-from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer , DebitEntrySerializer , ContractualHistorySerializer , DashboardSnapshotSerialixer
+from .serializers import StockStatusSerializer , StockStatusUpdateLogSerializer , StockStatusPatchSerializer , StockStatusChangeSessionSerializer , StockStatusFieldLogSerializer , DebitEntrySerializer , ContractualHistorySerializer , DashboardSnapshotSerializer
 from .services import arrive_batch , dispatch , move , create_audit, TRACKED_FIELDS
 from .filters import StockStatusFilters
 from tank.models import TankData ,TankItem
@@ -646,5 +646,5 @@ class SnapshotListView(APIView):
             return Response({"error": "date query parameter is required"}, status=400)
 
         snapshots = DashboardSnapshot.objects.filter(snapshot_date=date)
-        serializer = DashboardSnapshotSerialixer(snapshots, many=True)
+        serializer = DashboardSnapshotSerializer(snapshots, many=True)
         return Response(serializer.data)        
