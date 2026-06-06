@@ -3,10 +3,30 @@ from django.db import models, transaction
 import uuid
 
 # Create your models here.
+
+
 class TankItem(models.Model):
+    SUB_GROUP_CHOICES = (
+        ('SOYABEAN', 'SOYABEAN'),
+        ('OILVE' , 'OILVE'),
+        ('CANOLA' , 'CANOLA'),
+        ('MUSTARD' ,'MUSTARD'),
+        ('GROUNDNUT' , 'GROUNDNUT'),
+        ('GHEE' , 'GHEE'),
+        ('SUNFLOWER' , 'SUNFLOWER'),
+        ('RICE BRAN' , 'RICE BRAN'),
+        ('COCONUT' , 'COCONUT'),
+        ('SESAME' , 'SESAME'),
+        ('EXTRA VIRGIN' , 'EXTRA VIRGIN'),
+        ('COTTON SEED' , 'COTTON SEED'),
+        ('BLENDED' , 'BLENDED')
+    )
+
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tank_item_code = models.CharField(unique=True ,max_length=50)
     tank_item_name = models.CharField(max_length = 255)
+    category = models.CharField(choices=SUB_GROUP_CHOICES , null=True , blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=50)
