@@ -1152,4 +1152,26 @@ class Queries:
         ORDER BY T0."DocDate" ASC, T0."DocNum", T1."LineNum" ' 
         )
         """
+
+    @staticmethod
+    def get_monthly_planning(monthId):
+        return f"""
+        SELECT * FROM OPENQUERY(HANADB112, '
+            SELECT T1."U_Sub_Group", SUM(T0."Quantity") AS "Quantity"
+            FROM "JIVO_OIL_HANADB"."OITM" AS T1 
+            LEFT JOIN "JIVO_OIL_HANADB"."FCT1" AS T0 ON T0."ItemCode" = T1."ItemCode"
+            WHERE T0."AbsID" = ''{monthId}'' 
+            GROUP BY T1."U_Sub_Group"
+            ORDER BY "Quantity" DESC
+        ')
+        """
     
+    @staticmethod
+    def get_planned_months():
+        return f"""
+        SELECT * FROM OPENQUERY(HANADB112, '
+            SELECT
+                *
+            FROM "JIVO_OIL_HANADB"."OFCT"  
+        ')
+        """

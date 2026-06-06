@@ -6,7 +6,7 @@ from django.db.models import Sum, Count, Avg , Q
 from django.db.models.functions import Round, Coalesce
 from decimal import Decimal
 
-from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService , APService
+from .services.services import PartyServices, ProductServices , POService , BalanceSheetService, GRPOServices , InventoryService , APService , PlanningService
 from .services.connections import Queries
 
 from .serializers import RMProductSerializer, FGProductSerializer , PartySerializer , SyncLogSerializer, DomesticContractSerializer
@@ -490,3 +490,30 @@ class getOpenPoView(APIView):
     def get(self , request):
         result = POService().syncOpenPOs()
         return Response({"open_pos" : result})
+
+class getMonhtlyPlanningView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('sap_sync.sync_balance_sheet')]
+    
+    def get(self, request):
+        monthId = request.query_params.get('monthId')
+        
+        if not monthId:
+            # Side note: It's better to return a 400 Response instead of raising a ValueError
+            return Response({"error": "Month Id is required"}, status=400)
+        
+        # Instantiate the service here
+        service = PlanningService()
+        result = service.get_monthly_planning(monthId)
+        
+        return Response({"monthly_planning": result})
+    
+class getPlannedMonthsView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('sap_sync.sync_balance_sheet')]
+    
+    def get(self, request):
+        service = PlanningService()
+        result = service.get_planned_months()
+        
+        return Response({"Planned_months": result})
