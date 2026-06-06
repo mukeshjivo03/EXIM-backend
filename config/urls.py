@@ -38,4 +38,5 @@ urlpatterns = [
     path('license/' , include('license.urls')),
     path('dc/' , include('contracts.urls')),
     path('exim-rates/' , include('exim_rates.urls')),
+    path('ai/' , include('Chatbot.urls'))
 ]
