@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  getCustomerAgingBalanceSheet, syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP  , getCustomerBalnceSheet , getCustomerLedger , getVendorLedger , getBalanceInRange , getAllOpenAR , getVendorBalanceSheet , getOpenPoView
+from .views import  getCustomerAgingBalanceSheet, syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP  , getCustomerBalnceSheet , getCustomerLedger , getVendorLedger , getBalanceInRange , getAllOpenAR , getVendorBalanceSheet , getOpenPoView ,getMonhtlyPlanningView ,getPlannedMonthsView
 
 
 
@@ -14,8 +14,8 @@ urlpatterns = [
     path('sap_sync/open-grpos/' , syncOpenGRPOS.as_view()),
     path('sap-sync/open-pos/' , getOpenPoView.as_view()),
     path('director-inventorty/' , DirectorDashboard.as_view()),
-    
-    
+    path('sap-sync/monthly-planning/' , getMonhtlyPlanningView.as_view()),
+    path('sap-sync/planned-months/' , getPlannedMonthsView.as_view()),
     path('item/rm/<str:item_code>/' , RMProductGetandDeleteView.as_view()),
     path('items/rm/' , RMProductListView.as_view()),
     path('items/rm/summary/' , RMProductSummaryView.as_view()),

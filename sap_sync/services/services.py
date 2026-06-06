@@ -587,4 +587,21 @@ class APService:
             
         return result
     
+
+class PlanningService:
+    def __init__(self):
+        self.connection = SAPConnection()
     
+    def get_monthly_planning(self , monthId):
+        with self.connection as conn:
+            query = Queries().get_monthly_planning(monthId)  
+            result = conn.execute_query(query)
+
+        return result      
+    
+    def get_planned_months(self):
+        with self.connection as conn:
+            query = Queries().get_planned_months()
+            result = conn.execute_query(query)
+
+        return result
