@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StockStatus , StockStatusUpdateLog , StockStatusFieldLog , StockStatusChangeSession , DebitEntry , ContractualHistory , DashboardSnapshot
+from .models import StockStatus , StockStatusUpdateLog , StockStatusFieldLog , StockStatusChangeSession , DebitEntry , ContractualHistory , DashboardSnapshot , DashboardOrder
 from sap_sync.models import RMProducts , Party
 from tank.models import TankData , TankItem
 
@@ -131,3 +131,7 @@ class DashboardSnapshotSerializer(serializers.ModelSerializer):
         model = DashboardSnapshot
         fields = '__all__'
     
+class DashboardOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DashboardOrder
+        fields = '__all__'

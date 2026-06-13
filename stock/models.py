@@ -361,3 +361,16 @@ class DashboardSnapshot(models.Model):
     class Meta:
         db_table = 'dashboard_snapshot'
         unique_together = ('snapshot_date', 'item_code', 'vendor_code')
+
+
+
+class DashboardOrder(models.Model):
+    item_code = models.ForeignKey(TankItem, on_delete=models.SET_NULL, null=True ,to_field = 'tank_item_code')
+    order_number = models.IntegerField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'dashboard_order'
+        ordering = ['order_number']
