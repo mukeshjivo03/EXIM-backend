@@ -105,7 +105,7 @@ class StockStatus(models.Model):
     
     def save(self, *args, **kwargs):
         # ── existing RM0CDRO swap logic ──────────────────────────────────────
-        if self.item_code.tank_item_code == 'RM0CDRO' and self.status == 'AT_REFINERY' and self.quantity is not None:
+        if self.item_code.tank_item_code == 'c2c38f74-2449-483f-b096-4ef91584f782' and self.status == 'AT_REFINERY' and self.quantity is not None:
             self.item_code = TankItem.objects.get(tank_item_code='RM00C01')
             deduction_qty = Decimal('0.03') * self.quantity
             self.quantity = self.quantity - deduction_qty
