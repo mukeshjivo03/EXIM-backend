@@ -103,10 +103,19 @@ class StockStatus(models.Model):
         db_table = 'stock_status'
         permissions = [('view_vehicle_report' , 'Can view Vehicle Report')]
     
+    
     def save(self, *args, **kwargs):
+        
+        print(f"Is Crude :{self.item_code.tank_item_name == 'Crude Oil'}")
+        print(f"ItemCode : {self.item_code.tank_item_name}")
+        print(f"Is At Refinery :{self.status == 'AT_REFINERY' }")
+        
         # ── existing RM0CDRO swap logic ──────────────────────────────────────
-        if self.item_code.tank_item_code == 'c2c38f74-2449-483f-b096-4ef91584f782' and self.status == 'AT_REFINERY' and self.quantity is not None:
-            self.item_code = TankItem.objects.get(tank_item_code='RM00C01')
+        print(f"Main Conditions: {self.item_code.tank_item_name == 'Crude Oil  ' and self.status == 'AT_REFINERY' and self.quantity is not None}")
+        if self.item_code.tank_item_name == 'Crude Oil' and self.status == 'AT_REFINERY' and self.quantity is not None:
+            
+            print("Converting Crude to Canola.....")
+            self.item_code = TankItem.objects.get(id='73109f7d-4e6b-46c1-9209-dfcbc463775e')
             deduction_qty = Decimal('0.03') * self.quantity
             self.quantity = self.quantity - deduction_qty
 
