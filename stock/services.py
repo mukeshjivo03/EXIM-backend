@@ -10,7 +10,6 @@ def resolve_parent(source):
     else:
         return source.parent
 
-
 def get_or_create_accumulator(parent, new_status, arrived_qty, rate, created_by):
     existing = StockStatus.objects.filter(
         parent=parent,
@@ -111,7 +110,7 @@ def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_n
     return new_record
 
 
-def move(source, new_quantity, action, new_status, arrival_date ,created_by):
+def move(source, new_quantity, action, new_status, arrival_date, location  ,created_by):
     difference = Decimal(source.quantity) - Decimal(new_quantity)
 
     if difference != 0:
@@ -128,6 +127,7 @@ def move(source, new_quantity, action, new_status, arrival_date ,created_by):
             source.status = new_status
             source.quantity = new_quantity
             source.arrival_date = arrival_date
+            # source.location = location
             print(f'Tolerating with {arrival_date} for {source.item_code} and status {new_status}')
             
             if new_status == 'IN_TANK' and not source.bility_number:
@@ -146,6 +146,7 @@ def move(source, new_quantity, action, new_status, arrival_date ,created_by):
     source.quantity = new_quantity
     source.status = new_status
     source.arrival_date = arrival_date
+    source.location = location
     source.save()
 
     return source
