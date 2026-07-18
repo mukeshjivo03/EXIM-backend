@@ -45,6 +45,11 @@ class StockStatus(models.Model):
         'IN_TANK',
         'OUT_SIDE_FACTORY',
     ])
+
+    PAYMENT_STATUSES = frozenset([
+        'PAID',
+        'UNPAID'
+    ])
     
     item_code = models.ForeignKey(TankItem, on_delete=models.SET_NULL, null=True ,to_field = 'tank_item_code')
     status = models.CharField(max_length=50 , choices=STATUS_CHOICES)
@@ -72,6 +77,7 @@ class StockStatus(models.Model):
     bility_number = models.CharField(max_length=100 , null = True, blank=True)
     grpo_number = models.CharField(max_length=100 , null = True, blank=True)
 
+    payment_status = models.CharField(max_length=20, choices=[('PAID', 'Paid'), ('UNPAID', 'Unpaid')], default='UNPAID')
 
 
     # Only in CDRO and Canola 

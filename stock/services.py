@@ -62,7 +62,7 @@ def arrive_batch(otw_record, weighed_qty, created_by, action, destination_status
     return accumulator
 
 
-def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_number , location  , action=None  ):
+def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_number , location  , payment_status  ,action=None , ):
     if quantity > source.quantity:
         raise ValueError(f"Dispatch quantity {quantity} exceeds available quantity {source.quantity}")
 
@@ -110,7 +110,7 @@ def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_n
     return new_record
 
 
-def move(source, new_quantity, action, new_status, arrival_date, location  ,created_by):
+def move(source, new_quantity, action, new_status, arrival_date, location , payment_status, created_by):
     difference = Decimal(source.quantity) - Decimal(new_quantity)
 
     if difference != 0:
@@ -147,6 +147,7 @@ def move(source, new_quantity, action, new_status, arrival_date, location  ,crea
     source.status = new_status
     source.arrival_date = arrival_date
     source.location = location
+    source.payment_status = payment_status
     source.save()
 
     return source

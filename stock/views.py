@@ -373,17 +373,18 @@ class Dispatch(APIView):
         action = request.data.get('action')
         created_by = request.data.get('created_by')
 
+
         transporter = request.data.get('transporter')
         vehicle_number = request.data.get('vehicle_number')
         eta = request.data.get('eta')
         location = request.data.get('location')
-    
+        payment_status = request.data.get('payment_status')
 
 
         stock = StockStatus.objects.get(id=source_id)
         old_snapshot = {f: str(getattr(stock, f)) for f in TRACKED_FIELDS}
 
-        new_record = dispatch(stock, dispatch_quantity, dispatch_status, created_by, transporter , eta , vehicle_number , location , action)
+        new_record = dispatch(stock, dispatch_quantity, dispatch_status, created_by, transporter , eta , vehicle_number , location ,payment_status , action  )
 
         create_audit(new_record, changed_by_label=created_by, action='CREATE', note=f"dispatched from #{source_id}")
         create_audit(stock, changed_by_label=created_by, action='UPDATE', old_snapshot=old_snapshot, note="dispatch source reduced")
@@ -427,11 +428,12 @@ class MoveView(APIView):
         new_status = request.data.get('new_status')
         arrival_date = request.data.get('arrival_date')
         location = request.data.get('location') 
+        payment_status = request.data.get('payment_status')
 
 
         stock = StockStatus.objects.get(id=stock_id)
         old_snapshot = {f: str(getattr(stock, f)) for f in TRACKED_FIELDS}
-        new_record = move(stock, new_quantity, action, new_status, arrival_date,location,    created_by)
+        new_record = move(stock, new_quantity, action, new_status, arrival_date,location, payment_status, created_by)
 
         create_audit(new_record, changed_by_label=created_by, action='UPDATE', old_snapshot=old_snapshot, note=f"move → {new_status}")
 
