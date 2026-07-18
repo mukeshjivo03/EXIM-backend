@@ -1175,3 +1175,10 @@ class Queries:
             FROM "JIVO_OIL_HANADB"."OFCT"  
         ')
         """
+
+    # @staticmethod
+    # def get_grpo_quantity(startDate , endDate , subGroup):
+    #     return f"""
+
+    #     ')
+    #     """

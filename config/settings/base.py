@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     'daily_price',
     'license',
     'contracts',
+    'exim_rates',
+    'rates',
+    
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
