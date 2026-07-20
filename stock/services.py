@@ -147,7 +147,8 @@ def move(source, new_quantity, action, new_status, arrival_date, location , paym
     source.status = new_status
     source.arrival_date = arrival_date
     source.location = location
-    source.payment_status = payment_status
+    if payment_status is not None:
+        source.payment_status = payment_status
     source.save()
 
     return source
