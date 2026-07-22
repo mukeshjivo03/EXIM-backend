@@ -20,6 +20,13 @@ class CommodityMarginListCreateView(generics.ListCreateAPIView):
     queryset = CommodityMargin.objects.all()
     serializer_class = CommodityMarginSerializer
 
+
+class CommodityMarginRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CommodityMargin.objects.all()
+    serializer_class = CommodityMarginSerializer
+    lookup_field = 'id'
+
+    
 class MarketRateCreateView(generics.CreateAPIView):
     queryset = MarketRates.objects.all()
     serializer_class = MarketRateCreateSerializer
