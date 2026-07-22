@@ -23,7 +23,7 @@ class PackingMarginSerializer(serializers.ModelSerializer):
 class CommodityMarginSerializer(serializers.ModelSerializer):
     class Meta:
         model = CommodityMargin
-        fields = ['id' ,'commodity' , 'margin_rate' , 'created_by']
+        fields = ['id' ,'commodity' , 'margin_rate' , 'freight_rate' , 'created_by']
 
 class MarketRateCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,13 +71,36 @@ class MarketRateCreateSerializer(serializers.ModelSerializer):
         return market_rate
 
 class MarketRatesViewSerializer(serializers.ModelSerializer):
-   with_packing = serializers.ReadOnlyField() 
-   with_gst_kg = serializers.ReadOnlyField()
-   with_gst_ltr = serializers.ReadOnlyField() 
+    with_packing = serializers.ReadOnlyField() 
+    with_gst_kg = serializers.ReadOnlyField()
+    with_gst_ltr = serializers.ReadOnlyField() 
 
-   class Meta:
-       model = MarketRates
-       fields = ['id' ,'commodity' , 'factory_kg' , 'with_packing' , 'with_gst_kg' , 'with_gst_ltr' , 'date']
+    freight_rate = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MarketRates
+        # Ensure you include all standard fields plus your computed fields
+        fields = [
+            'id', 
+            'date',
+            'commodity', 
+            'factory_kg', 
+            'factory_kg_freight',
+            'with_packing', 
+            'with_gst_kg', 
+            'with_gst_ltr', 
+            'freight_rate', 
+            'created_by'
+        ]
+
+    def get_freight_rate(self, obj):
+        # 'obj' is the MarketRates instance being serialized.
+        # We access the freight_rate from the related commodity.
+        if obj.commodity and hasattr(obj.commodity, 'freight_rate'):
+            return obj.commodity.freight_rate
+        
+        # Return 0 or None if there is no related commodity or freight rate
+        return 0
 
 class BasicRatesSerializer(serializers.ModelSerializer):
     basic_price_ltr = serializers.ReadOnlyField()

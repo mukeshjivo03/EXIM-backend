@@ -473,6 +473,7 @@ class VehicleReport(APIView):
                 status=Max('status'),
                 job_work=Max('job_work'),
                 rate=Max('rate'),    # ✅ added
+                payment_status = Max('payment_status')
             )
             .order_by('vehicle_number', 'transporter', 'item_code')
         )
@@ -501,6 +502,7 @@ class VehicleReport(APIView):
                 'status': row['status'],
                 'job_work': row['job_work'],
                 'rate': row['rate'],    # ✅ added
+                'payment_status' : row['payment_status']
             })
 
         return Response(list(grouped.values()))

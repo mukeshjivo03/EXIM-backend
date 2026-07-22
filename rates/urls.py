@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PackingMarginListCreateView , CommodityMarginListCreateView , MarketRateCreateView , MarketRatesGetView ,PackingMarginRetrieveUpdateDeleteView , MarketRateRetrieveUpdateDeleteView , GetLatestMarketRates,GetBasicRatesView , PackSizeListCreateView , PackSizeRetrieveUpdateDeleteView , GetPackRatesView , GetLatestRateTableView
+from .views import PackingMarginListCreateView , CommodityMarginListCreateView , MarketRateCreateView , MarketRatesGetView ,PackingMarginRetrieveUpdateDeleteView , MarketRateRetrieveUpdateDeleteView , GetLatestMarketRates,GetBasicRatesView , PackSizeListCreateView , PackSizeRetrieveUpdateDeleteView , GetPackRatesView , GetLatestRateTableView ,CommodityMarginRetrieveUpdateDeleteView
 
 
 urlpatterns = [
@@ -16,6 +16,7 @@ urlpatterns = [
     path('rate-table/latest/' , GetLatestRateTableView.as_view()),
 
     path('packing/<int:id>/' , PackingMarginRetrieveUpdateDeleteView.as_view()),
-    path('market-rate/<int:id>/' , MarketRateRetrieveUpdateDeleteView.as_view())
+    path('market-rate/<int:id>/' , MarketRateRetrieveUpdateDeleteView.as_view()),
+    path('commodity/<int:id>/' , CommodityMarginRetrieveUpdateDeleteView.as_view())
 
 ]

@@ -7,6 +7,8 @@ LTR_CONVERSION = Decimal('1.0989')
 class CommodityMargin(models.Model):
     commodity = models.CharField(max_length=100)
     margin_rate = models.DecimalField(max_digits=5, decimal_places=2 , blank=True , null=True)
+    freight_rate = models.DecimalField(max_digits=5, decimal_places=2 , blank=True , null=True , default='0.00')
+
     created_at = models.DateTimeField(auto_now=True)
     created_by = models.CharField(max_length=255)
 
@@ -16,7 +18,9 @@ class CommodityMargin(models.Model):
 
 class MarketRates(models.Model):
     commodity = models.ForeignKey(CommodityMargin , on_delete=models.SET_NULL , null = True)
+
     factory_kg = models.DecimalField(max_digits=10, decimal_places=2)
+    factory_kg_freight = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField(auto_now_add=True)
     created_by = models.CharField(max_length=100)
 
@@ -26,6 +30,14 @@ class MarketRates(models.Model):
     class Meta:
         db_table = 'market_rates'
         unique_together = ('commodity', 'date')
+
+    def save(self, *args, **kwargs):
+        if self.factory_kg :
+            freight_rate = self.commodity.freight_rate
+            self.factory_kg_freight = self.factory_kg + freight_rate
+
+        super().save(*args, **kwargs)
+
 
     @property
     def with_packing(self) -> Decimal:
