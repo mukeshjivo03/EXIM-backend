@@ -49,6 +49,9 @@ class SystemAccess(models.Model):
             ('view_exim_rates' , 'Can see Exim Rates'),
             ('view_director_report' , 'Can See Director Report'),
             ('add_opening_rate' , 'Can Add Opening Rate'),
-            ('view_customer_balance_sheet' , 'Can View Customer Balance Sheet') 
+            ('view_customer_balance_sheet' , 'Can View Customer Balance Sheet') ,
+            ('view_bank_accounts' , 'Can View bank Accounts'),
+            ('view_bank_closing' , 'Can View bank closing')
+            
         ]
 
