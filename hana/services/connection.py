@@ -60,6 +60,7 @@ class HANAConnection:
 class Queries():
     OIL_SCHEMA = settings.DATABASES['hana']['OIL_SCHEMA']
     BEVERAGE_SCHEMA = settings.DATABASES['hana']['BEVERAGE_SCHEMA']
+    MART_SCHEMA = settings.DATABASES['hana']['MART_SCHEMA']
 
     @staticmethod
     def resolve_branch(branch):
@@ -67,6 +68,8 @@ class Queries():
             return Queries.OIL_SCHEMA
         elif branch == 'BEVERAGES':
             return Queries.BEVERAGE_SCHEMA
+        elif branch == 'MART':
+            return Queries.MART_SCHEMA
         raise ValueError(f"Unknown branch: {branch!r}")
         
     @staticmethod
@@ -114,4 +117,79 @@ class Queries():
         AND a."ActType" = 'N'
         GROUP BY a."AcctCode", a."AcctName", a."FatherNum"
         ORDER BY a."FatherNum", a."AcctCode"
+        """
+
+    @staticmethod
+    def get_account_ledger(branch):
+        s = Queries.resolve_branch(branch)
+        return F"""
+        SELECT
+            j."TransId",
+            j."Line_ID",
+            j."RefDate",
+            j."Account",
+            a."AcctName",
+            j."Debit",
+            j."Credit",
+            j."LineMemo",
+            j."ShortName",
+            h."Memo" AS "HeaderMemo",
+            h."TransType",
+            h."Ref1",
+            h."Ref2"
+        FROM {s}."JDT1" j
+        INNER JOIN {s}."OJDT" h ON h."TransId" = j."TransId"
+        LEFT JOIN {s}."OACT" a ON a."AcctCode" = j."Account"
+        WHERE j."Account" = ?
+        AND j."RefDate" BETWEEN ? AND ?
+        ORDER BY j."RefDate", j."TransId"
+        """
+
+    @staticmethod
+    def get_accounts_summary(branch):
+        s = Queries.resolve_branch(branch)
+        return F"""
+        SELECT
+            CASE
+                WHEN "FatherNum" IN ('1104100','1104200') THEN 'Bank'
+                WHEN "FatherNum" = '1106100' THEN 'FD'
+                WHEN "FatherNum" IN ('2201100','2201200','2201300','2201400','2202100','2202300') THEN 'Loan'
+            END AS "Category",
+            COUNT(*) AS "AccountCount",
+            SUM("CurrTotal") AS "TotalBalance",
+            "ActCurr"
+        FROM {s}."OACT"
+        WHERE "Postable" = 'Y'
+        AND "Frozen" = 'N'
+        AND "ActType" = 'N'
+        AND "FatherNum" IN (
+            '1104100', '1104200', '1106100',
+            '2201100', '2201200', '2201300', '2201400',
+            '2202100', '2202300'
+        )
+        GROUP BY
+            CASE
+                WHEN "FatherNum" IN ('1104100','1104200') THEN 'Bank'
+                WHEN "FatherNum" = '1106100' THEN 'FD'
+                WHEN "FatherNum" IN ('2201100','2201200','2201300','2201400','2202100','2202300') THEN 'Loan'
+            END,
+            "ActCurr"
+        ORDER BY "Category"
+        """
+
+    @staticmethod
+    def get_account_monthly_trend(branch):
+        s = Queries.resolve_branch(branch)
+        return F"""
+        SELECT
+            YEAR(j."RefDate") AS "Year",
+            MONTH(j."RefDate") AS "Month",
+            SUM(j."Debit") AS "TotalDebit",
+            SUM(j."Credit") AS "TotalCredit",
+            SUM(j."Debit" - j."Credit") AS "NetMovement"
+        FROM {s}."JDT1" j
+        WHERE j."Account" = ?
+        AND j."RefDate" BETWEEN ? AND ?
+        GROUP BY YEAR(j."RefDate"), MONTH(j."RefDate")
+        ORDER BY YEAR(j."RefDate"), MONTH(j."RefDate")
         """
