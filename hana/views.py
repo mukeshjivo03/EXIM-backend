@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 from .services.services import get_all_accounts, get_account_closing_balances
-
+from accounts.permissions import HasAppPermission
 
 VALID_BRANCHES = ('OIL', 'BEVERAGES')
 
@@ -20,8 +20,10 @@ def get_branch_or_error(request):
 
 
 class AccountsView(APIView):
-    permission_classes = [IsAuthenticated]
-
+    def get_permissions(self):
+            return [IsAuthenticated() , HasAppPermission('accounts.view_bank_accounts')]
+        
+        
     def get(self, request):
         branch, error = get_branch_or_error(request)
         if error:
@@ -39,7 +41,10 @@ class AccountsView(APIView):
 
 
 class AccountClosingBalanceView(APIView):
-    permission_classes = [IsAuthenticated]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_bank_closing')]
+            
+    
 
     def get(self, request):
         branch, error = get_branch_or_error(request)
