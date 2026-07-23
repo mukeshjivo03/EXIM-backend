@@ -20,7 +20,7 @@ def get_branch_or_error(request):
 
 
 class AccountsView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         branch, error = get_branch_or_error(request)
@@ -39,7 +39,7 @@ class AccountsView(APIView):
 
 
 class AccountClosingBalanceView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         branch, error = get_branch_or_error(request)
