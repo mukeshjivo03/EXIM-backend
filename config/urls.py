@@ -39,5 +39,6 @@ urlpatterns = [
     path('dc/' , include('contracts.urls')),
     path('exim-rates/' , include('exim_rates.urls')),
     path('ai/' , include('Chatbot.urls')),
-    path('rates/' , include('rates.urls'))
+    path('rates/' , include('rates.urls')),
+    path('hana/' , include('hana.urls'))
 ]

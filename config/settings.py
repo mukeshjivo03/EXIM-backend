@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'contracts',
     'exim_rates',
     'rates',
+    'hana'
     
 ]
 
@@ -105,7 +106,16 @@ DATABASES = {
         'OPTIONS': {
             'connect_timeout': 10,  # Forces it to wait up to 10 seconds to connect
         }
-    }
+    },
+     'hana': {
+            'ENGINE': 'django.db.backends.dummy', 
+            'HOST': os.getenv('HANA_DB_HOST'),
+            'PORT': os.getenv('HANA_DB_PORT'),
+            'OIL_SCHEMA': os.getenv('HANA_DB_OIL_NAME'),
+            'BEVERAGE_SCHEMA': os.getenv('HANA_DB_BEVERAGE_NAME'),
+            'USER': os.getenv('HANA_DB_USER'),
+            'PASSWORD': os.getenv('HANA_DB_PASSWORD'),
+        }
 }
 
 # SAP Database Connection
