@@ -113,6 +113,7 @@ DATABASES = {
             'PORT': os.getenv('HANA_DB_PORT'),
             'OIL_SCHEMA': os.getenv('HANA_DB_OIL_NAME'),
             'BEVERAGE_SCHEMA': os.getenv('HANA_DB_BEVERAGE_NAME'),
+            'MART_SCHEMA': os.getenv('HANA_DB_MART_NAME'),
             'USER': os.getenv('HANA_DB_USER'),
             'PASSWORD': os.getenv('HANA_DB_PASSWORD'),
         }
