@@ -76,25 +76,33 @@ class Queries():
     def get_all_accounts(branch):
         s = Queries.resolve_branch(branch)
         return F"""
-        SELECT 
-            "AcctCode", "AcctName", "FatherNum", "GroupMask",
-            "U_Bank_Name", "U_Account_Number", "U_IFSC", "CurrTotal", "ActCurr",
-            CASE 
-            WHEN "FatherNum" IN ('1104100','1104200') THEN 'Bank'
-            WHEN "FatherNum" = '1106100' THEN 'FD'
-            WHEN "FatherNum" IN ('2201100','2201200','2201300','2201400','2202100','2202300') THEN 'Loan'
+        SELECT
+            a."AcctCode", a."AcctName", a."FatherNum", a."GroupMask",
+            a."U_Bank_Name", a."U_Account_Number", a."U_IFSC", a."CurrTotal", a."ActCurr",
+            g."AcctName" AS "GroupName",
+            CASE
+            WHEN a."FatherNum" IN ('1104100','1104200') THEN 'Bank'
+            WHEN a."FatherNum" = '1106100' THEN 'FD'
+            WHEN a."FatherNum" IN ('2201100','2201200','2201300','2201400','2202100','2202300') THEN 'Loan'
     END AS "Category"
-        FROM {s}."OACT"
-        WHERE "Postable" = 'Y' 
-        AND "Frozen" = 'N' 
-        AND "ActType" = 'N'
-        AND "FatherNum" IN (
+        FROM {s}."OACT" a
+        -- FatherNum points at the parent (non-postable) OACT row, i.e. the SAP
+        -- group/sub-group this account sits under. Joining it back gives the UI
+        -- the real group NAME ("Wallets", "Vehicle Loans", "Director Loans"…)
+        -- instead of a bare numeric code.
+        LEFT JOIN {s}."OACT" g ON g."AcctCode" = a."FatherNum"
+        WHERE a."Postable" = 'Y'
+        AND a."Frozen" = 'N'
+        AND a."ActType" = 'N'
+        AND a."CurrTotal" > '0.00'
+        AND a."AcctCode" NOT IN ('1103115')
+        AND a."FatherNum" IN (
             '1104100', '1104200',   -- Bank accounts
             '1106100',               -- FDs
             '2201100', '2201200', '2201300', '2201400',  -- Bank OD/CC, Term Loans, Credit Card, Vehicle Loans
             '2202100', '2202300'     -- Unsecured loans (individual + corporate)
         )
-        ORDER BY "FatherNum", "AcctCode"
+        ORDER BY a."CurrTotal" DESC
         """
 
     @staticmethod
@@ -151,30 +159,38 @@ class Queries():
         return F"""
         SELECT
             CASE
-                WHEN "FatherNum" IN ('1104100','1104200') THEN 'Bank'
-                WHEN "FatherNum" = '1106100' THEN 'FD'
-                WHEN "FatherNum" IN ('2201100','2201200','2201300','2201400','2202100','2202300') THEN 'Loan'
+                WHEN a."FatherNum" IN ('1104100','1104200') THEN 'Bank'
+                WHEN a."FatherNum" = '1106100' THEN 'FD'
+                WHEN a."FatherNum" IN ('2201100','2201200','2201300','2201400','2202100','2202300') THEN 'Loan'
             END AS "Category",
+            a."FatherNum",
+            g."AcctName" AS "GroupName",
             COUNT(*) AS "AccountCount",
-            SUM("CurrTotal") AS "TotalBalance",
-            "ActCurr"
-        FROM {s}."OACT"
-        WHERE "Postable" = 'Y'
-        AND "Frozen" = 'N'
-        AND "ActType" = 'N'
-        AND "FatherNum" IN (
+            SUM(a."CurrTotal") AS "TotalBalance",
+            a."ActCurr"
+        FROM {s}."OACT" a
+        LEFT JOIN {s}."OACT" g ON g."AcctCode" = a."FatherNum"
+        WHERE a."Postable" = 'Y'
+        AND a."Frozen" = 'N'
+        AND a."ActType" = 'N'
+        AND a."FatherNum" IN (
             '1104100', '1104200', '1106100',
             '2201100', '2201200', '2201300', '2201400',
             '2202100', '2202300'
         )
+        -- Grouped one level finer than the category (by SAP sub-group) so the UI
+        -- can split e.g. Wallets out of Bank, and Director Loans out of Loans.
+        -- Summing the rows per category still yields the same category totals.
         GROUP BY
             CASE
-                WHEN "FatherNum" IN ('1104100','1104200') THEN 'Bank'
-                WHEN "FatherNum" = '1106100' THEN 'FD'
-                WHEN "FatherNum" IN ('2201100','2201200','2201300','2201400','2202100','2202300') THEN 'Loan'
+                WHEN a."FatherNum" IN ('1104100','1104200') THEN 'Bank'
+                WHEN a."FatherNum" = '1106100' THEN 'FD'
+                WHEN a."FatherNum" IN ('2201100','2201200','2201300','2201400','2202100','2202300') THEN 'Loan'
             END,
-            "ActCurr"
-        ORDER BY "Category"
+            a."FatherNum",
+            g."AcctName",
+            a."ActCurr"
+        ORDER BY "Category", a."FatherNum"
         """
 
     @staticmethod
