@@ -32,6 +32,21 @@ class syncPartyView(APIView):
             return Response({'success': False, 'error': str(e)}, status=500)
 
         
+class createTempPartyView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('sap_sync.add_party')]
+
+    def post(self, request):
+        try:
+            party_obj = PartyServices().createTempParty(request.data.get('card_name'))
+            serializer = PartySerializer(party_obj)
+
+            return Response({'success': True, 'party': serializer.data}, status=201)
+
+        except Exception as e:
+            return Response({'success': False, 'error': str(e)}, status=400)
+
+
 class syncRMProductsView(APIView):
     def get_permissions(self):
         return [IsAuthenticated() , HasAppPermission('sap_sync.sync_rm')]

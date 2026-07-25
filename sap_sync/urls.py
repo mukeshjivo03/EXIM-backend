@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path 
-from .views import  getCustomerAgingBalanceSheet, syncPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP  , getCustomerBalnceSheet , getCustomerLedger , getVendorLedger , getBalanceInRange , getAllOpenAR , getVendorBalanceSheet , getOpenPoView ,getMonhtlyPlanningView ,getPlannedMonthsView
+from .views import  getCustomerAgingBalanceSheet, syncPartyView , createTempPartyView , syncRMProductsView , syncFGProductsView , syncSingleRMProductView, syncSingleFGProductView , RMProductGetandDeleteView , RMProductListView , RMProductSummaryView , RMProductVarietyListView ,FGProductGetandDeleteView , FGProductListView , PartyGetandDeleteView , PartyListView , SyncLogListView , syncPOView , syncSinglePOView , DomesticContactListView , DomesticContractRetrieveUpdateDeleteView , syncBalanceSheet , syncOpenGRPOS ,syncInventory ,syncUniqueWarehouse , syncFinishedInventory , DirectorDashboard , syncBalanceSheetInsights , getOpenAP  , getCustomerBalnceSheet , getCustomerLedger , getVendorLedger , getBalanceInRange , getAllOpenAR , getVendorBalanceSheet , getOpenPoView ,getMonhtlyPlanningView ,getPlannedMonthsView
 
 
 
@@ -26,6 +26,7 @@ urlpatterns = [
     
     path('party/<str:card_code>/',PartyGetandDeleteView.as_view()),
     path('parties/',PartyListView.as_view()),
+    path('party/temp/create/', createTempPartyView.as_view()),
     path('sync_logs/' , SyncLogListView.as_view()),
 
     path('sap-sync/po/' , syncPOView.as_view()),

@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.db import transaction , IntegrityError
 
 from .connections import SAPConnection , Queries
 from ..models import syncLogs , RMProducts , FGProducts , Party , DomesticContracts 
@@ -301,8 +302,51 @@ class PartyServices:
             log.save()
             
             raise Exception(f"Service Error: {str(e)}")
-    
-    
+
+
+    TEMP_PREFIX = 'TEMP'
+    TEMP_PLACEHOLDER = 'TMP'
+
+    def _nextTempCardCode(self):
+        codes = Party.objects.filter(
+            card_code__regex=r'^%s[0-9]+$' % self.TEMP_PREFIX
+        ).values_list('card_code', flat=True)
+
+        last_no = 0
+        for code in codes:
+            number = int(code[len(self.TEMP_PREFIX):])
+            if number > last_no:
+                last_no = number
+
+        return f"{self.TEMP_PREFIX}{last_no + 1:04d}"
+
+    def createTempParty(self, cardName):
+        """Create a placeholder party (TEMP0001, TEMP0002, ...) for a card
+        that does not exist in SAP yet. Only the name comes from the user."""
+
+        card_name = str(cardName or '').strip()
+        if not card_name:
+            raise Exception("Please Provide Card Name")
+
+        if len(card_name) > 50:
+            raise Exception("Card Name cannot be longer than 50 characters")
+
+        # Retry guards against two requests picking the same number at once.
+        for _ in range(5):
+            try:
+                with transaction.atomic():
+                    return Party.objects.create(
+                        card_code = self._nextTempCardCode(),
+                        card_name = card_name,
+                        state = self.TEMP_PLACEHOLDER,
+                        u_main_group = self.TEMP_PLACEHOLDER,
+                        country = self.TEMP_PLACEHOLDER
+                    )
+            except IntegrityError:
+                continue
+
+        raise Exception("Could not generate a unique temporary card code, please retry")
+
 
 class POService:
     def __init__(self):
