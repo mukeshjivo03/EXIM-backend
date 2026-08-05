@@ -1,7 +1,16 @@
 from rest_framework import serializers
-from .models import DomesticReports
+from .models import DomesticReports , DomesticContractDetails
 from sap_sync.models import Party , RMProducts
 from decimal import Decimal
+
+
+class DomesticContractDetailSerializer(serializers.ModelSerializer):
+    """Read-only view of an imported DC workbook row."""
+
+    class Meta:
+        model = DomesticContractDetails
+        fields = '__all__'
+        read_only_fields = [field.name for field in DomesticContractDetails._meta.fields]
 
 class DomesticReportSerializer(serializers.ModelSerializer):
     product_name = serializers.SerializerMethodField()

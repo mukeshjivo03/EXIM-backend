@@ -5,9 +5,34 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 
-from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer, FreightSerializer , ContractDropdownSerializer
-from .models import DomesticReports
+from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer, FreightSerializer , ContractDropdownSerializer , DomesticContractDetailSerializer
+from .models import DomesticReports , DomesticContractDetails
 from accounts.permissions import HasAppPermission
+
+
+class DomesticContractDetailListView(APIView):
+    """DC workbook rows, newest invoice first.
+
+    ?year=2026 narrows to that financial year (1 Apr - 31 Mar); omit for all rows.
+    Filtering and paging beyond this are done client-side, as on the other list pages.
+    """
+
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('contracts.view_domesticcontractdetails')]
+
+    def get(self, request):
+        data = DomesticContractDetails.objects.all()
+
+        year = request.query_params.get('year')
+        if year:
+            try:
+                fy = int(year)
+            except ValueError:
+                return Response({'detail': f"Invalid year: {year!r}"}, status=400)
+            data = data.filter(invoice_date__range=[date(fy, 4, 1), date(fy + 1, 3, 31)])
+
+        serializer = DomesticContractDetailSerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class DomesticReportListView(APIView):
