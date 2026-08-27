@@ -78,8 +78,8 @@ class AccountClosingBalanceView(APIView):
 
 
 class AccountLedgerView(APIView):
-    # def get_permissions(self):
-        # return [IsAuthenticated() , HasAppPermission('accounts.view_bank_closing')]
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_bank_ledger')]
 
     def get(self, request):
         branch, error = get_branch_or_error(request)
@@ -107,6 +107,9 @@ class AccountLedgerView(APIView):
 
 
 class AccountsSummaryView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_finance_dashboard')]
+
     def get(self, request):
         branch, error = get_branch_or_error(request)
         if error:
@@ -124,6 +127,9 @@ class AccountsSummaryView(APIView):
 
 
 class AccountMonthlyTrendView(APIView):
+    def get_permissions(self):
+        return [IsAuthenticated() , HasAppPermission('accounts.view_finance_dashboard')]
+
     def get(self, request):
         branch, error = get_branch_or_error(request)
         if error:

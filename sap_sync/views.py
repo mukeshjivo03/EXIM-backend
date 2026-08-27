@@ -408,7 +408,7 @@ class DirectorDashboard(APIView):
         
 class getOpenAP(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('accounts.view_open_aps')]
     def get(self , request):
         result = APService().getAllOpenAP()
         return Response({"Open APs" : result})
@@ -427,7 +427,7 @@ class getOpenAP(APIView):
     
 class getCustomerBalnceSheet(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_outstanding')]
     
     def get(self , request):
         result = BalanceSheetService().syncCustaBalanceSheet()
@@ -436,7 +436,7 @@ class getCustomerBalnceSheet(APIView):
     
 class getCustomerLedger(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_ledger')]
     
     def get(self , request):
         cardCode = request.query_params.get('cardCode')
@@ -450,7 +450,7 @@ class getCustomerLedger(APIView):
     
 class getVendorLedger(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('accounts.view_vendor_ledger')]
     
     def get(self , request):
         cardCode = request.query_params.get('cardCode')
@@ -464,7 +464,7 @@ class getVendorLedger(APIView):
         
 class getBalanceInRange(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_aging')]
     
     def get(self , request):
         startDate = request.query_params.get('startDate')
@@ -478,7 +478,7 @@ class getBalanceInRange(APIView):
     
 class getAllOpenAR(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('accounts.view_customer_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('accounts.view_open_ars')]
     
     def get(self , request):
         result = APService().getAllOpenAR()
@@ -487,7 +487,7 @@ class getAllOpenAR(APIView):
     
 class getVendorBalanceSheet(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('accounts.view_vendor_outstanding')]
     
     def get(self , request):
         result = BalanceSheetService().syncVendorBalanceSheet()
@@ -500,7 +500,7 @@ class getCustomerAgingBalanceSheet(APIView):
 
 class getOpenPoView(APIView):
     def get_permissions(self):
-        return [IsAuthenticated() , HasAppPermission('sap_sync.sync_balance_sheet')]
+        return [IsAuthenticated() , HasAppPermission('accounts.view_open_pos')]
     
     def get(self , request):
         result = POService().syncOpenPOs()
@@ -508,7 +508,7 @@ class getOpenPoView(APIView):
 
 class getMonhtlyPlanningView(APIView):
     def get_permissions(self):
-        return [IsAuthenticated(), HasAppPermission('sap_sync.sync_balance_sheet')]
+        return [IsAuthenticated(), HasAppPermission('planning.view_planningupload')]
     
     def get(self, request):
         monthId = request.query_params.get('monthId')
@@ -525,7 +525,7 @@ class getMonhtlyPlanningView(APIView):
     
 class getPlannedMonthsView(APIView):
     def get_permissions(self):
-        return [IsAuthenticated(), HasAppPermission('sap_sync.sync_balance_sheet')]
+        return [IsAuthenticated(), HasAppPermission('planning.view_planningupload')]
     
     def get(self, request):
         service = PlanningService()
