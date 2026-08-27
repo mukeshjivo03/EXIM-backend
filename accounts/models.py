@@ -49,9 +49,28 @@ class SystemAccess(models.Model):
             ('view_exim_rates' , 'Can see Exim Rates'),
             ('view_director_report' , 'Can See Director Report'),
             ('add_opening_rate' , 'Can Add Opening Rate'),
-            ('view_customer_balance_sheet' , 'Can View Customer Balance Sheet') ,
             ('view_bank_accounts' , 'Can View bank Accounts'),
-            ('view_bank_closing' , 'Can View bank closing')
-            
+            ('view_bank_closing' , 'Can View bank closing'),
+
+            # Umbrella permissions kept so existing grants keep working. New work
+            # should use the per-report permissions below; these two used to gate
+            # every customer/vendor report at once.
+            ('view_customer_balance_sheet' , 'Can View Customer Balance Sheet') ,
+
+            # --- Customer reports (was: view_customer_balance_sheet) ---
+            ('view_customer_outstanding' , 'Can view Customer Outstanding'),
+            ('view_customer_ledger' , 'Can view Customer Ledger'),
+            ('view_customer_aging' , 'Can view Customer Aging'),
+            ('view_open_ars' , 'Can view Open ARs'),
+
+            # --- Vendor / payable reports (was: sap_sync.sync_balance_sheet) ---
+            ('view_vendor_outstanding' , 'Can view Vendor Outstanding'),
+            ('view_vendor_ledger' , 'Can view Vendor Ledger'),
+            ('view_open_aps' , 'Can view Open APs'),
+            ('view_open_pos' , 'Can view Open POs'),
+
+            # --- Bank / finance ---
+            ('view_finance_dashboard' , 'Can view Finance Dashboard'),
+            ('view_bank_ledger' , 'Can view Bank Ledger'),
         ]
 

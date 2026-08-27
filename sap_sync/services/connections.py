@@ -1153,26 +1153,48 @@ class Queries:
         )
         """
 
+    # Planning is kept per company. OITM/FCT1 have identical shapes in the OIL and
+    # MART schemas, so the two legs union cleanly; the outer GROUP BY folds a
+    # sub-group planned by both companies into one combined row rather than
+    # emitting it twice (the report keys its rows on U_Sub_Group).
     @staticmethod
     def get_monthly_planning(monthId):
         return f"""
         SELECT * FROM OPENQUERY(HANADB112, '
-            SELECT T1."U_Sub_Group", SUM(T0."Quantity") AS "Quantity"
-            FROM "JIVO_OIL_HANADB"."OITM" AS T1 
-            LEFT JOIN "JIVO_OIL_HANADB"."FCT1" AS T0 ON T0."ItemCode" = T1."ItemCode"
-            WHERE T0."AbsID" = ''{monthId}'' 
-            GROUP BY T1."U_Sub_Group"
+            SELECT "U_Sub_Group", SUM("Quantity") AS "Quantity"
+            FROM (
+                SELECT T1."U_Sub_Group" AS "U_Sub_Group", T0."Quantity" AS "Quantity"
+                FROM "JIVO_OIL_HANADB"."OITM" AS T1
+                INNER JOIN "JIVO_OIL_HANADB"."FCT1" AS T0 ON T0."ItemCode" = T1."ItemCode"
+                WHERE T0."AbsID" = ''{monthId}''
+
+                UNION ALL
+
+                SELECT T1."U_Sub_Group" AS "U_Sub_Group", T0."Quantity" AS "Quantity"
+                FROM "JIVO_MART_HANADB"."OITM" AS T1
+                INNER JOIN "JIVO_MART_HANADB"."FCT1" AS T0 ON T0."ItemCode" = T1."ItemCode"
+                WHERE T0."AbsID" = ''{monthId}''
+            ) AS U
+            GROUP BY "U_Sub_Group"
             ORDER BY "Quantity" DESC
         ')
         """
     
+    # Columns are enumerated rather than SELECT * so the two companies' forecast
+    # headers line up positionally; "Company" tags which schema a month came from.
     @staticmethod
     def get_planned_months():
-        return f"""
+        return """
         SELECT * FROM OPENQUERY(HANADB112, '
-            SELECT
-                *
-            FROM "JIVO_OIL_HANADB"."OFCT"  
+            SELECT ''OIL'' AS "Company", "AbsID", "Code", "Name", "UserSign", "StartDate", "EndDate", "FormView"
+            FROM "JIVO_OIL_HANADB"."OFCT"
+
+            UNION ALL
+
+            SELECT ''MART'' AS "Company", "AbsID", "Code", "Name", "UserSign", "StartDate", "EndDate", "FormView"
+            FROM "JIVO_MART_HANADB"."OFCT"
+
+            ORDER BY "StartDate" DESC
         ')
         """
 
