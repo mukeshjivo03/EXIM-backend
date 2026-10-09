@@ -62,7 +62,7 @@ def arrive_batch(otw_record, weighed_qty, created_by, action, destination_status
     return accumulator
 
 
-def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_number , location  , payment_status  ,action=None , ):
+def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_number , location  , payment_status  ,action=None , po_number=None):
     if quantity > source.quantity:
         raise ValueError(f"Dispatch quantity {quantity} exceeds available quantity {source.quantity}")
 
@@ -82,7 +82,8 @@ def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_n
         transporter = transporter,
         vehicle_number = vehicle_number,
         eta = eta,
-        location  = location
+        location  = location,
+        po_number = po_number or source.po_number,
     )
 
     if action in ('TOLERATE', 'DEBIT'):
@@ -110,7 +111,7 @@ def dispatch(source, quantity, status, created_by, transporter , eta , vehicle_n
     return new_record
 
 
-def move(source, new_quantity, action, new_status, arrival_date, location , payment_status, created_by):
+def move(source, new_quantity, action, new_status, arrival_date, location , payment_status, created_by, po_number=None):
     difference = Decimal(source.quantity) - Decimal(new_quantity)
 
     if difference != 0:
@@ -149,6 +150,8 @@ def move(source, new_quantity, action, new_status, arrival_date, location , paym
     source.location = location
     if payment_status is not None:
         source.payment_status = payment_status
+    if po_number:
+        source.po_number = po_number
     source.save()
 
     return source
@@ -156,7 +159,7 @@ def move(source, new_quantity, action, new_status, arrival_date, location , paym
 
 # ── Audit ──────────────────────────────────────────────────────────────────
 
-TRACKED_FIELDS = ['status', 'rate', 'quantity', 'vehicle_number', 'location', 'eta']
+TRACKED_FIELDS = ['status', 'rate', 'quantity', 'vehicle_number', 'location', 'eta', 'po_number']
 
 
 def create_audit(stock, changed_by_label, action, old_snapshot=None, note=''):

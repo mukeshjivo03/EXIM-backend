@@ -16,6 +16,7 @@ from .filters import StockStatusFilters
 from tank.models import TankData ,TankItem
 from sap_sync.models import Party
 from accounts.permissions import HasAppPermission
+from hana.services.po_flow import get_po_flows
 
 class StockStatusListCreateView(generics.ListCreateAPIView):
     def  get_permissions(self):
@@ -379,12 +380,13 @@ class Dispatch(APIView):
         eta = request.data.get('eta')
         location = request.data.get('location')
         payment_status = request.data.get('payment_status')
+        po_number = (request.data.get('po_number') or '').strip() or None
 
 
         stock = StockStatus.objects.get(id=source_id)
         old_snapshot = {f: str(getattr(stock, f)) for f in TRACKED_FIELDS}
 
-        new_record = dispatch(stock, dispatch_quantity, dispatch_status, created_by, transporter , eta , vehicle_number , location ,payment_status , action  )
+        new_record = dispatch(stock, dispatch_quantity, dispatch_status, created_by, transporter , eta , vehicle_number , location ,payment_status , action , po_number=po_number)
 
         create_audit(new_record, changed_by_label=created_by, action='CREATE', note=f"dispatched from #{source_id}")
         create_audit(stock, changed_by_label=created_by, action='UPDATE', old_snapshot=old_snapshot, note="dispatch source reduced")
@@ -429,11 +431,12 @@ class MoveView(APIView):
         arrival_date = request.data.get('arrival_date')
         location = request.data.get('location') 
         payment_status = request.data.get('payment_status')
+        po_number = (request.data.get('po_number') or '').strip() or None
 
 
         stock = StockStatus.objects.get(id=stock_id)
         old_snapshot = {f: str(getattr(stock, f)) for f in TRACKED_FIELDS}
-        new_record = move(stock, new_quantity, action, new_status, arrival_date,location, payment_status, created_by)
+        new_record = move(stock, new_quantity, action, new_status, arrival_date,location, payment_status, created_by, po_number=po_number)
 
         create_audit(new_record, changed_by_label=created_by, action='UPDATE', old_snapshot=old_snapshot, note=f"move → {new_status}")
 
@@ -457,6 +460,7 @@ class VehicleReport(APIView):
                 'transporter',       # ✅ added
                 'item_code',
                 'vendor_code',
+                'po_number',         # batches under different POs stay on separate lines
                 vendor_name=F('vendor_code__card_name'),
                 item_name=F('item_code__tank_item_name'),
             )
@@ -475,7 +479,7 @@ class VehicleReport(APIView):
                 rate=Max('rate'),    # ✅ added
                 payment_status = Max('payment_status')
             )
-            .order_by('vehicle_number', 'transporter', 'item_code')
+            .order_by('vehicle_number', 'transporter', 'item_code', 'po_number')
         )
 
         grouped = {}
@@ -502,7 +506,8 @@ class VehicleReport(APIView):
                 'status': row['status'],
                 'job_work': row['job_work'],
                 'rate': row['rate'],    # ✅ added
-                'payment_status' : row['payment_status']
+                'payment_status' : row['payment_status'],
+                'po_number': row['po_number'],
             })
 
         return Response(list(grouped.values()))
@@ -629,3 +634,50 @@ class DashboardOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ['PUT' , 'PATCH']:
             return [IsAuthenticated() , HasAppPermission('stock.change_dashboardorder')]
         return [IsAuthenticated() , HasAppPermission('stock.view_dashboardorder')]
+
+
+def _norm_vehicle(value):
+    return "".join(ch for ch in (value or "").upper() if ch.isalnum())
+
+
+class PoFlowReport(APIView):
+    """PO-linked stock entries with their SAP document flow (PO → GRPO → landed cost /
+    inventory transfer / A/P invoice → credit memo). SAP is only read, never written."""
+
+    def get_permissions(self):
+        return [IsAuthenticated(), HasAppPermission('stock.view_stockstatus')]
+
+    def get(self, request):
+        queryset = StockStatus.objects.filter(deleted=False, po_number__isnull=False).exclude(po_number='')
+        po = (request.query_params.get('po') or '').strip()
+        if po:
+            queryset = queryset.filter(po_number__iexact=po)
+
+        entries = list(
+            queryset
+            .values(
+                'id', 'status', 'po_number', 'vehicle_number', 'transporter', 'quantity', 'rate',
+                'eta', 'arrival_date', 'item_code',
+                item_name=F('item_code__tank_item_name'),
+                vendor=F('vendor_code'),
+                vendor_name=F('vendor_code__card_name'),
+            )
+            .order_by('po_number', 'id')
+        )
+
+        flows, sap_error = {}, None
+        try:
+            flows = get_po_flows([e['po_number'] for e in entries])
+        except (ConnectionError, RuntimeError) as e:
+            sap_error = str(e)
+
+        for entry in entries:
+            flow = flows.get(entry['po_number'].strip(), {})
+            vehicle = _norm_vehicle(entry['vehicle_number'])
+            # The GRPO(s) SAP booked for this entry's truck, matched on vehicle number
+            entry['matched_grpos'] = [
+                g['doc_num'] for g in flow.get('grpos', [])
+                if vehicle and _norm_vehicle(g['vehicle_number']) == vehicle
+            ]
+
+        return Response({'entries': entries, 'po_flows': flows, 'sap_error': sap_error})

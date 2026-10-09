@@ -76,6 +76,8 @@ class StockStatus(models.Model):
     
     bility_number = models.CharField(max_length=100 , null = True, blank=True)
     grpo_number = models.CharField(max_length=100 , null = True, blank=True)
+    # SAP purchase order this batch is loaded/shipped against (UNDER_LOADING / ON_THE_WAY / OUT_SIDE_FACTORY)
+    po_number = models.CharField(max_length=50 , null = True, blank=True, db_index=True)
 
     payment_status = models.CharField(max_length=20, choices=[('PAID', 'Paid'), ('UNPAID', 'Unpaid')], default='UNPAID')
 
