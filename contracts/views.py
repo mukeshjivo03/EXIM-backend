@@ -8,6 +8,8 @@ from django.db.models import Q
 from .serializers import DomesticReportSerializer , ContractSerializer , LoadingSerializer, FreightSerializer , ContractDropdownSerializer , DomesticContractDetailSerializer
 from .models import DomesticReports , DomesticContractDetails
 from accounts.permissions import HasAppPermission
+from rest_framework.parsers import MultiPartParser, FormParser
+from .services import DCImportError, import_dc_workbook
 
 
 class DomesticContractDetailListView(APIView):
@@ -33,6 +35,57 @@ class DomesticContractDetailListView(APIView):
 
         serializer = DomesticContractDetailSerializer(data, many=True)
         return Response(serializer.data)
+
+
+MAX_DC_UPLOAD_BYTES = 10 * 1024 * 1024
+
+
+def _flag(request, name):
+    return str(request.data.get(name, '')).lower() in ('1', 'true', 'yes', 'on')
+
+
+class DomesticContractDetailUploadView(APIView):
+    """Upload the DC workbook and upsert it on invoice number.
+
+    multipart: file (.xlsx), dry_run (check only, write nothing), keep_partial
+    (import rows with unreadable optional cells, leaving those columns empty).
+    Returns counts plus the rows skipped / flagged / failed. If any row can't be
+    parsed nothing is written (400 with the same report).
+    """
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_permissions(self):
+        # An upsert both creates and updates rows.
+        return [
+            IsAuthenticated(),
+            HasAppPermission('contracts.add_domesticcontractdetails'),
+            HasAppPermission('contracts.change_domesticcontractdetails'),
+        ]
+
+    def post(self, request):
+        upload = request.FILES.get('file')
+        if not upload:
+            return Response({'detail': 'Choose the DC Excel file to upload.'}, status=400)
+        if not upload.name.lower().endswith(('.xlsx', '.xlsm')):
+            return Response({'detail': 'Please upload an .xlsx DC workbook.'}, status=400)
+        if upload.size > MAX_DC_UPLOAD_BYTES:
+            return Response({'detail': 'That file is larger than the 10 MB limit.'}, status=400)
+
+        try:
+            result = import_dc_workbook(
+                upload,
+                upload.name,
+                dry_run=_flag(request, 'dry_run'),
+                keep_partial=_flag(request, 'keep_partial'),
+            )
+        except DCImportError as exc:
+            return Response({'detail': str(exc)}, status=400)
+
+        body = result.as_dict()
+        if result.errors:
+            body['detail'] = f"{len(result.errors)} row(s) could not be read, so nothing was imported."
+            return Response(body, status=400)
+        return Response(body)
 
 
 class DomesticReportListView(APIView):
